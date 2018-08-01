@@ -202,7 +202,8 @@ dirStrRawData = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
 dirStrAnalysis = ['M:\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
 
 % TODO
-% move recorded data to raw rata folder here
+% move recorded data to raw rata folder
+
 
 % %% IMPORT %% check to see if ephys info is imported
 dirCheck = dir([dirStrAnalysis '*data*']);
@@ -210,7 +211,7 @@ dirCheck = dir([dirStrAnalysis '*data*']);
 if isempty(dirCheck)
     display('Handing info to existing importData function.  This will take a few minutes.');
     %!!!!!!!!!%importDataSynapse() currently in testing mode
-    importDataSynapse(date,index);
+    importDataSynapse(date,index,recordingComputer);
     %!!!!!!!!!!!!!!importData('PassiveEphys',S.exptDate,S.exptIndexLast);
 else
     display('Data already imported.');
