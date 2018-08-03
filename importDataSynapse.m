@@ -1,26 +1,20 @@
 function importDataSynapse(date,index)
-
 %test
-% date = '18801'
-% index = '009'
-%dirStrRawData = ['\\' '144.92.237.187' '\e\Data\Synapse\' date '-' '009' '\'];
-%vidPath
+date = '18801';
+index = '012';
 
-dirStrRawData = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
+
+dirStrRecSource = ['\\' '144.92.237.187' '\e\Data\Synapse\' date '-' index '\'];
+dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
 dirStrAnalysis = ['M:\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
 
-
-
-b = TDT2mat(dirStrRawData);
-%NOTES:
-%format seems to be 
-%b.streams.EEGw
-
-%most of our analysis expects 16 channels.  We will need to rethink much of
-%it.  Shouldn't be a total re-write, but will need each step considered.
+b = TDT2mat([dirStrRawData]);
+% legacy analysis expects 16 channels.  proceed carefully! Shouldn't be a 
+% total re-write, but will need each step tested throughly!
 
 stimName = 'eS1p';
 
+%b.streams.EEGw
 
 
 % figure out video time stamps here.  need video grid?

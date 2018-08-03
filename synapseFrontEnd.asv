@@ -17,6 +17,7 @@ function [] = synapseFrontEnd(animalName)
 %   imports the last index and gets the next one ready!
 
 S.recordingComputer = '144.92.237.187';
+S.recordingComputerSubfolder = '\e\Data\'; 
 S.dbConn = dbConnect();
 % TODO make this part of interface - gui?
 S.animalName = animalName;
@@ -34,6 +35,9 @@ S.listOfExperimentsRunToday = {};
 
 %starting pool here!  we need to be sure to shut it down
 parpool(2);
+% Start Synapse 
+updateDynamicDisplayBox('Starting Synapse');
+S = synapseConnectionProcess(S); % connect to recording computer
 
 S.fh = figure('units','pixels',...
     'position',[100 100 1400 700],...
@@ -66,7 +70,7 @@ S = listOfAllExperiments(S);
 
 uiwait;
 delete(gcp);
-
+synapseDisconnect(synapseObj);
 
 
 
@@ -97,34 +101,33 @@ pause(.5);
 
 % %!!!TODO!!!%%%%%%%%%%%%%!!!!!!!!!!!!!!!!!!!!!!!!!!!! ? shut off other buttons?
 
-updateDynamicDisplayBox('Starting Synapse');
-S = synapseConnectionProcess(S); % connect to recording computer
+
 updateDynamicDisplayBox('loading in parameter set');
 S = parameterCreationProcess(S); % create a parameter set and load it in
 % !!!!!!!!!!!!!!!!!!! alternatively, start recording immediately in
 % parameterCreationProcess or here (syanapse needs to be running to set
 % parameters)
-S.syn.setMode(0);
-
-
-
 
 
 
 % Here we use parallel computing to run a command to setup (and wait for)
-%next expt while it analyzes the last one?
-
-
-%X = S;
+% next expt while it analyzes the last one.  Need to set up a few
+% parameters instead of passing the 'S' object that we update.
 [date,index] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
-[~,indexLast] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndexLast);
+if ~isempty(S.exptIndexLast')
+    [~,indexLast] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndexLast);
+else
+    indexLast = '-1';
+end
 synapseObj = S.syn;
 recordingComputer = S.recordingComputer;
+subfolder = S.recordingComputerSubfolder;
 parfor i = 1:2
     if i == 1
-        synapseImportingPathway(date,indexLast,recordingComputer);
+        synapseImportingPathway(date,indexLast,recordingComputer,subfolder);
     else
-        synapseRecordingPathway(synapseObj,date,index);
+        %synapseRecordingPathway(synapseObj,date,index);
+        synapseRecordingPathway(synapseObj);
     end
 end
 % synapseRecordingPathway(S);
@@ -165,13 +168,13 @@ updateDynamicDisplayBox('','black');
 function synapseRecordingPathway(varargin)
 % S = varargin{1};
 synapseObj = varargin{1};
-date = varargin{2};
-index = varargin{3};
+% date = varargin{2};
+% index = varargin{3};
 % === path to start synapse, collect data, wait for that to finish
 
 %[date,index] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
 
-synapseObj.setCurrentBlock([date '-' index]);
+% synapseObj.setCurrentBlock([date '-' index]);
 waitingForUserToStartRecording = true;
 while waitingForUserToStartRecording
     updateDynamicDisplayBox('waiting for user to record');
@@ -188,7 +191,7 @@ while waitingForUserToFinishRecording
         waitingForUserToFinishRecording = false;
     end
 end
-synapseDisconnect(synapseObj);
+synapseObj.setMode(0);
 
 
 
@@ -197,33 +200,33 @@ function synapseImportingPathway(varargin)
 date = varargin{1};
 index = varargin{2}; %this is set to the previous index (see call)
 recordingComputer = varargin{3};
-dirStrRecSource = ['\\' recordingComputer '\e\Data\Synapse\' date '-' index '\'];
-dirStrRawData = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
-dirStrAnalysis = ['M:\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
-
-% TODO
-% move recorded data to raw rata folder
-
-
+subfolder = varargin{4};
+indexLast = '-1';
+if strfind(indexLast,'-1');
+dirStrRecSource = ['\\' recordingComputer subfolder '20' date(1:2) '\' date '-' index '\'];
+% WARNING! the following shouldn't be hard coded as they are.  Pass as parameters
+% to synapseImportingPathway
+dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+dirStrAnalysis = ['M:\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+% move recorded data to raw rata folder here
+moveDataRecToRaw(dirStrRecData,dirStrRawData);
 % %% IMPORT %% check to see if ephys info is imported
 dirCheck = dir([dirStrAnalysis '*data*']);
 % import or not, depending on options toggled
 if isempty(dirCheck)
     display('Handing info to existing importData function.  This will take a few minutes.');
     %!!!!!!!!!%importDataSynapse() currently in testing mode
-    importDataSynapse(date,index,recordingComputer);
+    importDataSynapse(date,index);
     %!!!!!!!!!!!!!!importData('PassiveEphys',S.exptDate,S.exptIndexLast);
 else
     display('Data already imported.');
 end
-
-
-
-% %% COPY MOVIES %% check to see if we need to copy videos to server
+% %% COPY MOVIES %% this should be redundant since we now copy all files above,
+% but it's little cost to just double check movie file location, so I'll
+% leave this for now.
 vidFileName = [];
 videoFileTypesToLookFor = {'.avi','.'};
 videoFound = false;
-
 for iSearch = 1:length(videoFileTypesToLookFor)
     dirCheck = dir([dirStrRawData '*' videoFileTypesToLookFor{iSearch}]);  % TODO: should we also look for AVI files?
     for iDir = 1:length(dirCheck)
@@ -310,7 +313,10 @@ countX = 1;
 while ~sequenceUpdated
     csvAssembler(S.exptDate,S.exptIndex,S.tempnStims,S.tempnTrials); %setup trial file (writes to folder)
     % update and send parameters to Synapse
-    S.syn.setMode(2);
+    % need to set tank name here if we're going to just start recording!
+    [date,index] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
+    S.syn.setCurrentBlock([date '-' index]);
+    S.syn.setMode(3); %changing this so recording just starts! make sure we're happy with this! !!!!!!!!!TODO!!!!!!!!!
     pause(4);
     seqList = S.syn.getParameterValues('ParSeq1','SequenceFileList');
     result = 0;
@@ -398,6 +404,7 @@ if isequal(houseTodayDateIn_dbForm,exptDate{1})
 else
     S.exptDate = houseTodayDateIn_dbForm;
     S.exptIndex = 0;
+    S.exptIndexLast = [];
 end
 
 thisID = lastEntryID{1}+1;

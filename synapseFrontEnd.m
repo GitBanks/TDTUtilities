@@ -16,7 +16,9 @@ function [] = synapseFrontEnd(animalName)
 %   d. monitors Synapse for when it's done recording - when done, it
 %   imports the last index and gets the next one ready!
 
+S.enableMultiThread = 1;
 S.recordingComputer = '144.92.237.187';
+S.recordingComputerSubfolder = '\e\Data\'; 
 S.dbConn = dbConnect();
 % TODO make this part of interface - gui?
 S.animalName = animalName;
@@ -33,7 +35,12 @@ S.nExptsRecordedToday = 0;
 S.listOfExperimentsRunToday = {};
 
 %starting pool here!  we need to be sure to shut it down
-parpool(2);
+if S.enableMultiThread
+    parpool(2);
+end
+% Start Synapse 
+updateDynamicDisplayBox('Starting Synapse');
+S = synapseConnectionProcess(S); % connect to recording computer
 
 S.fh = figure('units','pixels',...
     'position',[100 100 1400 700],...
@@ -65,8 +72,9 @@ setupFigure(S); % draw a number of list boxes and display fixed text
 S = listOfAllExperiments(S);
 
 uiwait;
-delete(gcp);
-
+% cleanup
+if S.enableMultiThread; delete(gcp); end
+synapseDisconnect(S.syn);
 
 
 
@@ -97,39 +105,41 @@ pause(.5);
 
 % %!!!TODO!!!%%%%%%%%%%%%%!!!!!!!!!!!!!!!!!!!!!!!!!!!! ? shut off other buttons?
 
-updateDynamicDisplayBox('Starting Synapse');
-S = synapseConnectionProcess(S); % connect to recording computer
+
 updateDynamicDisplayBox('loading in parameter set');
 S = parameterCreationProcess(S); % create a parameter set and load it in
 % !!!!!!!!!!!!!!!!!!! alternatively, start recording immediately in
 % parameterCreationProcess or here (syanapse needs to be running to set
 % parameters)
-S.syn.setMode(0);
-
-
-
 
 
 
 % Here we use parallel computing to run a command to setup (and wait for)
-%next expt while it analyzes the last one?
-
-
-%X = S;
+% next expt while it analyzes the last one.  Need to set up a few
+% parameters instead of passing the 'S' object that we update.
 [date,index] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
-[~,indexLast] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndexLast);
+if ~isempty(S.exptIndexLast')
+    [~,indexLast] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndexLast);
+else
+    indexLast = '-1';
+end
 synapseObj = S.syn;
 recordingComputer = S.recordingComputer;
-parfor i = 1:2
-    if i == 1
-        synapseImportingPathway(date,indexLast,recordingComputer);
-    else
-        synapseRecordingPathway(synapseObj,date,index);
-    end
-end
-% synapseRecordingPathway(S);
-% synapseImportingPathway(S);
+subfolder = S.recordingComputerSubfolder;
 
+if S.enableMultiThread
+    parfor i = 1:2
+        if i == 1
+            synapseRecordingPathway(synapseObj);
+        else
+            synapseImportingPathway(date,indexLast,recordingComputer,subfolder);
+        end
+    end
+else
+    % for testing or using without parfor
+    synapseRecordingPathway(synapseObj);
+    synapseImportingPathway(date,indexLast,recordingComputer,subfolder);
+end
 
 
 updateDynamicDisplayBox('finished recording!','black');
@@ -165,21 +175,19 @@ updateDynamicDisplayBox('','black');
 function synapseRecordingPathway(varargin)
 % S = varargin{1};
 synapseObj = varargin{1};
-date = varargin{2};
-index = varargin{3};
+% date = varargin{2};
+% index = varargin{3};
 % === path to start synapse, collect data, wait for that to finish
-
 %[date,index] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
-
-synapseObj.setCurrentBlock([date '-' index]);
-waitingForUserToStartRecording = true;
-while waitingForUserToStartRecording
-    updateDynamicDisplayBox('waiting for user to record');
-    pause(1);
-    if synapseObj.getMode() == 3
-        waitingForUserToStartRecording = false;
-    end
-end
+% synapseObj.setCurrentBlock([date '-' index]);
+% waitingForUserToStartRecording = true; % recent change: program auto-starts so should already be '3'
+% while waitingForUserToStartRecording
+%     updateDynamicDisplayBox('waiting for user to record');
+%     pause(1);
+%     if synapseObj.getMode() == 3
+%         waitingForUserToStartRecording = false;
+%     end
+% end
 waitingForUserToFinishRecording = true;
 while waitingForUserToFinishRecording
     updateDynamicDisplayBox('waiting for recording to complete');
@@ -188,7 +196,7 @@ while waitingForUserToFinishRecording
         waitingForUserToFinishRecording = false;
     end
 end
-synapseDisconnect(synapseObj);
+synapseObj.setMode(0);
 
 
 
@@ -197,32 +205,38 @@ function synapseImportingPathway(varargin)
 date = varargin{1};
 index = varargin{2}; %this is set to the previous index (see call)
 recordingComputer = varargin{3};
-dirStrRecSource = ['\\' recordingComputer '\e\Data\Synapse\' date '-' index '\'];
-dirStrRawData = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
-dirStrAnalysis = ['M:\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
-
-% TODO
+subfolder = varargin{4};
+if isempty(strfind(index,'-1')); % don't run on first index - if nothing has been run today yet.
+    %may want to add try/catch so if one day doesn't analyze we don't shit ourselves
+dirStrRecSource = ['\\' recordingComputer subfolder '20' date(1:2) '\' date '-' index '\'];
+% WARNING! the following shouldn't be hard coded as they are.  Pass as parameters
+% to synapseImportingPathway
+dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+dirStrAnalysis = ['M:\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
 % move recorded data to raw rata folder here
-
+moveDataRecToRaw(dirStrRecSource,dirStrRawData);
 % %% IMPORT %% check to see if ephys info is imported
 dirCheck = dir([dirStrAnalysis '*data*']);
 % import or not, depending on options toggled
 if isempty(dirCheck)
     display('Handing info to existing importData function.  This will take a few minutes.');
     %!!!!!!!!!%importDataSynapse() currently in testing mode
-    importDataSynapse(date,index);
+    
+    
+    %importDataSynapse(date,index);
+    %!!!!!!!!!!!!!TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     %!!!!!!!!!!!!!!importData('PassiveEphys',S.exptDate,S.exptIndexLast);
+    
+    
 else
     display('Data already imported.');
 end
-
-
-
-% %% COPY MOVIES %% check to see if we need to copy videos to server
+% %% COPY MOVIES %% this should be redundant since we now copy all files above,
+% but it's little cost to just double check movie file location, so I'll
+% leave this for now.
 vidFileName = [];
 videoFileTypesToLookFor = {'.avi','.'};
 videoFound = false;
-
 for iSearch = 1:length(videoFileTypesToLookFor)
     dirCheck = dir([dirStrRawData '*' videoFileTypesToLookFor{iSearch}]);  % TODO: should we also look for AVI files?
     for iDir = 1:length(dirCheck)
@@ -271,7 +285,7 @@ elseif isempty(dir([vidFileName '-framegrid.mat']))
         end
     end
 end
-
+end
 
 % get animal name and ID info
 % dbConn = dbConnect();
@@ -309,7 +323,10 @@ countX = 1;
 while ~sequenceUpdated
     csvAssembler(S.exptDate,S.exptIndex,S.tempnStims,S.tempnTrials); %setup trial file (writes to folder)
     % update and send parameters to Synapse
-    S.syn.setMode(2);
+    % need to set tank name here if we're going to just start recording!
+    [date,index] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
+    S.syn.setCurrentBlock([date '-' index]);
+    S.syn.setMode(3); %changing this so recording just starts! make sure we're happy with this! !!!!!!!!!TODO!!!!!!!!!
     pause(4);
     seqList = S.syn.getParameterValues('ParSeq1','SequenceFileList');
     result = 0;
@@ -397,8 +414,8 @@ if isequal(houseTodayDateIn_dbForm,exptDate{1})
 else
     S.exptDate = houseTodayDateIn_dbForm;
     S.exptIndex = 0;
+    S.exptIndexLast = [];
 end
-
 thisID = lastEntryID{1}+1;
 % == Add the main information
 addNotebookEntry = ['INSERT INTO masterexpt (exptIndex, hardware, grandExpt,'...
@@ -441,15 +458,10 @@ addDescription = ['UPDATE masterexpt SET notebookDesc= ''' ...
     S.listOfExperimentsRunToday{S.nExptsRecordedToday} ''' WHERE exptID= '''...
     num2str(thisID) ''''];
 display(['Description will be: ' S.listOfExperimentsRunToday{S.nExptsRecordedToday} ' Be sure you are happy with that']);
-exec(S.dbConn,addNotebookEntry);%%%%%!!!! uncomment when ready to test notebook!
-exec(S.dbConn,addDetailEphys);%%%%%!!!! uncomment when ready to test notebook!
-exec(S.dbConn,addDescription);%%%%%!!!! uncomment when ready to test notebook!
-% display(addNotebookEntry);
-% display(addDetailEphys);
-% display(addDescription);
-
-
-
+%! we're editing the notebook here!!! be careful when changing syntax!
+exec(S.dbConn,addNotebookEntry);
+exec(S.dbConn,addDetailEphys);
+exec(S.dbConn,addDescription);
 
 function updateDynamicDisplayBox(textI,colorI)
 %handy way to update diplay text

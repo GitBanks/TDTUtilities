@@ -1,16 +1,14 @@
 function importDataSynapse(date,index)
 
 %test
-% date = '18801'
-% index = '009'
-%dirStrRawData = ['\\' '144.92.237.187' '\e\Data\Synapse\' date '-' index '\'];
+date = '18801';
+index = '010';
 
-dirStrRawData = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
+
 dirStrAnalysis = ['M:\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
 
 
-
-b = TDT2mat(dirStrRawData);
+b = TDT2mat(dirStrAnalysis);
 %NOTES:
 %format seems to be 
 %b.streams.EEGw
@@ -18,7 +16,14 @@ b = TDT2mat(dirStrRawData);
 %most of our analysis expects 16 channels.  We will need to rethink much of
 %it.  Shouldn't be a total re-write, but will need each step considered.
 
-stimName = 'eS1r';
+stimName = 'eS1p';
+
+
+
+% figure out video time stamps here.  need video grid?
+vidPath = '';
+
+
 
 timeSeries = b.scalars.(stimName).ts;
 vidFrameTimeStamps = b.epocs.Cam1.onset;
