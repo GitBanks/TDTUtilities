@@ -30,9 +30,11 @@ S.animalName = animalName;
 % presets?  make part of gui?
 S.nHoursPre = 1; % refers to number of hours pre time zero manipulation
 S.nHoursPost = 4;
-S.forceStimPresentation = false; 
+S.forceStimPresentation = false; % this will force 
 S.nExptsRecordedToday = 0;
 S.listOfExperimentsRunToday = {};
+
+
 
 %starting pool here!  we need to be sure to shut it down
 if S.enableMultiThread
@@ -48,15 +50,12 @@ S.fh = figure('units','pixels',...
     'numbertitle','off',...
     'name','Experiment Day Setup',...
     'resize','off');
-
 S.Preselects = {'Saline','LPS','ISO','Ketamine'};
-
-%!!!!!!todo!!!!! make this selectable?
+%!!!!!!TODO!!!!! make this selectable?
 uicontrol('style','text',...
     'units','pix',...
     'position',[10 650 120 30],...
     'string',S.animalName); 
-
 S.pp = uicontrol('style','pop',...
     'unit','pix',...
     'position',[135 650 120 30],...
@@ -67,10 +66,9 @@ S.pb = uicontrol('style','push',...
     'string', 'Setup this expt',...
     'fontsize',10,...
     'callback',{@setupExpt,S});
-
 setupFigure(S); % draw a number of list boxes and display fixed text
 S = listOfAllExperiments(S);
-
+% everything done
 uiwait;
 % cleanup
 if S.enableMultiThread; delete(gcp); end
