@@ -73,9 +73,9 @@ MAXCHANNELS = 1024;
 
 % put the slashes in the correct direction.
 tank = strrep(tank, '/', '\');
-% if tank(end) == '\'
-%     tank(end) = [];
-% end
+if tank(end) == '\'
+    tank(end) = [];
+end
     
 % if block wasn't passed, extract it from tank path
 if mod(nargin, 2) == 1
