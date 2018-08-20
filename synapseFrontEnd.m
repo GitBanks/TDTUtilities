@@ -16,7 +16,7 @@ function [] = synapseFrontEnd(animalName)
 %   d. monitors Synapse for when it's done recording - when done, it
 %   imports the last index and gets the next one ready!
 
-S.enableMultiThread = 1;
+S.enableMultiThread = 1; % for testing or using without parfor, set to 0
 S.recordingComputer = '144.92.237.187';
 S.recordingComputerSubfolder = '\e\Data\'; 
 S.dbConn = dbConnect();
@@ -37,7 +37,7 @@ S.listOfExperimentsRunToday = {};
 
 
 %starting pool here!  we need to be sure to shut it down
-if S.enableMultiThread
+if S.enableMultiThread 
     parpool(2);
 end
 % Start Synapse 
@@ -119,7 +119,9 @@ S = parameterCreationProcess(S); % create a parameter set and load it in
 if ~isempty(S.exptIndexLast')
     [~,indexLast] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndexLast);
 else
-    indexLast = '-1';
+    indexLast = '-1'; %this could hand synapseImportingPathway a -1 val
+    % if we haven't run anything previously today which will tell it to
+    % skip analysis
 end
 synapseObj = S.syn;
 recordingComputer = S.recordingComputer;
@@ -134,7 +136,7 @@ if S.enableMultiThread
         end
     end
 else
-    % for testing or using without parfor
+    
     synapseRecordingPathway(synapseObj);
     synapseImportingPathway(date,indexLast,recordingComputer,subfolder);
 end
@@ -200,22 +202,21 @@ synapseObj.setMode(0);
 
 
 function synapseImportingPathway(varargin)
+%may want to add try/catch so if one day doesn't analyze we don't shit ourselves
 date = varargin{1};
 index = varargin{2}; %this is set to the previous index (see call)
 recordingComputer = varargin{3};
 subfolder = varargin{4};
-if isempty(strfind(index,'-1')); % don't run on first index - if nothing has been run today yet.
-    %may want to add try/catch so if one day doesn't analyze we don't shit ourselves
+if isempty(strfind(index,'-1')); return; end; % don't run on first index - if nothing has been run today yet.
 dirStrRecSource = ['\\' recordingComputer subfolder '20' date(1:2) '\' date '-' index '\'];
 % WARNING! the following shouldn't be hard coded as they are.  Pass as parameters
 % to synapseImportingPathway
 dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
 dirStrAnalysis = ['M:\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
-% move recorded data to raw rata folder here
+% %% STEP 1 MOVE RECORDED DATA TO RAW %%
 moveDataRecToRaw(dirStrRecSource,dirStrRawData);
-% %% IMPORT %% check to see if ephys info is imported
-dirCheck = dir([dirStrAnalysis '*data*']);
-% import or not, depending on options toggled
+% %% STEP 2 IMPORT 
+dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
 if isempty(dirCheck)
     display('Handing info to existing importData function.  This will take a few minutes.');
     %!!!!!!!!!%importDataSynapse() currently in testing mode
@@ -282,7 +283,6 @@ elseif isempty(dir([vidFileName '-framegrid.mat']))
             repeatedAttempts = repeatedAttempts+1;
         end
     end
-end
 end
 
 % get animal name and ID info

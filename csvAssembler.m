@@ -1,4 +1,10 @@
 function csvAssembler(date,index,nStimTypes,nTrialsPerStim)
+% This creates a randomized sequence in the format accepted by Synapse, of  
+% nStimTypes number of stims and nTrialsPerStim number of trials per stim.  
+% e.g., with 5 unique stims and 100 presentations of each, it will create a 
+% list of these 500, shuffle them, and write them to the expected folder 
+% with the name {date}-{index}
+
 %date = '18711';
 %index = '000';
 %nStimTypes = 5

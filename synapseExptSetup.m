@@ -40,7 +40,7 @@ indexDescriptionSequence = {
 
 
 %TODO are these rules certain?
-if ~isempty(strfind(animalName,'LFP')) || forceStimPresentation
+if ~isempty(strfind(animalName,'LFP')) || ~isempty(strfind(animalName,'DREADD')) || forceStimPresentation
     indexDescriptionRECtype = {
     'Spon'
     'Stim'
