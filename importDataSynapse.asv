@@ -1,15 +1,15 @@
 function importDataSynapse(exptDate,exptIndex)
 
 %test
-exptDate = '18803';
-exptIndex = '002';
+exptDate = '18821';
+exptIndex = '001';
 
 signalTypes = {'EEG','LFP'}; % !!!TODO!!! don't hardcode this 
 
 % not great to hard code... add as parameter?
 dirStrRawData = ['W:\Data\PassiveEphys\' '20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %input
 dirStrAnalysis = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %output
-data = TDTbin2mat(dirStrRawData);
+data = TDTbin2mat(dirStrRawData); % this step may take a while depending on how long the recording is.  We can limit the length if necessary,
 
 % % % % stuff not established perfectly % % %
 
@@ -22,17 +22,32 @@ data = TDTbin2mat(dirStrRawData);
 % if this isn't an 'evoked' set, we should handle it differently - 1
 % continuous trial?  are other analyses able to handle that?
 
+% %not sure if necessary?
+dbConn = dbConnect(); %handle this better?  close db at end?
+exptID = getIDfromDateIndex(exptDate,exptIndex);
+SQLdescription = fetch(dbConn,['SELECT notebookDesc FROM masterexpt WHERE exptID= ''' num2str(exptID) '''']);
+
+close(dbConn);
+
+%use this 
+
+
+
 streamList = fields(data.streams);
 % step through signalTypes and find which match streams
 for iSignal = 1:length(signalTypes)
     for iList = 1:length(streamList)
         if ~isempty(strfind(streamList{iList},signalTypes{iSignal})) % only handle the streams we have written to
             tempdT = 1/data.streams.(streamList{iList}).fs;
+            %timeseries
             tempTS = zeros(1,length(data.streams.(streamList{iList}).data));
             tempTS(1) = tempdT;
             for iTimes = 2:length(tempTS)
                tempTS(iTimes) = tempTS(iTimes-1)+tempdT;
             end
+            
+            
+            
             
             % assign as appropriate
             if strfind(signalTypes{iSignal},'LFP') %not happy with this. the alternative is to establish a config file that has info like this but will need a bit of setup
@@ -44,13 +59,8 @@ for iSignal = 1:length(signalTypes)
 end
 
 
-
-
-
 stimName = 'eS1p'; % !!TODO!! auto detect scalars that have been read in.  match to existing stims in DB
 stimOnsetTimeSeries = data.scalars.(stimName).ts;
-
-%create EEG time series
 
 
 

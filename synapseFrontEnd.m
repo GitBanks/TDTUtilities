@@ -16,9 +16,17 @@ function [] = synapseFrontEnd(animalName)
 %   d. monitors Synapse for when it's done recording - when done, it
 %   imports the last index and gets the next one ready!
 
+
+% TODO !!! : add a check to see if we can connect to recording computer path
+% (sometimes network logs us out) !!!! otherwise we can't guarantee
+% importing will work consistantly
+% example path: \\144.92.237.187\c\Data\2018\
+
 S.enableMultiThread = 1; % for testing or using without parfor, set to 0
 S.recordingComputer = '144.92.237.187';
-S.recordingComputerSubfolder = '\e\Data\'; 
+S.recordingComputerSubfolder = '\c\Data\';
+% TODO: add a check or scan for latest recording folder (low priority)
+
 S.dbConn = dbConnect();
 % TODO make this part of interface - gui?
 S.animalName = animalName;
@@ -50,7 +58,7 @@ S.fh = figure('units','pixels',...
     'numbertitle','off',...
     'name','Experiment Day Setup',...
     'resize','off');
-S.Preselects = {'Saline','LPS','ISO','Ketamine'};
+S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO'}; % just add manipulations as needed (?)
 %!!!!!!TODO!!!!! make this selectable?
 uicontrol('style','text',...
     'units','pix',...
@@ -202,12 +210,21 @@ synapseObj.setMode(0);
 
 
 function synapseImportingPathway(varargin)
-%may want to add try/catch so if one day doesn't analyze we don't shit ourselves
+% test block:
+% [date,index] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
+% date = '18821'
+% index = '001'
+% synapseImportingPathway(date,indexLast,recordingComputer,subfolder);
+% recordingComputer = '144.92.237.187';
+% subfolder = '\c\Data\';
+
+% may want to add try/catch so if a single day doesn't analyze we don't shit ourselves
 date = varargin{1};
 index = varargin{2}; %this is set to the previous index (see call)
 recordingComputer = varargin{3};
 subfolder = varargin{4};
-if isempty(strfind(index,'-1')); return; end; % don't run on first index - if nothing has been run today yet.
+
+if ~isempty(strfind(index,'-1')); return; end; % don't run on first index - if nothing has been run today yet.
 dirStrRecSource = ['\\' recordingComputer subfolder '20' date(1:2) '\' date '-' index '\'];
 % WARNING! the following shouldn't be hard coded as they are.  Pass as parameters
 % to synapseImportingPathway

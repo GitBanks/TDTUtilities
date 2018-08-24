@@ -1,28 +1,31 @@
 function importDataSynapse(exptDate,exptIndex)
 
 %test
-exptDate = '18802';
+exptDate = '18821';
 exptIndex = '001';
 
 signalTypes = {'EEG','LFP'}; % !!!TODO!!! don't hardcode this 
-
 % not great to hard code... add as parameter?
 dirStrRawData = ['W:\Data\PassiveEphys\' '20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %input
 dirStrAnalysis = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %output
-data = TDTbin2mat(dirStrRawData);
+% !!TODO!! don't hardcode any of the above!
 
-% % % % stuff not established perfectly % % %
-
+display('Loading in raw data.  This sometimes takes a while.');
+data = TDTbin2mat(dirStrRawData); % this step may take a while depending on how long the recording is.  We can limit the length if necessary,
+display('Loading complete.');
 % find which channels are EEG, LFP, etc. from database
 % obviously, will only work if this has been entered (will be empty
 % otherwise - add check?)
 [channelMap] = getElectrodeLocationFromDateIndex(exptDate,exptIndex);
 
+
+
+
 % 2. stream detection from saved data: data.streams
 % if this isn't an 'evoked' set, we should handle it differently - 1
 % continuous trial?  are other analyses able to handle that?
 
-%not sure if necessary?
+% %not sure if necessary?
 dbConn = dbConnect(); %handle this better?  close db at end?
 exptID = getIDfromDateIndex(exptDate,exptIndex);
 SQLdescription = fetch(dbConn,['SELECT notebookDesc FROM masterexpt WHERE exptID= ''' num2str(exptID) '''']);
