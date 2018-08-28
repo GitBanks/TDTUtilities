@@ -123,7 +123,7 @@ S = parameterCreationProcess(S); % create a parameter set and load it in
 % Here we use parallel computing to run a command to setup (and wait for)
 % next expt while it analyzes the last one.  Need to set up a few
 % parameters instead of passing the 'S' object that we update.
-[date,index] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
+[date,~] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
 if ~isempty(S.exptIndexLast')
     [~,indexLast] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndexLast);
 else
@@ -236,7 +236,7 @@ moveDataRecToRaw(dirStrRecSource,dirStrRawData);
 dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
 if isempty(dirCheck)
     display('Handing info to existing importData function.  This will take a few minutes.');
-    %!!!!!!!!!%importDataSynapse() currently in testing mode
+    importDataSynapse(date,index) % !!! still testing!!! be careful!!!
     
     
     %importDataSynapse(date,index);

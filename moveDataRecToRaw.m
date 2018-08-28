@@ -1,6 +1,13 @@
 function moveDataRecToRaw(dirStrRecData,dirStrRawData)
 % just move all files to raw data server
-recDataDir = dir(dirStrRecData);
+
+if exist(dirStrRecData,'dir') == 7
+    recDataDir = dir(dirStrRecData);
+else
+    display('recording folder doesn''t exist.  Was it moved or deleted?');
+    return;
+end
+
 if ~exist(dirStrRawData,'dir')
     mkdir(dirStrRawData);
 end
