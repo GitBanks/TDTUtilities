@@ -302,6 +302,9 @@ elseif isempty(dir([vidFileName '-framegrid.mat']))
     end
 end
 
+
+
+
 % get animal name and ID info
 % dbConn = dbConnect();
 % exptID = getIDfromDateIndex(S.exptDate,exptIndex);

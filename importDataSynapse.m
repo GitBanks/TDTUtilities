@@ -53,7 +53,7 @@ if ~isempty(data.scalars) %not empty, is evoked, so should save as chan X sample
         trialList(iTrial).dataFile = data.info.blockname;
         trialList(iTrial).origTrialNum = iTrial;
         trialList(iTrial).trialTime = stimTimes(iTrial);
-        trialList(iTrial).gain(1:16) = 10000; % NOOOOOOOOOOOOOOO  find from database
+        trialList(iTrial).gain(1:16) = 1; % Synapse standard unless modified
         trialList(iTrial).offset(1:16) = 0;
     end
 else %handle spontaneous/non-evoked recorded data
@@ -62,7 +62,7 @@ else %handle spontaneous/non-evoked recorded data
     trialList(1).dataFile = data.info.blockname;
     trialList(1).origTrialNum = 1;
     trialList(1).trialTime = stimTimes;
-    trialList(1).gain(1:16) = 10000; % NOOOOOOOOOOOOOOO  find from database
+    trialList(1).gain(1:16) = 1; % % Synapse standard unless modified
     trialList(1).offset(1:16) = 0;
     stimDur = -1;
 end

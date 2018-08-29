@@ -1317,25 +1317,29 @@ lines = lines{1};
 
 % loop through rows
 storenum = 0;
-for i = 1:length(lines)-1
-    
-    % check if this is a new store
-    if(~isempty(strfind(lines{i},'StoreName')))
-        storenum = storenum + 1;
-    end
-    
-    % find delimiters
-    equals = strfind(lines{i},'=');
-    semi = strfind(lines{i},';');
-    
-    % grab field and value between the '=' and ';'
-    fieldstr = lines{i}(equals(1)+1:semi(1)-1);
-    value = lines{i}(equals(3)+1:semi(3)-1);
-    
-    % insert new field and value into store struct
-    blockNotes(storenum).(fieldstr) = value;
-end
+try
+    for i = 1:length(lines)-1
 
+        % check if this is a new store
+        if(~isempty(strfind(lines{i},'StoreName')))
+            storenum = storenum + 1;
+        end
+
+        % find delimiters
+        equals = strfind(lines{i},'=');
+        semi = strfind(lines{i},';');
+
+        % grab field and value between the '=' and ';'
+        fieldstr = lines{i}(equals(1)+1:semi(1)-1);
+        value = lines{i}(equals(3)+1:semi(3)-1);
+
+        % insert new field and value into store struct
+        blockNotes(storenum).(fieldstr) = value;
+    end
+catch
+    warning('Bad TBK file, try running the TankRestore tool to correct. See http://www.tdt.com/technotes/#0935.htm')
+    return;
+end
 % print out store information
 %for i = 1:storenum
 %    disp(blockNotes(i))

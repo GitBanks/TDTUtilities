@@ -8,7 +8,7 @@
 
 animal = 'DREADD07';
 listOfAnimalExpts = getExperimentsByAnimal(animal,'Spon');
-forceReimport = 0;
+forceReimport = 1;
 
 % % possibly use in getBatchParams program?
 % for iList = 1:length(listOfAnimalExpts)
