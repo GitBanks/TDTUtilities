@@ -99,10 +99,8 @@ uiwait;
 % cleanup
 if S.enableMultiThread; delete(gcp); end
 synapseDisconnect(S.syn);
-if ~isempty(S.exptIndexLast')
-    [date,indexLast] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndexLast);
-    synapseImportingPathway(date,indexLast,S.recordingComputer,S.recordingComputerSubfolder);
-end
+
+
 
 
 

@@ -4,7 +4,7 @@ function moveDataRecToRaw(dirStrRecData,dirStrRawData)
 if exist(dirStrRecData,'dir') == 7
     recDataDir = dir(dirStrRecData);
 else
-    display('recording folder doesn''t exist.  Was it moved or deleted?');
+    display('recording folder can not be found.  Check connection to remote computer, and existence of folder');
     return;
 end
 
