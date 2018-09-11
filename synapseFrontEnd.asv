@@ -1,83 +1,61 @@
 function [] = synapseFrontEnd(animalName)
-%testinputs
-%animalName = 'EEG16'
+% test inputs
+% animalName = 'EEG16'
 
-%1. pull the last few recent animals to select from
-%2. display a limited set of experiments to try and allow toggle
-%   a. test? or leave that for brainware?
-%   b. LPS
-%   c. saline
-%   d. ketamine
-%   e. Iso
-%3. present button to get next experiment ready - when clicked it:
-%   a. creates notebook entry (locking in an index)
-%   b. sets up randomized trials for Synapse
-%   c. gets Synapse ready to record
-%   d. monitors Synapse for when it's done recording - when done, it
-%   imports the last index and gets the next one ready!
+% This GUI, when given an animal name, will allow user to select an 
+% experiment type for which the program will create all expected indices
+% with related 'stim' and 'spontaneous' settings for Synapse.  This
+% interface will control Synapse: each press of 'start next index' will run
+% and stop the whole next recording period (usually 10-20 mins) while
+% *also* importing the last most recently recorded period.  User simply
+% needs to click button between periods, and be sure data collection looks
+% appropriate (experimental manipulations, animal behavior, signal quality,
+% data file and program management).
+% Keep in mind this contains numerous helper / sub functions that need to
+% be considered when making modifications, but this will allow
+% compartmentalization and scaling as new processes are available and
+% analyses desired.
+% 2018, Banks Lab, Sean Grady.
 
+% WIP: check code for % TODO % or % !!! TODO !!! % for different levels of
+% urgency to make the program better
 
-% TODO !!! : add a check to see if we can connect to recording computer path
-% (sometimes network logs us out) !!!! otherwise we can't guarantee
-% importing will work consistantly
+% WARNING! this is no longer suitable for regular EEG (1 hour) recordings
+% until we add 'spontaneous' wait time as a parameter
+
+% TODO % add 'config' file that allows parameters, file locations, and general lab changes to be centrally located.
+
+% ! TODO ! %  add a check to see if we can connect to recording computer path (sometimes network logs us out!) otherwise we can't guarantee importing will work consistantly
 % example path: \\144.92.237.187\c\Data\2018\
-
 S.enableMultiThread = 1; % for testing or using without parfor, set to 0
 S.recordingComputer = '144.92.237.187';
 S.recordingComputerSubfolder = '\c\Data\';
-% TODO: add a check or scan for latest recording folder (low priority)
-
 S.dbConn = dbConnect();
-% TODO make this part of interface - gui?
+% TODO % animalName is presently a parameter, but a menu selection might be better?  or auto-populate with recent (living) animal? 
 S.animalName = animalName;
-% dbConn = dbConnect();
-% latestAnimal = 270%DOTO how to find?
-% ephysResult = fetch(dbConn,['select animalName from animals where animalID='  num2str(latestAnimal)]);   
-% TODO make this part of interface - gui? store predefined sets here?
-% S.experimentDrugManipulation = 'LPS';
-% presets?  make part of gui?
-S.nHoursPre = 1; % refers to number of hours pre time zero manipulation
-S.nHoursPost = 4;
+% TODO % we may want to add nHoursPre to the GUI as a toggle or parameter
+S.nHoursPre = 1; % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
+S.nHoursPost = 4; % we've been doing 4, but consider adding it as a toggle in addition to nHoursPre
 
+% !! TODO !! % create parameter here to check for when inj is, and auto-next index stuff? urgent because this will allow us to streamline data collection
 
+% TODO % set all the following as toggles in GUI
+S.forceStimPresentation = false; % this will force synapseExptSetup to create stimulus periods even if it's an EEG animal
+S.nExptsRecordedToday = 0; % initialization, but we could also use this to set a different number if, e.g., the program was restarted and we needed to resume at middle of day
+S.listOfExperimentsRunToday = {}; % similar to nExptsRecordedToday. initialized here, but could be used to resume.
 
-
-
-
-
-
-
-% create parameter here to check for when inj is, and auto-next index
-% stuff????
-
-
-
-
-
-
-
-S.forceStimPresentation = false; % this will force 
-S.nExptsRecordedToday = 0;
-S.listOfExperimentsRunToday = {};
-
-
-
-%starting pool here!  we need to be sure to shut it down
-if S.enableMultiThread 
+if S.enableMultiThread % starting pool here!  we need to be sure to shut it down at end of program
     parpool(2);
 end
-% Start Synapse 
 updateDynamicDisplayBox('Starting Synapse');
-S = synapseConnectionProcess(S); % connect to recording computer
-
+S = synapseConnectionProcess(S); % Start Synapse, connect to recording computer
 S.fh = figure('units','pixels',...
     'position',[100 100 1400 700],...
     'menubar','none',...
     'numbertitle','off',...
     'name','Experiment Day Setup',...
     'resize','off');
-S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO'}; % just add manipulations as needed (?)
-%!!!!!!TODO!!!!! make this selectable?
+S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO'}; % just add manipulations as needed for now.  if there's a funky setup, we need to edit synapseExptSetup to handle it (see how iso is handled)
 uicontrol('style','text',...
     'units','pix',...
     'position',[10 650 120 30],...
@@ -92,24 +70,44 @@ S.pb = uicontrol('style','push',...
     'string', 'Setup this expt',...
     'fontsize',10,...
     'callback',{@setupExpt,S});
+% !TODO! %
+% 9/10/18: Issue discovered when trying to run 'synapseImportingPathway' at
+% the end, after this point.  The structure 'S' looks like it's updated
+% between setupExptToBeRun and refreshExptRemainingToBeRun through repeated
+% calls to pushbuttonStartNextIndex, but that (updated) S never outputs
+% here.
+
 setupFigure(S); % draw a number of list boxes and display fixed text
-S = listOfAllExperiments(S);
-% everything done
-uiwait;
-% cleanup
-if S.enableMultiThread; delete(gcp); end
-synapseDisconnect(S.syn);
+S = listOfAllExperiments(S); 
+uiwait;  % everything set up now. wait for button pushes or exit.
+% END OF PROGRAM %
+if S.enableMultiThread; delete(gcp); end % important to turn off multithreading; if crashed, will need to manually stop this!
+synapseDisconnect(S.syn); % disconnect from synapse
+if ~isempty(S.exptIndexLast') % this will import the last expt recorded before exiting.
+    [date,indexLast] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndexLast);
+    synapseImportingPathway(date,indexLast,S.recordingComputer,S.recordingComputerSubfolder);
+end
+% ! TODO ! % We may want to run fileMaint (when finished as a function)
+% before exiting to be sure we've copied, imported, and analyzed everything
+% for the day.  We could then use this point to run analyses that use the
+% whole day. . . . and upload plots to Slack?!? . . . or add this day to a
+% dynamic summary plot (with statistical power calculations!).
 
-
-
-
-
-  
 
 function [S] = pushbuttonStartNextIndex(varargin)
 S = varargin{3};
+
 if isempty(S.ExperimentsRemaining.exptDescriptionText)
-    return;   %stop user from otherwise running nothing.
+    % the following three lines 
+    lastEntryID = fetch(S.dbConn,'SELECT MAX(exptID) FROM masterexpt');
+    exptDate = fetch(S.dbConn,['SELECT exptDate FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
+    exptIndex = fetch(S.dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
+
+    synapseImportingPathway(date,indexLast,S.recordingComputer,S.recordingComputerSubfolder);
+    
+    
+    uiresume;
+    return;   %stop user from running nothing.
 end
 userListSelection = get(S.ls,'Value'); % Get the user's choice.
 S.nExptsRecordedToday = S.nExptsRecordedToday+1;
@@ -117,58 +115,40 @@ S.listOfExperimentsRunToday{S.nExptsRecordedToday} = S.ExperimentsRemaining.expt
 S.tempnTrials = S.ExperimentsRemaining.nTrialsIndexArray(userListSelection);
 S.tempnStims = S.ExperimentsRemaining.nStimsIndexArray(userListSelection);
 S.ExperimentsRemaining.exptDescriptionText(userListSelection) = []; % remove the user selected expt from list
-S.ExperimentsRemaining.nTrialsIndexArray(userListSelection) = []; % remove the user selected expt from list
-S.ExperimentsRemaining.nStimsIndexArray(userListSelection) = []; % remove the user selected expt from list
+S.ExperimentsRemaining.nTrialsIndexArray(userListSelection) = []; % remove the user selected expt parameters from list
+S.ExperimentsRemaining.nStimsIndexArray(userListSelection) = []; % remove the user selected expt parameters from list
 S = refreshExptRemainingToBeRun(S);
 updateDynamicDisplayBox('Creating new notebook entry');
 S = createNewNotebookEntry(S); % create notebook entry
 pause(.5);
-
-% %!!!TODO!!!%%%%%%%%%%%%%!!!!!!!!!!!!!!!!!!!!!!!!!!!! ? shut off other buttons?
-
+% !!!TODO!!! % shut off other buttons?
 updateDynamicDisplayBox('loading in parameter set');
-S = parameterCreationProcess(S); % create a parameter set and load it in.  
-% This also now starts recording and playing sequence automatically
-
-
-
-
+S = parameterCreationProcess(S); % create a parameter set and load it in. This starts recording and playing sequence automatically.
 % Here we use parallel computing to run a command to setup (and wait for)
-% next expt while it analyzes the last one.  Need to set up a few
-% parameters instead of passing the 'S' object that we update.
+% next expt while it analyzes the last one.
 [date,~] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
 if ~isempty(S.exptIndexLast')
     [~,indexLast] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndexLast);
 else
-    indexLast = '-1'; %this could hand synapseImportingPathway a -1 val
+    indexLast = '-1'; %this will hand synapseImportingPathway a -1 val
     % if we haven't run anything previously today which will tell it to
     % skip analysis
 end
-synapseObj = S.syn;
-recordingComputer = S.recordingComputer;
-subfolder = S.recordingComputerSubfolder;
-tempnStims = S.tempnStims;
-tempnTrials = S.tempnTrials;
 
-if S.enableMultiThread
+if S.enableMultiThread % this will make program unavailable until *both* 1 and 2 are finished completely.
     parfor i = 1:2
         if i == 1
-            synapseRecordingPathway(synapseObj,tempnStims,tempnTrials);
+            synapseRecordingPathway(S.syn,S.tempnStims,S.tempnTrials); %#ok<*PFBNS>
         else
-            synapseImportingPathway(date,indexLast,recordingComputer,subfolder);
+            synapseImportingPathway(date,indexLast,S.recordingComputer,S.recordingComputerSubfolder);
         end
     end
 else
-    
-    synapseRecordingPathway(synapseObj,tempnStims,tempnTrials);
-    %synapseImportingPathway(date,indexLast,recordingComputer,subfolder);
-    %%might take too long to analyze in sequence
+    % will take too long to analyze in sequence if we're not running parallel threads
+    synapseRecordingPathway(S.syn,S.tempnStims,S.tempnTrials);
+    %synapseImportingPathway(date,indexLast,recordingComputer,subfolder); 
 end
-
-
 updateDynamicDisplayBox('finished recording!','black');
-% === path to start synapse, collect data, wait for that to finish complete
-% here
 pause(1);
 updateDynamicDisplayBox('','black');
 pause(1);
@@ -179,61 +159,32 @@ S = refreshIndicesCompletedToday(S);
 S = listOfAllExperiments(S);
 updateDynamicDisplayBox('','black');
 
-%%%%!!!!!!!!!!!!!!!!!!!!!!!!!!!! ? reenable other buttons once we're done?
-
-% % % TESTING
-% % S.recordingComputer = '144.92.237.187';
-% % S.syn = SynapseAPI(S.recordingComputer);
-% % S.syn.setMode(0); %need to set mode to idle to modify parameters.
-% % S.syn.getModeStr()
-% for i=1:40  %blinky.  maybe do this while Synapse is running?
-% updateDynamicDisplayBox(S.listOfExperimentsRunToday{S.nExptsRecordedToday},'red');
-% pause(.1);
-% updateDynamicDisplayBox(S.listOfExperimentsRunToday{S.nExptsRecordedToday},'black');
-% pause(.1);
-% end
-
-
-
 
 function synapseRecordingPathway(varargin)
-% S = varargin{1};
 synapseObj = varargin{1};
 tempnStims = varargin{2};
 tempnTrials = varargin{3};
-
-% date = varargin{2};
-% index = varargin{3};
-% === path to start synapse, collect data, wait for that to finish
-%[date,index] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
-% synapseObj.setCurrentBlock([date '-' index]);
-% waitingForUserToStartRecording = true; % recent change: program auto-starts so should already be '3'
-% while waitingForUserToStartRecording
-%     updateDynamicDisplayBox('waiting for user to record');
-%     pause(1);
-%     if synapseObj.getMode() == 3
-%         waitingForUserToStartRecording = false;
-%     end
-% end
 waitingForUserToFinishRecording = true;
-if tempnStims == -1
-    pause(610); % this will wait 10 minutes before proceeding (for spon mode)    
+updateDynamicDisplayBox('waiting for recording to complete');
+% spontaneous mode
+% TODO % may want to allow time adjustments
+if tempnStims == -1 % represents 'spontaneous' mode
+    pause(610); % this will wait 10 minutes before proceeding (for spon mode)
+    % !!TODO!! % make this a parameter, setting, or something other than a
+    % hard-coded number!!
+    waitingForUserToFinishRecording = false;
+    synapseObj.setMode(0);
 end
+% evoked / stimulation mode
 while waitingForUserToFinishRecording
     progress = synapseObj.getParameterValue('ParSeq1','Progress'); % this will return which trial the sequence is in.
+    % at the end of the trials, it will return 0
+    pause(2); % scan the server every 2 seconds.  pause here (instead of end) so that at least 2 seconds of recording goes by after sequence finishes
     if progress == 0
-        synapseObj.setMode(0) % a bit convoluted !!! TODO: might not need bottom section, just end here.
-    end
-
-    updateDynamicDisplayBox('waiting for recording to complete');
-    pause(1);
-    if synapseObj.getMode() == 0
+        synapseObj.setMode(0);
         waitingForUserToFinishRecording = false;
     end
 end
-synapseObj.setMode(0);
-
-
 
 
 function synapseImportingPathway(varargin)
@@ -245,33 +196,28 @@ function synapseImportingPathway(varargin)
 % recordingComputer = '144.92.237.187';
 % subfolder = '\c\Data\';
 
-% may want to add try/catch so if a single day doesn't analyze we don't shit ourselves
+% TODO % add error handling so if a single day doesn't analyze we don't shit ourselves
 date = varargin{1};
 index = varargin{2}; %this is set to the previous index (see call)
 recordingComputer = varargin{3};
 subfolder = varargin{4};
-
 if ~isempty(strfind(index,'-1')); return; end; % don't run on first index - if nothing has been run today yet.
 dirStrRecSource = ['\\' recordingComputer subfolder '20' date(1:2) '\' date '-' index '\'];
-% WARNING! the following shouldn't be hard coded as they are.  Pass as parameters
-% to synapseImportingPathway
+% TODO %  the following shouldn't be hard coded as they are.  Pass as parameters to synapseImportingPathway
 dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
 dirStrAnalysis = ['M:\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
-% %% STEP 1 MOVE RECORDED DATA TO RAW %%
-moveDataRecToRaw(dirStrRecSource,dirStrRawData);
-% %% STEP 2 IMPORT 
+% MOVE RECORDED DATA TO RAW %
+moveDataRecToRaw(dirStrRecSource,dirStrRawData); % move recorded files to raw data server
+% IMPORT DATA % 
 dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
 if isempty(dirCheck)
     display('Handing info to existing importData function.  This will take a few minutes.');
-    importDataSynapse(date,index) % !!! still testing!!! be careful!!!
-
+    importDataSynapse(date,index)
 else
     display('Data already imported.');
 end
-
-% %% COPY MOVIES %% this should be redundant since we now copy all files above
-% but it's little cost to just double check movie file location, so I'll
-% leave this for now.  8/30/18 took this out.  if everything is fine, remove
+% COPY MOVIES % 
+% TODO % this should be redundant since we now copy all files above but it's little cost to just double check movie file location, so I'll leave this for now
 vidFileName = [];
 videoFileTypesToLookFor = {'.avi','.'};
 videoFound = false;
@@ -304,14 +250,12 @@ if videoFound == false;
     end
 end
 
-% %% GRIDIFICATION %%
+% GRIDIFICATION FOR VIDEO ANALYSIS %
 repeatedAttempts = 1;
 maxAttempts = 4;
 if videoFound == false % no video?  can't run
     display(['No video found in ' dirStrRawData '!']);
 elseif isempty(dir([vidFileName '-framegrid.mat']))
-    % if grid isn't done, or user wants to rerun it anyway create the frame 
-    % grid!  this takes a while.
     while repeatedAttempts < maxAttempts
         try
             display('attempting to run mmread on video...')
@@ -324,19 +268,6 @@ elseif isempty(dir([vidFileName '-framegrid.mat']))
     end
 end
 
-
-
-% test
-% S.exptDate = '18831'
-% S.exptIndex = '000'
-% S.tempnStims = 5
-% S.tempnTrials = 1
-% S.tempnStims = -1
-% S.tempnTrials = 1
-% S.syn.setMode(0);
-% S.syn.setMode(2);
-
-% 8/30/18 TODO: add auto start sequence file below !!!!!!!!!!!!!!!!!!!!!!
 
 function [S] = parameterCreationProcess(varargin) 
 S = varargin{1};

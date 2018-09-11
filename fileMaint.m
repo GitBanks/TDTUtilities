@@ -43,7 +43,7 @@ for iList = 1:length(listOfAnimalExpts)
     else
         display('Data already imported.');
     end
-    % %% STEP 3 (sadly) move to W
+    % %% STEP 3 (sadly) move to W (sadly because analyzed data are going to 'raw data' storage zone)
     if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\'],'dir')
         mkdir(['W:\Data\PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
         display(['making dir: W:\Data\PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
@@ -64,4 +64,14 @@ for iList = 1:length(listOfAnimalExpts)
             copyfile([dirStrAnalysis currentDir(iDir).name],['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\' currentDir(iDir).name])
         end
     end
+    
+    
+    % add this, then run
+   % videoFrameGridMakerSynapse(fileName);
+    
+    
+    
+    
+    
+    
 end

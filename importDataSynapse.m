@@ -21,6 +21,8 @@ postStim = 500;
 % loading ephys data
 display('Loading in raw data.  This sometimes takes a while.');
 data = TDTbin2mat(dirStrRawData); % this step may take a while depending on how long the recording is.  We can limit the length if necessary,
+% data = TDTbin2mat(dirStrRawData,'TYPE',{'epocs'}); consider this format with
+% the limited 'TYPE' could be useful 
 display('Loading complete.');
 
 % %not sure if necessary? cross verify with whether it found trials or spon
