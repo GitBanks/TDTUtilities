@@ -94,12 +94,11 @@ end
 % have been run:
 % cellfun(@unique,listOfAnimalExpts)
 for i =1:length(listOfAnimalExpts)
-    a(i) = str2num(listOfAnimalExpts{i}(1:5));
+    a = str2num(listOfAnimalExpts{i}(1:5))
+
 end
-b = unique(a)';
-for i = 1:length(b)
-    videoMovementScoreByGridSynapse(animal,num2str(b(i)))
-end
+% videoMovementScoreByGridSynapse(animalName,formatDateFive)
+
 
 
 

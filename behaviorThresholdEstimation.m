@@ -45,17 +45,18 @@ if strcmp(choice,'Let me pick')
     display(['Changing thresh from estimated ' num2str(threshEst) ' to ' num2str(exp(adjustedThresh))]);
     threshEst = exp(adjustedThresh);
 end
-
+close all
 % old plotting system
 nIndices = length(experimentInfo);
 scrsz = get(0,'ScreenSize');
 figure('Position',[1 scrsz(4)*0.1 scrsz(3) (scrsz(4)/6*nIndices*0.6)]);
 movegui(gcf,'north');
 for iPlot = 1:nIndices
-    xvals = experimentInfo(iPlot).frameTimeStamps;
+    minVal = min([length(experimentInfo(iPlot).frameTimeStamps) length(experimentInfo(iPlot).framesRaw)]);
+    xvals = experimentInfo(iPlot).frameTimeStamps(1:minVal);
     %xvals = 1:length(Experiment(iPlot).smoothed);
     subtightplot(nIndices,1,iPlot);
-    plot(xvals,experimentInfo(iPlot).framesRaw(1:length(xvals)));
+    plot(xvals,experimentInfo(iPlot).framesRaw(1:minVal));
     hold on;
     plot([xvals(1) xvals(end)],[threshEst,threshEst],'--r');
     hold on;
@@ -65,4 +66,5 @@ for iPlot = 1:nIndices
 %             ylim([0,0.02]);
     ylim([0,7000]);
     xlim([0,3600]);
+    drawnow;
 end

@@ -91,11 +91,10 @@ for iList = 1:length(operationList)
     maxVal = prctile(tempCatAllGrids,99);
     minVal = prctile(tempCatAllGrids,1);
     frameGrid = (frameGrid-minVal)/maxVal;
-    % we do this here AFTER prctile has been calculated, etc.
+    %we do this here AFTER prctile has been calculated, etc.
     if size(frameTimeStamps,2) > size(frameGrid,3)
-        adjVal = abs(size(frameTimeStamps,2)-size(frameGrid,3));
-        frameGrid = cat(3,zeros(10,10,adjVal),frameGrid);
-        experimentInfo(iList).frames = [zeros(1,adjVal) experimentInfo(iList).frames];
+        frameGrid = cat(3,zeros(10,10,abs(size(frameTimeStamps,2)-size(frameGrid,3))),frameGrid);
+        experimentInfo(iList).frames = [ experimentInfo(iList).frames]
     end
     for iGrid = 1:size(heatMapMoveFinal,1)
         for jGrid = 1:size(heatMapMoveFinal,2)
