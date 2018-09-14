@@ -9,6 +9,7 @@
 animal = 'DREADD07';
 listOfAnimalExpts = getExperimentsByAnimal(animal,'Spon');
 forceReimport = 0;
+forceRegrid = 0;
 
 % % possibly use in getBatchParams program?
 % for iList = 1:length(listOfAnimalExpts)
@@ -64,14 +65,24 @@ for iList = 1:length(listOfAnimalExpts)
             copyfile([dirStrAnalysis currentDir(iDir).name],['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\' currentDir(iDir).name])
         end
     end
-    
-    
-    % add this, then run
-   % videoFrameGridMakerSynapse(fileName);
-    
-    
-    
-    
-    
-    
+    % MOVIES: grid, prep % 
+    vidFile = dir([dirStrRawData '*.avi']); % simplified version for Synapse
+    if isempty(vidFile)
+        error('video file not found!  This program expects video!')
+    end
+    vidFilePath = [dirStrRawData vidFile.name];
+    repeatedAttempts = 1;
+    maxAttempts = 4;
+    if isempty(dir([dirStrRawData '-framegrid.mat']))|| forceRegrid
+        while repeatedAttempts < maxAttempts
+            try
+                display('attempting to run mmread on video...')
+                videoFrameGridMakerSynapse(vidFilePath);
+                repeatedAttempts = maxAttempts;
+            catch
+                display(['mmread is slightly unstable.  Let''s try ' num2str(maxAttempts-repeatedAttempts) ' more times.' ])
+                repeatedAttempts = repeatedAttempts+1;
+            end
+        end
+    end
 end

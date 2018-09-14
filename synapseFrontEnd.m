@@ -83,6 +83,7 @@ uiwait(S.fh);  % everything set up now. wait for button pushes or exit.
 % END OF PROGRAM %
 if S.enableMultiThread; delete(gcp); end % important to turn off multithreading; if crashed, will need to manually stop this!
 synapseDisconnect(S.syn); % disconnect from synapse
+videoMovementScoreByGridSynapse(animalName,formatDateFive)
 % if ~isempty(S.exptIndexLast') % this will import the last expt recorded before exiting.
 %     [date,indexLast] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndexLast);
 %     synapseImportingPathway(date,indexLast,S.recordingComputer,S.recordingComputerSubfolder);
@@ -214,50 +215,19 @@ if isempty(dirCheck)
 else
     display('Data already imported.');
 end
-% COPY MOVIES % 
-% TODO % this should be redundant since we now copy all files above but it's little cost to just double check movie file location, so I'll leave this for now
-vidFileName = [];
-videoFileTypesToLookFor = {'.avi','.'};
-videoFound = false;
-for iSearch = 1:length(videoFileTypesToLookFor)
-    dirCheck = dir([dirStrRawData '*' videoFileTypesToLookFor{iSearch}]);  % TODO: should we also look for AVI files?
-    for iDir = 1:length(dirCheck)
-        if dirCheck(iDir).isdir == false && dirCheck(iDir).bytes > 1000
-            display('found a movie already on server');
-            videoFound = true;
-            vidFileName = [dirStrRawData dirCheck(iDir).name];
-        end
-    end
+% MOVIES: grid, prep % 
+vidFile = dir([dirStrRawData '*.avi']); % simplified version for Synapse
+if isempty(vidFile)
+    error('video file not found!  This program expects video!')
 end
-if videoFound == false;
-    display('Since we didn''t find a movie on server, let''s copy it now.');
-    for iSearch = 1:length(videoFileTypesToLookFor)
-        dirCheck = dir([dirStrRecSource '*' videoFileTypesToLookFor{iSearch}]);
-        for iDir = 1:length(dirCheck)
-            if dirCheck(iDir).isdir == false && dirCheck(iDir).bytes > 1000
-                display('Copying now');
-                source = [dirStrRecSource dirCheck(iDir).name];
-                vidFileName = [dirStrRawData dirCheck(iDir).name];
-                if ~exist(dirStrRawData,'dir')
-                    mkdir(dirStrRawData);
-                end
-                copyfile(source,vidFileName);
-                videoFound = true;
-            end
-        end
-    end
-end
-
-% GRIDIFICATION FOR VIDEO ANALYSIS %
+vidFilePath = [dirStrRawData vidFile.name];
 repeatedAttempts = 1;
 maxAttempts = 4;
-if videoFound == false % no video?  can't run
-    display(['No video found in ' dirStrRawData '!']);
-elseif isempty(dir([vidFileName '-framegrid.mat']))
+if isempty(dir([dirStrRawData '-framegrid.mat']))
     while repeatedAttempts < maxAttempts
         try
             display('attempting to run mmread on video...')
-            videoFrameGridMakerSynapse(vidFileName);
+            videoFrameGridMakerSynapse(vidFilePath);
             repeatedAttempts = maxAttempts;
         catch
             display(['mmread is slightly unstable.  Let''s try ' num2str(maxAttempts-repeatedAttempts) ' more times.' ])

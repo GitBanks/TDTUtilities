@@ -89,11 +89,18 @@ while startNotFilledIn
     startFillIndex = startFillIndex+1;
 end
 newFrameTimeStamps = [flip(beginning) frameTimeStamps'];
-if (length(timeGrid) - length(newFrameTimeStamps)) == length(find(frameTimeStamps(end) < timeGrid))
+if (length(timeGrid) - length(newFrameTimeStamps)) - length(find(frameTimeStamps(end) < timeGrid)) < 2
     for iFill = 1:length(find(frameTimeStamps(end) < timeGrid))
         endFill(iFill) = frameTimeStamps(end)+mean(diff(frameTimeStamps))*iFill;
     end
     newFrameTimeStamps = [newFrameTimeStamps endFill];
+    if length(timeGrid) ~= length(newFrameTimeStamps) %if we're off by one, figure out which end to stick the last frame
+        if newFrameTimeStamps(1)-timeGrid(1)>newFrameTimeStamps(end)-timeGrid(end)
+            newFrameTimeStamps = [0.001 newFrameTimeStamps]; % if more time exists at beginning of time stamps
+        else
+            newFrameTimeStamps = [newFrameTimeStamps newFrameTimeStamps(end)+mean(diff(frameTimeStamps))];
+        end
+    end
 else
     warning('something is wrong with video alignment!');    
 end
