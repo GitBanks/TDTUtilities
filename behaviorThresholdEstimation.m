@@ -1,4 +1,10 @@
 function [threshEst] = behaviorThresholdEstimation(experimentInfo)
+% Given: a structure containing arrays of calculated movement score
+% Return: a threshold estimate.  Also plot a histogram and request user
+% input / evaluation.
+% this is the previous way movement or nonmovement were determined.  Some
+% analysis still expects movement and nonmovement inputs, so this will
+% fulfill that need, and provide a reference comparisons.
 estimationHist = cat(2,experimentInfo(1:4).framesRaw);
 estimationHist = log(estimationHist);
 estimationHist = estimationHist(estimationHist>0);
@@ -54,7 +60,6 @@ movegui(gcf,'north');
 for iPlot = 1:nIndices
     minVal = min([length(experimentInfo(iPlot).frameTimeStamps) length(experimentInfo(iPlot).framesRaw)]);
     xvals = experimentInfo(iPlot).frameTimeStamps(1:minVal);
-    %xvals = 1:length(Experiment(iPlot).smoothed);
     subtightplot(nIndices,1,iPlot);
     plot(xvals,experimentInfo(iPlot).framesRaw(1:minVal));
     hold on;
@@ -65,6 +70,6 @@ for iPlot = 1:nIndices
 %             ylim([0,threshEst*5]);
 %             ylim([0,0.02]);
     ylim([0,7000]);
-    xlim([0,3600]);
+    xlim([0,xvals(end)]);
     drawnow;
 end

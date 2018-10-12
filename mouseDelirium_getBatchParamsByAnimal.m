@@ -1,6 +1,12 @@
 function [batchParams] = mouseDelirium_getBatchParamsByAnimal(animalName)
+% STUB/WIP: mouseDelirium_getBatchParamsByAnimal
+% original method is a cumbersome nightmare.  All this info *should* be in
+% database! The last thing to add is drug info (like LPS (NOT IN DB!)) -
+% enter it into the DB.  Once it's in there, we can provide
+% 'batchParams' as desired / as called.
 % test info
 % animalName = 'DREADD07'
+
 
 batchParams = struct;
 outPath = '\\MEMORYBANKS\Data\mouseEEG\videoScoring\';

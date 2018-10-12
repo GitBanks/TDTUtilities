@@ -21,7 +21,6 @@ function videoMovementScoreByGridSynapse(animal,exptDate)
 % [threshEst] = behaviorThresholdEstimation(experimentInfo);
 % [tempBehavParams] = fillTempBehavParams(experimentInfo)
 % [listOfAnimalExpts] = getExperimentsByAnimal(animal,'Spon')
-
 % test params
 % animal = 'DREADD07';
 % exptDate = '18907';
@@ -35,6 +34,9 @@ display(['Loading ' exptDate ' from database.']);
 listOfAnimalExpts = getExperimentsByAnimal(animal,'Spon');
 listIndex = 1;
 for iDays = 1:length(listOfAnimalExpts)
+    if isempty(listOfAnimalExpts{iDays,1})
+        error('This step is only set to run on spontaneous stuff for now.')
+    end
     if ~isempty(strfind(listOfAnimalExpts{iDays,1}(1:5),exptDate))
         operationList{listIndex} = listOfAnimalExpts{iDays,1};
         framesFile = dir([rootDir operationList{listIndex} '\*framegrid*']);

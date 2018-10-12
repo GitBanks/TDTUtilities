@@ -1,5 +1,7 @@
 function setElectrodeLocationFromAnimal(originalAnimal,targetAnimal)
-% for test
+% Copies electrode map and description from one animal to another in the 
+% database, because most maps are standardized and replicated.
+% test example
 % originalAnimal = 'LFP16';
 % targetAnimal = 'LFP17';
 dbConn = dbConnect(); %handle this better?  close db at end?

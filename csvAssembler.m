@@ -4,6 +4,9 @@ function csvAssembler(date,index,nStimTypes,nTrialsPerStim)
 % e.g., with 5 unique stims and 100 presentations of each, it will create a 
 % list of these 500, shuffle them, and write them to the expected folder 
 % with the name {date}-{index}
+% Calls:
+% [date,index] = fixDateIndexToFiveForSynapse(date,index);
+% trialPattern = createTrialPattern(nStimTypes,nTrialsPerStim);
 
 %date = '18711';
 %index = '000';

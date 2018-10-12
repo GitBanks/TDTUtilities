@@ -1,12 +1,12 @@
 function videoFrameGridMakerSynapse(fileName)
 % GIVEN: a file location
-% DO: load video file; reduce each frame to a grid;
-
+% DO: load video file; reduce each frame to a grid; save grid file to
+% location
 % example parameter:
 % fileName = 'W:\Data\PassiveEphys\2018\18907-001\2018_18907-001_Cam1.avi';
-
 % change in Synapse version: analyzed data should be put in 'memorybanks'
 % or appropriate derived or analysis path.
+
 saveDirRoot = '\\MEMORYBANKS\Data\PassiveEphys\';
 delims = strfind(fileName,filesep);
 rawPath = fileName(1:delims(end));

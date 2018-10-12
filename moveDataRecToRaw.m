@@ -1,5 +1,6 @@
 function moveDataRecToRaw(dirStrRecData,dirStrRawData)
-% just move all files to raw data server
+% just move all named recorded files to our secure raw data server, with a
+% bit of verification and cleanup
 
 if exist(dirStrRecData,'dir') == 7
     recDataDir = dir(dirStrRecData);
