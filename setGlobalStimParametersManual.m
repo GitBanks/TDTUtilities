@@ -6,11 +6,12 @@ exptDate = '18907';
 exptList = getExperimentsByAnimalAndDate(animalName,exptDate);
 
 dbConn = dbConnect();
-globalParamsAvailable = unique(fetch(dbConn,['SELECT paramfield FROM global_stimparams'])); 
+globalParamsAvailable = unique(fetch(dbConn,'SELECT paramfield FROM global_stimparams')); 
 rememberLastChoices = true;
 
 
 lastChoice = '0';
+needToSetDay = 'N';
 for iIndex = 1:length(exptList)
     exptIndex = exptList{iIndex,1}(7:9);
     drugGuess = strsplit(exptList{iIndex,2}{:},' ');
@@ -28,13 +29,13 @@ for iIndex = 1:length(exptList)
     end
     % second, look to see if they're in the global stim params
     [nGlobalPars,globalParNames,globalParVals]= getGlobalStimParams(exptDate,exptIndex);
-    needToSetDay = 'N';
+    
     for iParams = 1:size(matches,1)
         if isempty(globalParNames)
             globalParNames = {''};
         end
         if ~isempty(strfind(globalParNames{1},matches{iParams,2}))
-            display(['notebook has ' globalParNames{1} ' recorded with a value of ' num2str(globalParVals) ' which matches notebook description.'])
+            display(['notebook has ' globalParNames{1} ' recorded with a value of ' num2str(globalParVals(1)) ' which matches notebook description.'])
         else
             if ~exist('remembered','var')
                 display(['Global parameter not found! We think it should be ' matches{1,2}])
@@ -80,3 +81,4 @@ end
 
 
 
+close(dbConn);

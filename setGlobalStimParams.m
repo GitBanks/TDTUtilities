@@ -12,5 +12,11 @@ masterResult = fetch(dbConn,['select exptID from masterexpt where exptDate=''' h
 exptID = masterResult{1,1};
 insertGlobalStimParams = ['insert into global_stimparams (exptID,paramfield,paramvalue) values (' num2str(exptID)  ','''  globalParNames ''',' num2str(globalParVals) ')'];
 exec(dbConn,insertGlobalStimParams);
-updateStimInfoSynapse(exptDate,exptIndex);
+try
+    updateStimInfoSynapse(exptDate,exptIndex);
+catch
+    % Data must be handled differently pre-synapse = I didn't write
+    % anything for the Brainware data yet.
+    display('Error updating stim table with new global stim params.  Data must be handled differently pre-synapse.  Try reimporting.')
+end
 close(dbConn);

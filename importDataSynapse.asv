@@ -180,7 +180,7 @@ for iSignal = 1:length(signalTypes)
                 % caught up
                 endpad = find(length(data.streams.(streamList{iList}).data)<stimRange(iStim,:));
                 if length(endpad) > 0
-                    ephysData(:,:,iStim) = cat(2,data.streams.(streamList{iList}).data(:,stimRange(iStim,1):end),zeros(nChans,length(endpad)));
+                    ephysData(:,:,iStim) = data.streams.(streamList{iList}).data(:,stimRange(iStim,1):end);
                 else
                     ephysData(:,:,iStim) = data.streams.(streamList{iList}).data(:,stimRange(iStim,:));
                 end

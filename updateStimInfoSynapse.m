@@ -53,7 +53,16 @@ if ~isempty(stimInfo.scalars)
             stimIncrement = stimIncrement+1;
         end
     end
-    
+    % many existing programs are expecting del and dur tags in the stim 
+    % info.  Add that here.  In the future, we should toggle the dur and
+    % del based on how we're chopping up the continuous data
+    stimPars{stimIncrement} = 'LED_stim_del';
+    stimIncrement = stimIncrement+1;
+    nStimParams = nStimParams+1;
+    uniqueStim(nStimParams,:) = 500;
+    stimPars{stimIncrement} = 'LED_train_dur';
+    nStimParams = nStimParams+1;
+    uniqueStim(nStimParams,:) = 1000;
     % % !!! TODO !!! % The above is not at all the correct way to do that
     % the following from Synapse API will help pull parameter names
     % gizmo_names = syn.getGizmoNames()
@@ -61,7 +70,6 @@ if ~isempty(stimInfo.scalars)
     % gizmo = gizmo_names{i}
     % params = syn.getParameterNames(gizmo);
     % end
-
 else % if there is no 'scalar' field, it's a spontaneous recording.  set that up here.
     nTrials = 1;
     nStimParams = 1;
@@ -96,7 +104,8 @@ nDistinctStim = size(newStimIndx,2);
 newStimIndx(nDistinctStim+1) = nTrials+1;
 trialList(1:nTrials) = struct('uniqueStimID',0,'dataFile','','origTrialNum',0,'trialTime',0);
 for iTrial = 1:nTrials
-    trialList(iTrial).gain = ephysResult{1,3};
+    trialList(iTrial).gain = 1;
+    %trialList(iTrial).gain = ephysResult{1,3};
     trialList(iTrial).offset = 0;
     % behavioral functionality disabled
 end

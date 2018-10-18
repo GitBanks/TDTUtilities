@@ -1,5 +1,5 @@
-% fileMaint.m
-% A utility script to run that replicates the import data pathway in
+function fileMaint(animal)
+% A utility  to run that replicates the import data pathway in
 % synapseFrontEnd
 % 1. move files
 % 2. import data
@@ -13,22 +13,25 @@
 % WARNING a few locations are hardcoded!!!
 
 
-animal = 'DREADD07';
+%animal = 'DREADD07';
 %listOfAnimalExpts = getExperimentsByAnimal(animal,'Spon');
 %animal = 'LFP18';
 listOfAnimalExpts = getExperimentsByAnimal(animal);
 
+
 % animal = 'LFPU01';
 % listOfAnimalExpts = getExperimentsByAnimal(animal);
-forceReimport = 1;
+forceReimport = 0;
 forceRegrid = 0;
+forceReimportTrials = 0;
+
 
 % % possibly use in getBatchParams program?
 % for iList = 1:length(listOfAnimalExpts)
 %     b(iList,1) = str2num(listOfAnimalExpts{iList,1}(1:5));
 % end
 % c = unique(b)
-
+descOfAnimalExpts = listOfAnimalExpts(:,2);
 listOfAnimalExpts = listOfAnimalExpts(:,1);
 
 if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\'],'dir')
@@ -36,7 +39,7 @@ if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\'],'dir')
     display(['making dir: W:\Data\PassiveEphys\EEG animal data\' animal '\']);
 end
 
-for iList = 45:length(listOfAnimalExpts)
+for iList = 1:length(listOfAnimalExpts)
 %for iList = 26:length(listOfAnimalExpts)
     date = listOfAnimalExpts{iList}(1:5);
     index = listOfAnimalExpts{iList}(7:9);
@@ -55,8 +58,9 @@ for iList = 45:length(listOfAnimalExpts)
         catch
             display([date '-' index 'not imported!!']);
         end
-    else
-        display('Data already imported.');
+    elseif forceReimportTrials
+        display('Data already imported, but updating trialinfo');
+        updateStimInfoSynapse(date,index);
     end
     % %% STEP 3 (sadly) move to W (sadly because analyzed data are going to 'raw data' storage zone)
     if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\'],'dir')
@@ -74,7 +78,7 @@ for iList = 45:length(listOfAnimalExpts)
             clear ephysData
             clear DSephysData
         end
-        if strfind(currentDir(iDir).name,'trial') >0;
+        if strfind(currentDir(iDir).name,'trial') >0
             display(['Copying ' currentDir(iDir).name]);
             copyfile([dirStrAnalysis currentDir(iDir).name],['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\' currentDir(iDir).name])
         end
@@ -99,7 +103,25 @@ for iList = 45:length(listOfAnimalExpts)
             end
         end
     end
+    % %% MUA CHECK %% might want to fix up 'artifact rejection' option - some need it, some don't
+    if ~isempty(strfind(descOfAnimalExpts{iList}{:},'Stim'))
+        display('Running MUA analysis')
+        dirCheck = dir([dirStrAnalysis '*TrshldMUA_Stim*']);
+        if isempty(dirCheck)
+            analyzeMUAthresholdArtifactRejection('PassiveEphys',date,index,index,0,1,0,1,0,-.5,1.5,-.001,3,2,1,true);
+        else
+            display([date '-' index ' analyze MUA already done.']);
+        end
+    end
 end
+
+
+
+
+
+
+
+
 
 % this section is run after all indices for a whole day have been
 for i =1:length(listOfAnimalExpts)
