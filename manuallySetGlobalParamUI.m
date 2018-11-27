@@ -1,6 +1,6 @@
 function manuallySetGlobalParamUI(animalName)
 
-animalName = 'Dreadd07';
+% animalName = 'Dreadd07';
 
 dbConn = dbConnect();
 S.Preselects = unique(fetch(dbConn,'SELECT paramfield FROM global_stimparams')); 

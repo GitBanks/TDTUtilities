@@ -7,6 +7,9 @@ function importDataSynapse(exptDate,exptIndex)
 % exptIndex = '000';
 % exptDate = '18820';
 % exptIndex = '000';
+% exptDate = '18o19';
+% exptIndex = '005';
+
 % dirStrRawData = 'W:\Data\PassiveEphys\2018\18o01-001\'; %input
 % TODO / WIP works, but some parameters not handled appropriately (so
 % analyze MUA will not work)
@@ -167,6 +170,7 @@ for iSignal = 1:length(signalTypes)
                 display('Done finding trial times in stream');
             else
                 display('Using continuous stream');
+                stimRange = zeros(1,length(data.streams.(streamList{iList}).data));
                 stimRange(1,:) = 1:length(data.streams.(streamList{iList}).data);
             end
             
@@ -196,7 +200,7 @@ for iSignal = 1:length(signalTypes)
                 dataFileName = [dirStrAnalysis exptDate '-' exptIndex '_' 'data0']; % 0 is hard coded because EEG data will be small, or should otherwise taken from the data.stream on it's own
             end
             save(dataFileName,'ephysData','dT','-v7.3');
-            clear ephysData dT;
+            clear ephysData dT stimRange;
         end
     end
 end

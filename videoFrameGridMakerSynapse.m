@@ -93,7 +93,9 @@ if (length(timeGrid) - length(newFrameTimeStamps)) - length(find(frameTimeStamps
     for iFill = 1:length(find(frameTimeStamps(end) < timeGrid))
         endFill(iFill) = frameTimeStamps(end)+mean(diff(frameTimeStamps))*iFill;
     end
-    newFrameTimeStamps = [newFrameTimeStamps endFill];
+    if exist('endfill','var')
+        newFrameTimeStamps = [newFrameTimeStamps endFill];
+    end
     if length(timeGrid) ~= length(newFrameTimeStamps) %if we're off by one, figure out which end to stick the last frame
         if newFrameTimeStamps(1)-timeGrid(1)>newFrameTimeStamps(end)-timeGrid(end)
             newFrameTimeStamps = [0.001 newFrameTimeStamps]; % if more time exists at beginning of time stamps
@@ -104,7 +106,7 @@ if (length(timeGrid) - length(newFrameTimeStamps)) - length(find(frameTimeStamps
 else
     warning('something is wrong with video alignment!');    
 end
-frameTimeStamps = newFrameTimeStamps;
+frameTimeStamps = newFrameTimeStamps';
 timeGrid = frameTimeStamps; % not sure which one is used when, get rid of one once we know...
 % some possible integrity checks (if we need them): actualFrameRate should
 % equal mean(diff(frameTimeStamps)); if frameTimeStamps isn't totally equal

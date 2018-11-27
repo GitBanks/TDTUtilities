@@ -134,17 +134,27 @@ else
     % skip analysis
 end
 
+if ~isempty(strfind(S.animalName,'LFP'));
+    sponTime = 610;
+elseif ~isempty(strfind(S.animalName,'EEG'));
+    sponTime = 3610;
+else
+    display('I hope you didn''t plan to run any spontaneous recordings...')
+    sponTime = 610;
+end
+
+
 if S.enableMultiThread % this will make program unavailable until *both* 1 and 2 are finished completely.
     parfor i = 1:2
         if i == 1
-            synapseRecordingPathway(S.syn,S.tempnStims,S.tempnTrials); %#ok<*PFBNS>
+            synapseRecordingPathway(S.syn,S.tempnStims,S.tempnTrials,sponTime); %#ok<*PFBNS>
         else
             synapseImportingPathway(date,indexLast,S.recordingComputer,S.recordingComputerSubfolder);
         end
     end
 else
     % will take too long to analyze in sequence if we're not running parallel threads
-    synapseRecordingPathway(S.syn,S.tempnStims,S.tempnTrials);
+    synapseRecordingPathway(S.syn,S.tempnStims,S.tempnTrials,sponTime);
     %synapseImportingPathway(date,indexLast,recordingComputer,subfolder); 
 end
 updateDynamicDisplayBox('finished recording!','black');
@@ -163,12 +173,13 @@ function synapseRecordingPathway(varargin)
 synapseObj = varargin{1};
 tempnStims = varargin{2};
 tempnTrials = varargin{3};
+sponTime = varargin{4};
 waitingForUserToFinishRecording = true;
 updateDynamicDisplayBox('waiting for recording to complete');
 % spontaneous mode
 % TODO % may want to allow time adjustments
 if tempnStims == -1 % represents 'spontaneous' mode
-    pause(610); % this will wait 10 minutes before proceeding (for spon mode)
+    pause(sponTime); % this will wait 10 minutes before proceeding (for spon mode)
     % !!TODO!! % make this a parameter, setting, or something other than a
     % hard-coded number!!
     waitingForUserToFinishRecording = false;
@@ -244,6 +255,7 @@ countX = 1;
 while ~sequenceUpdated
     csvAssembler(S.exptDate,S.exptIndex,S.tempnStims,S.tempnTrials); %setup trial file (writes to folder)
     [date,index] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex); % need to set tank name here if we're going to just start recording!
+    pause(1);
     S.syn.setCurrentBlock([date '-' index]); % update and send parameters to Synapse
     S.syn.setMode(3); % recording set to auto start (3 is rec).
     pause(2); % reduced this from 4 8/30/18

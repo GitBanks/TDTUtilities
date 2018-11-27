@@ -16,7 +16,10 @@ function fileMaint(animal)
 %animal = 'DREADD07';
 %listOfAnimalExpts = getExperimentsByAnimal(animal,'Spon');
 %animal = 'LFP18';
+%animal = 'EEG55';
+
 listOfAnimalExpts = getExperimentsByAnimal(animal);
+
 
 
 % animal = 'LFPU01';
@@ -25,6 +28,9 @@ forceReimport = 0;
 forceRegrid = 0;
 forceReimportTrials = 0;
 
+% before full automation, we can use this to set drug parameters in the DB
+% so that below we can run
+manuallySetGlobalParamUI(animal);
 
 % % possibly use in getBatchParams program?
 % for iList = 1:length(listOfAnimalExpts)
@@ -33,6 +39,26 @@ forceReimportTrials = 0;
 % c = unique(b)
 descOfAnimalExpts = listOfAnimalExpts(:,2);
 listOfAnimalExpts = listOfAnimalExpts(:,1);
+
+
+% check to see if probe has been entered, and if not prompt user for that
+% info
+try
+    [electrodeLocation] = getElectrodeLocationFromDateIndex(listOfAnimalExpts{1}(1:5),listOfAnimalExpts{1}(7:9));
+catch
+    display('Probe information not found.  Using template.');
+    display('WARNING!!! if probe configuration has changed, stop now and correct in database!!!');
+    if strcmp(animal(1:3),'EEG')
+        setElectrodeLocationFromAnimal('EEG52',animal);
+    elseif strcmp(animal(1:3),'LFP')
+        setElectrodeLocationFromAnimal('LFP16',animal);
+    elseif strcmp(animal(1:3),'DRE')
+        setElectrodeLocationFromAnimal('DREADD07',animal);
+    else
+        error('Animal type not recognized.')
+    end
+end
+
 
 if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\'],'dir')
     mkdir(['W:\Data\PassiveEphys\EEG animal data\' animal '\']);
@@ -68,7 +94,9 @@ for iList = 1:length(listOfAnimalExpts)
         display(['making dir: W:\Data\PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
     end
     currentDir = dir(dirStrAnalysis);
-    for iDir = 1:length(currentDir)
+    for iDir = 1:length(currentDir) %could add a check to see if files exist to save time (if they do)
+        
+        
         if strfind(currentDir(iDir).name,'EEGdata') >0
             fileString = [dirStrAnalysis currentDir(iDir).name];
             load(fileString);
@@ -103,23 +131,30 @@ for iList = 1:length(listOfAnimalExpts)
             end
         end
     end
+    
+    
+    
+    
+    % insert some method to figure out which index is the control index
+    
+    
+    
+    
+    
     % %% MUA CHECK %% might want to fix up 'artifact rejection' option - some need it, some don't
     if ~isempty(strfind(descOfAnimalExpts{iList}{:},'Stim'))
         display('Running MUA analysis')
         dirCheck = dir([dirStrAnalysis '*TrshldMUA_Stim*']);
         if isempty(dirCheck)
-            analyzeMUAthresholdArtifactRejection('PassiveEphys',date,index,index,0,1,0,1,0,-.5,1.5,-.001,3,2,1,true);
+            analyzeMUAthresholdArtifactRejection('PassiveEphys',date,index,index,0,1,0,1,0,-.5,1.5,-.001,3,2,1,false);
+%             analyzeMUAthresholdArtifactRejection(exptType,exptDate,exptIndex,threshIndex,rejectAcrossChannels,...
+%     filterMUA,subtrCommRef,detection,interpolation,tPltStart,tPltStop,PSTHPlotMin,...
+%     PSTHPlotMax,threshFac,batchBoolean,isArduino)
         else
             display([date '-' index ' analyze MUA already done.']);
         end
     end
 end
-
-
-
-
-
-
 
 
 
@@ -130,11 +165,26 @@ end
 b = unique(a)';
 for i = 1:length(b)
     try
-        videoMovementScoreByGridSynapse(animal,b{i})
+        videoMovementScoreByGridSynapse(animal,b{i}) 
     catch
         display([b{i} ' didn''t process.'])
     end
 end
+
+
+
+% Add a check here to see if plotting is finished !for *each* day otherwise
+% rerunning this each time will take a very long time - possibly add a
+% 'force___' run toggle?
+[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis_Synapse(animal);
+% run Ziyad's plotting program
+plotFieldTripSpectra_ZS({animal},0,gMouseEphys_out,gBatchParams); %spectra will save if second param = 0
+% save mouseEphys_out, gBatchParams, and spectra
+% !! TODO !! need to put this after the behave/video processing !!
+saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out)
+
+
+
 
 
 
