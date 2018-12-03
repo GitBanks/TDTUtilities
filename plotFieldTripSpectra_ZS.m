@@ -4,7 +4,8 @@ function plotFieldTripSpectra_ZS(animalList,savePlots,mouseEphys_out,batchParams
 %AnimalList must be a cell array of animal names; savePlots is a toggle to save the figure automatically,
 %mouseEphys_out is the fieldtrip output structure; batchParams are user-generated descriptions of expt. - ZS 18n14 
 
-% animalList = {'EEG55'}; test case
+% animalList = {'EEG55'}; %test case
+% animalList = {'EEG51'}; %test case
 
 if ~exist('mouseEphys_out','var')
     load('W:\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse.mat')
@@ -20,19 +21,20 @@ elseif ~iscell(animalList)
     error('Please store animal name(s) inside a cell');
 end
 
-outDataPath = 'M:\mouseEEG\FieldTripVideoScoring';
+% outDataPath = 'M:\mouseEEG\FieldTripVideoScoring';
+outDataPath = 'M:\mouseEEG\FieldTripVideoScoring\temp';
 
 for iAnimal = 1:length(animalList)
     thisName = animalList{iAnimal};
     dates = fieldnames(mouseEphys_out.(thisName));
     chanLabels = batchParams.(thisName).ephysInfo.chanLabels;
-    maxForPlot = 0;
-    minForPlot = 10^-11;
+    maxForPlot = 10^-11;
+    minForPlot = 0;
     for iDate = 1:length(dates)
         thisDate = dates{iDate};
         thisTreat = batchParams.(thisName).(thisDate).treatment;
         figureName = ([thisName ' - ' thisDate ' - ' thisTreat ' - no parse']);
-        figure('Name',figureName);
+        figH = figure('Name',figureName);
         colOrd = colorcube;
         set(gcf,'DefaultAxesColorOrder',colOrd([12 10 15:3:27],:)); %set color order for current figure. These are colors I like - ZS 18n14 
         expts = fieldnames(mouseEphys_out.(thisName).(thisDate));
@@ -47,13 +49,13 @@ for iAnimal = 1:length(animalList)
                     loglog(f,p,'LineWidth',1.5);
                 end
                 hold on
-                maxForPlot = max([maxForPlot,p]);
-                minForPlot = min([minForPlot,p]);
+                maxForPlot = max([maxForPlot,max(p)]);
+                minForPlot = min([minForPlot,min(p)]);
                 
             end
             title(chanLabels{iChan});
             xlim([1 100]);
-            ylim([minForPlot-.15*minForPlot maxForPlot+.15*maxForPlot]);
+            %ylim([minForPlot maxForPlot]);
             s = gca;
             s.XTick = [1 10 100];
             s.XTickLabel = {1 10 100};
@@ -66,17 +68,29 @@ for iAnimal = 1:length(animalList)
             end
             iCount = iCount+1;
         end        
+        
+        
+        %rescale plots here
+        iCount = 1;
+        for iChan = [4 1 3 2] 
+            subtightplot(2,2,iCount,[.02 .02]);
+            ylim([minForPlot maxForPlot]);
+            iCount = iCount+1;
+        end        
         clear iCount
+        
        
         if savePlots
             if ~exist([outDataPath '\' thisName '\'],'dir')
                 mkdir([outDataPath '\' thisName '\']);
             end
-            savefig(gcf,[outDataPath '\' thisName '\' figureName]);
+            savefig(figH,[outDataPath '\' thisName '\' figureName]);
             print([outDataPath '\' thisName '\' figureName],'-dpng')
             disp([thisName '\' figureName ' was saved']);
+            close all
         else 
             disp([figureName ' was not saved']);
+            
         end
     end
    
