@@ -104,7 +104,7 @@ nDistinctStim = size(newStimIndx,2);
 newStimIndx(nDistinctStim+1) = nTrials+1;
 trialList(1:nTrials) = struct('uniqueStimID',0,'dataFile','','origTrialNum',0,'trialTime',0);
 for iTrial = 1:nTrials
-    trialList(iTrial).gain = 1;
+    trialList(iTrial).gain = 1.e3; % This puts the units in millivolts! Important to know!!
     %trialList(iTrial).gain = ephysResult{1,3};
     trialList(iTrial).offset = 0;
     % behavioral functionality disabled

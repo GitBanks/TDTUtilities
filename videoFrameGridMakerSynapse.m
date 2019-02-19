@@ -34,7 +34,7 @@ end
 try
 % === Loading the whole video and run a vectorization reduction ===
 timeIndex = 0;
-tic;
+tic; 
 while timeIndex < firstFrame.totalDuration
     % create a 10*10 frame grid, so we can see what's happening in a
     % more refined way. % QUESTION: do we want more / less
@@ -73,6 +73,8 @@ while timeIndex < firstFrame.totalDuration
         toc;
     end
 end
+
+
 % in the Synapse version, we have two time arrays: one that was created by
 % Synapse itself, and one encoded in the video.  We have both now.  Synapse
 % frame time stamps start slightly after the beginning of recording, and

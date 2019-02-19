@@ -18,6 +18,9 @@ for iFile = 1:length(recDataDir)
         fileDest = [dirStrRawData recDataDir(iFile).name];
         if recDataDir(iFile).bytes > 0
             copyfile(fileSource,fileDest);
+        else
+            warning([recDataDir(iFile).name ' is size 0!']);
+            copyfile(fileSource,fileDest);
         end
         tempCheckD = dir(fileDest);
         tempCheckS = dir(fileSource);

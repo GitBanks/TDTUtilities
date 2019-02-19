@@ -18,7 +18,7 @@ if nargin <3
 end
 [outputList] = getExperimentsByAnimal(animalName,findExptType);
 listIndex = 1;
-for iDays = 1:length(outputList)
+for iDays = 1:size(outputList,1)
     if ~isempty(strfind(outputList{iDays,1}(1:5),exptDate))
         operationList{listIndex,1} = outputList{iDays,1};
         operationList{listIndex,2} = outputList{iDays,2};

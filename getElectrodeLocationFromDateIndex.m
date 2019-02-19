@@ -11,15 +11,19 @@ if iscell(exptIndex)
     exptIndex = exptIndex{1};
 end
 
+% check if version is newer than 2017a. 
+fetchAdj = fetchAdjust; %added fetchAdj ZS 2/14/2019
+
 dbConn = dbConnect(); %handle this better?  close db at end?
 exptID = getIDfromDateIndex(exptDate,exptIndex);
 %SQLdetail_ephys = fetch(dbConn,['SELECT * FROM detail_ephys WHERE exptID= ' num2str(exptID) ]);
-animalID = fetch(dbConn,['SELECT animalID FROM masterexpt WHERE exptID= ' num2str(exptID) ]);
+animalID = fetch(dbConn,['SELECT animalID FROM masterexpt WHERE exptID= ' num2str(exptID) ],fetchAdj{:}); 
+
 animalID = animalID{1};
 
 %TODO handle case where animal has more than one probe
 
-probeRequestText = fetch(dbConn,['SELECT * FROM probe WHERE animalID='  num2str(animalID) ]);
+probeRequestText = fetch(dbConn,['SELECT * FROM probe WHERE animalID='  num2str(animalID) ],fetchAdj{:});
 if isempty(probeRequestText)
     error('enter probe information please')
 end

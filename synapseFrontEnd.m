@@ -54,8 +54,8 @@ S.fh = figure('units','pixels',...
     'menubar','none',...
     'numbertitle','off',...
     'name','Experiment Day Setup',...
-    'resize','off');
-S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO'}; % just add manipulations as needed for now.  if there's a funky setup, we need to edit synapseExptSetup to handle it (see how iso is handled)
+    'resize','off');                    %added Minocycline 2/12/2019 ZS
+S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline'}; % just add manipulations as needed for now.  if there's a funky setup, we need to edit synapseExptSetup to handle it (see how iso is handled)
 uicontrol('style','text',...
     'units','pix',...
     'position',[10 650 120 30],...
@@ -336,68 +336,74 @@ synapseObj.delete();
 
 function [S] = createNewNotebookEntry(varargin)
 S = varargin{1};
-lastEntryID = fetch(S.dbConn,'SELECT MAX(exptID) FROM masterexpt');
-hardware = 'TDT'; %this is always a TDT specific program.
-grandExpt = 'PassiveEphys'; %this is another assumption
-animalID = fetch(S.dbConn,['SELECT animalID FROM animals WHERE animalName=''' S.animalName '''']);
-exptDate = fetch(S.dbConn,['SELECT exptDate FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
-exptIndex = fetch(S.dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
-experimenterID = fetch(S.dbConn,['SELECT experimenterID FROM masterexpt WHERE exptID= ''' num2str(lastEntryID{1}) '''']);
-% check date, make sure if date is different index is reset
-if isequal(houseTodayDateIn_dbForm,exptDate{1})
-    S.exptIndexLast = exptIndex{1};
-    S.exptDate = exptDate{1};
-    S.exptIndex = exptIndex{1}+1;
-else
-    S.exptDate = houseTodayDateIn_dbForm;
-    S.exptIndex = 0;
-    S.exptIndexLast = [];
-end
-thisID = lastEntryID{1}+1;
-% == Add the main information
-addNotebookEntry = ['INSERT INTO masterexpt (exptIndex, hardware, grandExpt,'...
-    'exptDate, animalID, experimenterID) VALUES (' num2str(S.exptIndex) ','''...
-    hardware ''',''' grandExpt ''',''' S.exptDate ''',' num2str(animalID{:})...
-    ',' num2str(experimenterID{:}) ')'];
-% == Add the details
-SQLdetail_ephys = fetch(S.dbConn,['SELECT * FROM detail_ephys WHERE exptID= ''' num2str(lastEntryID{1}) '''']);
-exptID = num2str(thisID);
-if ~isempty(SQLdetail_ephys)
-    filter_lowcut = num2str(SQLdetail_ephys{3});
-    filter_highcut = num2str(SQLdetail_ephys{4});
-    amp_gain = num2str(SQLdetail_ephys{5});
-    sample_freq = num2str(SQLdetail_ephys{6});
-    chamber = num2str(SQLdetail_ephys{7});
-    headstage = num2str(SQLdetail_ephys{8});
-    preamp = num2str(SQLdetail_ephys{10});
-    spkrCenter = num2str(SQLdetail_ephys{13});
-    recordingBox = num2str(SQLdetail_ephys{14});
-else  %defaults... not sure if this is correct
-    filter_lowcut = '0.2';
-    filter_highcut = '8545'; % default
-    amp_gain = '1'; % according to TDT, Synapse output is saved at 'unity' gain
-    sample_freq = '24414'; % default
-    chamber = 'Bottom';
-    headstage = 'ZC16';
-    preamp = 'PZ5';
-    spkrCenter = 'blank';
-    recordingBox = 'blank';
-end
-addDetailEphys = ['INSERT INTO detail_ephys (exptID,filter_lowcut,filter'...
-    '_highcut,amp_gain,sample_freq,chamber,headstage,preamp,spkrCenter,'...
-    'recordingBox) VALUES (' exptID ',' filter_lowcut ...
-    ',' filter_highcut ',' amp_gain ','...
-    sample_freq ',''' chamber ''','''...
-    headstage ''',''' preamp ''','''...
-    spkrCenter ''',''' recordingBox ''')'];
-addDescription = ['UPDATE masterexpt SET notebookDesc= ''' ...
-    S.listOfExperimentsRunToday{S.nExptsRecordedToday} ''' WHERE exptID= '''...
-    num2str(thisID) ''''];
-display(['Description will be: ' S.listOfExperimentsRunToday{S.nExptsRecordedToday} ' Be sure you are happy with that']);
-%! we're editing the notebook here!!! be careful when changing syntax!
-exec(S.dbConn,addNotebookEntry);
-exec(S.dbConn,addDetailEphys);
-exec(S.dbConn,addDescription);
+exptDescTemp = S.listOfExperimentsRunToday{S.nExptsRecordedToday};
+
+
+
+[S.exptIndexLast,S.exptDate,S.exptIndex] = createNewNotebookEntryTDT(exptDescTemp,S.animalName);
+
+% lastEntryID = fetch(S.dbConn,'SELECT MAX(exptID) FROM masterexpt');
+% hardware = 'TDT'; %this is always a TDT specific program.
+% grandExpt = 'PassiveEphys'; %this is another assumption
+% animalID = fetch(S.dbConn,['SELECT animalID FROM animals WHERE animalName=''' S.animalName '''']);
+% exptDate = fetch(S.dbConn,['SELECT exptDate FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
+% exptIndex = fetch(S.dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
+% experimenterID = fetch(S.dbConn,['SELECT experimenterID FROM masterexpt WHERE exptID= ''' num2str(lastEntryID{1}) '''']);
+% % check date, make sure if date is different index is reset
+% if isequal(houseTodayDateIn_dbForm,exptDate{1})
+%     S.exptIndexLast = exptIndex{1};
+%     S.exptDate = exptDate{1};
+%     S.exptIndex = exptIndex{1}+1;
+% else
+%     S.exptDate = houseTodayDateIn_dbForm;
+%     S.exptIndex = 0;
+%     S.exptIndexLast = [];
+% end
+% thisID = lastEntryID{1}+1;
+% % == Add the main information
+% addNotebookEntry = ['INSERT INTO masterexpt (exptIndex, hardware, grandExpt,'...
+%     'exptDate, animalID, experimenterID) VALUES (' num2str(S.exptIndex) ','''...
+%     hardware ''',''' grandExpt ''',''' S.exptDate ''',' num2str(animalID{:})...
+%     ',' num2str(experimenterID{:}) ')'];
+% % == Add the details
+% SQLdetail_ephys = fetch(S.dbConn,['SELECT * FROM detail_ephys WHERE exptID= ''' num2str(lastEntryID{1}) '''']);
+% exptID = num2str(thisID);
+% if ~isempty(SQLdetail_ephys)
+%     filter_lowcut = num2str(SQLdetail_ephys{3});
+%     filter_highcut = num2str(SQLdetail_ephys{4});
+%     amp_gain = num2str(SQLdetail_ephys{5});
+%     sample_freq = num2str(SQLdetail_ephys{6});
+%     chamber = num2str(SQLdetail_ephys{7});
+%     headstage = num2str(SQLdetail_ephys{8});
+%     preamp = num2str(SQLdetail_ephys{10});
+%     spkrCenter = num2str(SQLdetail_ephys{13});
+%     recordingBox = num2str(SQLdetail_ephys{14});
+% else  %defaults... not sure if this is correct
+%     filter_lowcut = '0.2';
+%     filter_highcut = '8545'; % default
+%     amp_gain = '1'; % according to TDT, Synapse output is saved at 'unity' gain
+%     sample_freq = '24414'; % default
+%     chamber = 'Bottom';
+%     headstage = 'ZC16';
+%     preamp = 'PZ5';
+%     spkrCenter = 'blank';
+%     recordingBox = 'blank';
+% end
+% addDetailEphys = ['INSERT INTO detail_ephys (exptID,filter_lowcut,filter'...
+%     '_highcut,amp_gain,sample_freq,chamber,headstage,preamp,spkrCenter,'...
+%     'recordingBox) VALUES (' exptID ',' filter_lowcut ...
+%     ',' filter_highcut ',' amp_gain ','...
+%     sample_freq ',''' chamber ''','''...
+%     headstage ''',''' preamp ''','''...
+%     spkrCenter ''',''' recordingBox ''')'];
+% addDescription = ['UPDATE masterexpt SET notebookDesc= ''' ...
+%     exptDescTemp ''' WHERE exptID= '''...
+%     num2str(thisID) ''''];
+% display(['Description will be: ' exptDescTemp ' Be sure you are happy with that']);
+% %! we're editing the notebook here!!! be careful when changing syntax!
+% exec(S.dbConn,addNotebookEntry);
+% exec(S.dbConn,addDetailEphys);
+% exec(S.dbConn,addDescription);
 
 function updateDynamicDisplayBox(textI,colorI)
 %handy way to update diplay text

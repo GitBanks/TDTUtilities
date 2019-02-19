@@ -28,9 +28,10 @@ forceReimport = 0;
 forceRegrid = 0;
 forceReimportTrials = 0;
 
+
 % before full automation, we can use this to set drug parameters in the DB
 % so that below we can run
-manuallySetGlobalParamUI(animal);
+manuallySetGlobalParamUI(animal); 
 
 % % possibly use in getBatchParams program?
 % for iList = 1:length(listOfAnimalExpts)
@@ -112,6 +113,7 @@ for iList = 1:length(listOfAnimalExpts)
         end
     end
     % MOVIES: grid, prep % 
+    addpath('Z:\DataBanks\mmread');
     vidFile = dir([dirStrRawData '*.avi']); % simplified version for Synapse
     if isempty(vidFile)
         error('video file not found!  This program expects video!')
@@ -151,7 +153,7 @@ for iList = 1:length(listOfAnimalExpts)
 %     filterMUA,subtrCommRef,detection,interpolation,tPltStart,tPltStop,PSTHPlotMin,...
 %     PSTHPlotMax,threshFac,batchBoolean,isArduino)
         else
-            display([date '-' index ' analyze MUA already done.']);
+            disp([date '-' index ' analyze MUA already done.']);
         end
     end
 end
@@ -167,7 +169,7 @@ for i = 1:length(b)
     try
         videoMovementScoreByGridSynapse(animal,b{i}) 
     catch
-        display([b{i} ' didn''t process.'])
+        disp([b{i} ' didn''t process.'])
     end
 end
 
@@ -176,12 +178,22 @@ end
 % Add a check here to see if plotting is finished !for *each* day otherwise
 % rerunning this each time will take a very long time - possibly add a
 % 'force___' run toggle?
+addpath('Z:\fieldtrip-20170405\','Z:\DataBanks\mouseDeliriumEphysAnalysis');
 [gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis_Synapse(animal);
-% run Ziyad's plotting program
-plotFieldTripSpectra_ZS({animal},0,gMouseEphys_out,gBatchParams); %spectra will save if second param = 0
 % save mouseEphys_out, gBatchParams, and spectra
 % !! TODO !! need to put this after the behave/video processing !!
 saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out)
+% run Ziyad's plotting program
+plotFieldTripSpectra_ZS({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
+
+
+% phase lag; 
+[gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animal,0);
+saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn);
+% update table so we can compare total power between WT and AD
+
+
+% slope analysis; 
 
 
 

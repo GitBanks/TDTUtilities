@@ -4,11 +4,12 @@ function plotFieldTripSpectra_ZS(animalList,savePlots,mouseEphys_out,batchParams
 %AnimalList must be a cell array of animal names; savePlots is a toggle to save the figure automatically,
 %mouseEphys_out is the fieldtrip output structure; batchParams are user-generated descriptions of expt. - ZS 18n14 
 
-% animalList = {'EEG55'}; %test case
-% animalList = {'EEG51'}; %test case
+% % test case % %
+% animalList = {'EEG57'}; 
+% savePlot = 0; (does not save)
 
 if ~exist('mouseEphys_out','var')
-    load('W:\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse.mat')
+    load('W:\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse.mat','mouseEphys_out','batchParams')
 end
 
 if ~exist('savePlots','var')
@@ -17,26 +18,33 @@ end
 
 if ~exist('animalList','var')
     error('Please enter animal name(s)')
-elseif ~iscell(animalList)
-    error('Please store animal name(s) inside a cell');
+elseif ~iscell(animalList) %ZS 1/22/2019 want to try using a try catch loop
+    animalList = {animalList};
+    warning('this function expects animal name(s) inside a cell');
 end
 
-% outDataPath = 'M:\mouseEEG\FieldTripVideoScoring';
-outDataPath = 'M:\mouseEEG\FieldTripVideoScoring\temp';
-
+outDataPath = 'M:\mouseEEG\Power\';
+addpath('M:\Ziyad\')
+colorOrder = colorZ; %updated 1/24/2019
 for iAnimal = 1:length(animalList)
     thisName = animalList{iAnimal};
-    dates = fieldnames(mouseEphys_out.(thisName));
+    %updated 1/24/2019 to avoid error due to mismatch in batchParams and
+    %ephysData for LFP9... 
+    ephysDates = fieldnames(mouseEphys_out.(thisName));
+    batchDates = fieldnames(batchParams.(thisName));
+    batchDates = batchDates(contains(batchDates,'date'));
+    theseDates = intersect(ephysDates,batchDates);
+    
     chanLabels = batchParams.(thisName).ephysInfo.chanLabels;
     maxForPlot = 10^-11;
     minForPlot = 0;
-    for iDate = 1:length(dates)
-        thisDate = dates{iDate};
+    for iDate = 1:length(theseDates)
+        thisDate = theseDates{iDate};
         thisTreat = batchParams.(thisName).(thisDate).treatment;
         figureName = ([thisName ' - ' thisDate ' - ' thisTreat ' - no parse']);
         figH = figure('Name',figureName);
-        colOrd = colorcube;
-        set(gcf,'DefaultAxesColorOrder',colOrd([12 10 15:3:27],:)); %set color order for current figure. These are colors I like - ZS 18n14 
+        
+        set(gcf,'DefaultAxesColorOrder',colorOrder); %set color order for current figure. These are colors I like - ZS 19124 
         expts = fieldnames(mouseEphys_out.(thisName).(thisDate));
         iCount = 1;
         for iChan = [4 1 3 2] %Plots AL AR PL PR in 2x2 subplots (in that order) - 18n13 ZS 
@@ -63,8 +71,8 @@ for iAnimal = 1:length(animalList)
             box off
             if iChan == 3
                xlabel('Freq');
-               ylabel('Power');  
-               legend(expts,'location','best');
+               ylabel('Power (mV^2)');  
+               legend(expts,'Location','Best');
             end
             iCount = iCount+1;
         end        
@@ -79,26 +87,15 @@ for iAnimal = 1:length(animalList)
         end        
         clear iCount
         
-       
         if savePlots
-            if ~exist([outDataPath '\' thisName '\'],'dir')
-                mkdir([outDataPath '\' thisName '\']);
+            if ~exist([outDataPath thisName '\'],'dir')
+                mkdir([outDataPath thisName '\']);
             end
-            savefig(figH,[outDataPath '\' thisName '\' figureName]);
-            print([outDataPath '\' thisName '\' figureName],'-dpng')
-            disp([thisName '\' figureName ' was saved']);
+            savePlot([outDataPath thisName '\'],figureName); %updated 1/24/2019. savePlot is in M:\Ziyad
             close all
         else 
-            disp([figureName ' was not saved']);
-            
+            disp([outDataPath thisName '\' figureName ' was not saved']);
         end
     end
    
 end
-
-
-% animalList = {'EEG52','EEG53','EEG54','EEG55','EEG57'};
-% 
-% load('W:\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse.mat')
-% 
-% plotFieldTripSpectra_ZS(animalList,1,mouseEphys_out,batchParams);

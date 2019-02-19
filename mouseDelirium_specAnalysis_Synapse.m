@@ -19,8 +19,9 @@ function [gBatchParams, mouseEphys_out] = mouseDelirium_specAnalysis_Synapse(ani
 % General parameters
 % Analysis type 0: mean activity in each trial
 % Test case: animalName = 'EEG55';
+synapsePathing;
  
-secretSauceActivate = 0; % WARNING: this is a temporary fix until we can analyze the movement data from Synapse.
+noMovtToggle = 0; % WARNING: this is a temporary fix until we can analyze the movement data from Synapse.
 outPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
 outFileName = 'mouseEphys_out_noParse_Synapse.mat';
 disp(['Data will be saved to `' outPath '`']);
@@ -78,7 +79,7 @@ for iDate = 1:length(eDates)
         
         %Load behav data, divide into segments w/ overlap,
         %calculate mean of each segment
-        if secretSauceActivate %WARNING: This is a TEMPORARY fix.
+        if noMovtToggle %WARNING: This is a TEMPORARY fix.
             meanMovementPerWindow = zeros(10000,1);
             meanMovementPerWindow(:,:) = NaN;
         else
@@ -97,7 +98,7 @@ for iDate = 1:length(eDates)
             windowLength = gBatchParams.(animalName).windowLength;
             windowOverlap = gBatchParams.(animalName).windowOverlap;
 
-            indexLength = frameTimeStampsAdj(end); 
+            indexLength = frameTimeStampsAdj(end);  %#ok<COLND>
             for iWindow = 1:indexLength
                 if ((iWindow-1)*windowLength)*(1-windowOverlap) + windowLength < indexLength
                     windowTimeLims(iWindow,1) = ((iWindow-1)*windowLength)*(1-windowOverlap);
@@ -128,13 +129,14 @@ for iDate = 1:length(eDates)
         cfg.detrend    = 'yes';
         % the following line avoids numeric round off issues in the time axes upon resampling
         %data_MouseEphys.time(1:end) = data_MouseEphys.time(1);
+        addpath('Z:\fieldtrip-20170405\','Z:\DataBanks\mouseDeliriumEphysAnalysis');
         data_MouseEphysDS = ft_resampledata(cfg, data_MouseEphys);     %%%% Returning an error in 2018a - ZS
         data_MouseEphysDS.sampleinfo = [1, size(data_MouseEphysDS.trial{1,1},2)];
         clear data_MouseEphys
         
         %Remove heart rate noise using ICA - WIP!!! 18n26
         if runICA
-            [data_MouseEphysDS] = runICAtoRemoveECG(batchParams,data_MouseEphysDS,thisDate,thisExpt);
+            [data_MouseEphysDS] = runICAtoRemoveECG(gBatchParams,data_MouseEphysDS,animalName,thisDate,thisExpt);
         end
 
         tempData = cell2mat(data_MouseEphysDS.trial);
@@ -212,8 +214,7 @@ for iDate = 1:length(eDates)
                 meanMovementPerWindow(theseTrials);
         
         mouseEphys_out.(animalName).(thisDate).(thisExpt).trialsKept = theseTrials;
-                % TODO: make sure this: batchParams.EEG55.date18n07.trialInfo
-        % gets saved!!!
+                
         clear windowTimeLims indexLength meanMovementPerWindow
     end %Loop over expts
     gBatchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;

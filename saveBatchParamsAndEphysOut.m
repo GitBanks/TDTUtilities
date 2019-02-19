@@ -29,7 +29,7 @@ end
 
 
 % this take like 30 sec to load... is this sustainable?
-load([computerSpecPath outFileName],'mouseEphys_out','batchParams','behavParams');
+load([computerSpecPath outFileName],'mouseEphys_out','batchParams');
 
 
 % sNames = fieldnames(batchParams);
@@ -48,13 +48,10 @@ batchParams.(gName) = gBatchParams.(gName);
 mouseEphys_out.(gName) = gMouseEphys_out.(gName);
 
 
-% template for structure in case we want to run only selected days (for
-% speed) - will need to make this change in mouseDelirium_specAnalysis_Synapse(animalName)
-% mouseEphys_out.(thisName).(thisDate).(thisExpt).trialsKept = theseTrials
 
 
 
 
-save([computerSpecPath outFileName],'mouseEphys_out','batchParams','behavParams');
-
+save([computerSpecPath outFileName],'mouseEphys_out','batchParams');
+disp('mouseEphys_out and batchParams saved!');
 

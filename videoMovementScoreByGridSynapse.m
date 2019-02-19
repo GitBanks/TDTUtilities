@@ -25,15 +25,21 @@ function videoMovementScoreByGridSynapse(animal,exptDate)
 % animal = 'DREADD07';
 % exptDate = '18907';
 
+% animal = 'EEG57';
+% exptDate = '18n14';
+
+% animal = 'EEG37';
+% exptDate = '17615';
+
 % a few hard-coded variables that should be parameters or from settings file
 masterFileName = 'W:\Data\PassiveEphys\EEG animal data\MouseBehavParams.mat';
-rootDir = 'M:\PassiveEphys\2018\'; % !!TODO!! % get 2018 path a little smarter than you're doing right now.
-
+rootDir = 'M:\PassiveEphys\2019\'; % !!TODO!! % get 2018 path a little smarter than you're doing right now.
+%ZS 19107
 % find correct movement files
 display(['Loading ' exptDate ' from database.']);
 listOfAnimalExpts = getExperimentsByAnimal(animal,'Spon');
 listIndex = 1;
-for iDays = 1:length(listOfAnimalExpts)
+for iDays = 1:size(listOfAnimalExpts,1)
     if isempty(listOfAnimalExpts{iDays,1})
         error('This step is only set to run on spontaneous stuff for now.')
     end
@@ -72,10 +78,12 @@ display('Calculating movement');
 experimentInfo = struct();
 for iList = 1:length(operationList)
     load(fileNameList{iList},'frameGrid','frameTimeStamps');
+    expectedOneSecondSpan = sum(frameTimeStamps(frameTimeStamps < 2) > 1);
     tempCatAllGrids = [];
     nSquares = sum(sum(heatMapMoveFinal));
 %     maxRead = min([length(experimentInfo(iList).frames) length(experimentInfo(iList).frameTimeStamps)]);
     experimentInfo(iList).frames = zeros(1,length(frameGrid));
+    % == frame value calculation ==
     framesTemp = zeros(1,length(frameGrid));
     for iGrid = 1:size(heatMapMoveFinal,1)
         for jGrid = 1:size(heatMapMoveFinal,2)
@@ -90,6 +98,17 @@ for iList = 1:length(operationList)
         framesTemp(iSubt) = abs(framesTemp(iSubt+1)-framesTemp(iSubt));
     end
     experimentInfo(iList).framesRaw = framesTemp;
+    % smoothing we've been using
+    % 'raiseTheRoof' is a smoothing that only pushes values higher (to
+    % account for instability when animal moves around)
+    experimentInfo(iList).framesRaw = smooth(raiseTheRoof(experimentInfo(iList).framesRaw,expectedOneSecondSpan*4),expectedOneSecondSpan*4,'sgolay');
+    
+    %set beginning and end .5 seconds to zero 
+    halfS = floor(expectedOneSecondSpan/2);
+    experimentInfo(iList).framesRaw(1:expectedOneSecondSpan*4) = 0;
+    experimentInfo(iList).framesRaw(end-expectedOneSecondSpan*4:end) = 0;
+    
+    % == normalized frame value calculation ==
     maxVal = prctile(tempCatAllGrids,99);
     minVal = prctile(tempCatAllGrids,1);
     frameGrid = (frameGrid-minVal)/maxVal;
@@ -110,7 +129,8 @@ for iList = 1:length(operationList)
     experimentInfo(iList).index = operationList{iList};
     experimentInfo(iList).frames = abs(diff(experimentInfo(iList).frames));
     experimentInfo(iList).frameTimeStamps = frameTimeStamps;
-    finalMovementArray = experimentInfo(iList).frames;
+    finalMovementArray = experimentInfo(iList).framesRaw;
+    % finalMovementArray = experimentInfo(iList).frames;
     % finalLEDTimes = Experiment(iList).LEDTimesAdj;
     frameTimeStampsAdj = experimentInfo(iList).frameTimeStamps;
     filePathName = [rootDir operationList{iList} '\' operationList{iList} '-movementInfoAdjusted.mat'];

@@ -1,6 +1,7 @@
 function manuallySetGlobalParamUI(animalName)
 
-% animalName = 'Dreadd07';
+% animalName = 'EEG53';
+
 
 dbConn = dbConnect();
 S.Preselects = unique(fetch(dbConn,'SELECT paramfield FROM global_stimparams')); 
@@ -37,7 +38,7 @@ function [S] = listOfDates(varargin)
 %list, then button press
 [S] = varargin{1}; % !can't call this as a callback!
 S.existingList = getExperimentsByAnimal(S.animalName);
-for i = 1:length(S.existingList)
+for i = 1:size(S.existingList,1)
     justDates(i,1) = {S.existingList{i,1}(1:5)};
 end
 S.uniqueExptDates = unique(justDates);
@@ -65,7 +66,7 @@ function [S] = addGlobal(varargin)
 S.userDateSelection = get(S.ls,'Value');
 display(['Loading ' S.uniqueExptDates{S.userDateSelection}])
 S.exptByDateList = getExperimentsByAnimalAndDate(S.animalName,S.uniqueExptDates{S.userDateSelection});
-S.indexRange = 1:length(S.exptByDateList);
+S.indexRange = 1:size(S.exptByDateList,1);
 [S] = updateDisplayList(S);
 
 
