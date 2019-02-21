@@ -6,17 +6,17 @@ function setElectrodeLocationFromAnimal(originalAnimal,targetAnimal)
 % targetAnimal = 'LFP17';
 dbConn = dbConnect(); %handle this better?  close db at end?
 try
-    animalIDOriginal = fetch(dbConn,['SELECT animalID FROM animals WHERE animalName = ''' originalAnimal '''']);
+    animalIDOriginal = fetchAdjust(dbConn,['SELECT animalID FROM animals WHERE animalName = ''' originalAnimal '''']);
     animalIDOriginal = animalIDOriginal{1};
-    probeRequestText = fetch(dbConn,['SELECT * FROM probe WHERE animalID='  num2str(animalIDOriginal) ]);
+    probeRequestText = fetchAdjust(dbConn,['SELECT * FROM probe WHERE animalID='  num2str(animalIDOriginal) ]);
 catch
     error('First animal not found');
 end
 try
-    animalIDTarget = fetch(dbConn,['SELECT animalID FROM animals WHERE animalName = ''' targetAnimal '''']);
+    animalIDTarget = fetchAdjust(dbConn,['SELECT animalID FROM animals WHERE animalName = ''' targetAnimal '''']);
     animalIDTarget = animalIDTarget{1};
     % add a check here to make sure there isn't already a probe for this animal
-    if ~isempty(fetch(dbConn,['SELECT * FROM probe WHERE animalID='  num2str(animalIDTarget) ]));
+    if ~isempty(fetchAdjust(dbConn,['SELECT * FROM probe WHERE animalID='  num2str(animalIDTarget) ]));
         error('probe information already exists')
     end
 catch
