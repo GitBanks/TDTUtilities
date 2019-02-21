@@ -2,11 +2,17 @@ function [ stimID ] = dbGetUniqueStimulus(stimPar)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Please note any alterations, and update version information
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% VersionNumber = 1.1
-% Date = 16-Aug-2011
+% VersionNumber = 1.2
+% Date = 20-Feb-2019
 %
 %
 %Updates:
+% 20-Feb-2019
+% Previous version was not compatible with versions of Matlab >= 2018, since 
+% the columns function no longer works the same way, so added  
+% isVersionNewerThan statement to test current version of Matlab and use 
+% sqlfind instead of columns if version is newer than 2017 (9.4). -ZS
+%
 % 16-Aug-2011
 % Previous version had problem with search such that it did not check all
 % columns of database, only those in stimPar, so if stimulus in table had
@@ -29,7 +35,12 @@ dbConn = dbConnect();
 
 % Look to see if the fields in our structure match columns in the database
 tempStimFields = fieldnames(stimPar);
-dbStimFields = columns(dbConn,[],[],'stimuli');
+if isVersionNewerThan(9.4) %added 2/20/2019 ZS
+    dbTable = sqlfind(dbConn,'stimuli');
+    dbStimFields = dbTable.Columns{strcmp(dbTable.Table,'stimuli')};
+else
+    dbStimFields = columns(dbConn,[],[],'stimuli');
+end
 
               
 %get list of all simulus parameters and look for aliases
@@ -39,7 +50,7 @@ newAlias = '';
 for iParam = 1:length(tempStimFields)
     parameter = tempStimFields(iParam); %query alias database for alias of parameter
     search = ['select alias from aliases where parameter = ''' parameter{1} ''' '];
-    alias = fetch(dbConn,search);
+    alias = fetchAdjust(dbConn,search);
     if(isempty(alias))
         %if alias is empty the parameter does not exsist in the alias table
         %and currently does not have an alias and should prompt the user
@@ -114,7 +125,7 @@ if sum(foundMatch(:)) == length(foundMatch)
     end
     getStimMatch = getStimMatch(1:end-5); %remove the last "and"
 
-    fetchStimMatch = fetch(dbConn,getStimMatch);
+    fetchStimMatch = fetchAdjust(dbConn,getStimMatch);
     
     % Check for uniqueness
     if ~isempty(fetchStimMatch)
@@ -145,7 +156,7 @@ if stimUnique==1
     insDataList = insDataList(1:end-1); %remove last comma
     insertStimulus = ['insert into stimuli (' insFieldList ') values (' insDataList ');'];
     exec(dbConn,insertStimulus);
-    lastInsert = fetch(dbConn,'select last_insert_id()');
+    lastInsert = fetchAdjust(dbConn,'select last_insert_id()');
     stimID = lastInsert{1};
 end
 

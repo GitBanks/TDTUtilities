@@ -15,25 +15,22 @@ if nargin <3
    ignoreCheck = true; % this will check to see if we should skip description that say 'ignore'
 end
 
-% check if version is newer than 2017a. 
-fetchAdj = fetchAdjust; %added fetchAdj zs 2/14/2019
-
 dbConn = dbConnect();
 
-animalID = fetch(dbConn,['select animalID from animals where animalName=''' animalName ''''],fetchAdj{:}); 
+animalID = fetchAdjust(dbConn,['select animalID from animals where animalName=''' animalName '''']); 
 if isempty(animalID)
     error('Animal name not found! Check spelling.')
 end
 
-exptList = fetch(dbConn,['SELECT exptID FROM masterexpt WHERE animalID =''' num2str(animalID{1,1}) ''''],fetchAdj{:}); %added {1,1} instead of {1} to animalID ZS 18d20
+exptList = fetchAdjust(dbConn,['SELECT exptID FROM masterexpt WHERE animalID =''' num2str(animalID{1,1}) '''']); %added {1,1} instead of {1} to animalID ZS 18d20
 
 
 listIncrement = 1;
 for iExpt = 1:size(exptList,1) %ZS 2/14/2018
-    workingList{iExpt,1} = fetch(dbConn,['SELECT exptDate FROM masterexpt WHERE exptID =''' num2str(exptList{iExpt}) ''''],fetchAdj{:}); 
-    workingList{iExpt,2} = fetch(dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID =''' num2str(exptList{iExpt}) ''''],fetchAdj{:}); 
+    workingList{iExpt,1} = fetchAdjust(dbConn,['SELECT exptDate FROM masterexpt WHERE exptID =''' num2str(exptList{iExpt}) '''']); 
+    workingList{iExpt,2} = fetchAdjust(dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID =''' num2str(exptList{iExpt}) '''']); 
     workingList{iExpt,2} = workingList{iExpt,2}{1};
-    workingList{iExpt,3} = fetch(dbConn,['SELECT notebookDesc FROM masterexpt WHERE exptID =''' num2str(exptList{iExpt}) ''''],fetchAdj{:});
+    workingList{iExpt,3} = fetchAdjust(dbConn,['SELECT notebookDesc FROM masterexpt WHERE exptID =''' num2str(exptList{iExpt}) '''']);
     if ~isempty(strfind(workingList{iExpt,3}{1},findExptType)) || isempty(findExptType)
         indexN = num2str(workingList{iExpt,2});
         if length(indexN) == 1
@@ -48,7 +45,7 @@ for iExpt = 1:size(exptList,1) %ZS 2/14/2018
     end
 end
 if ~exist('outputList','var')
-    outputList ={'',''};
+    outputList ={'',{''}};
     warning('2nd parameter is case sensitive (exclude search to see full list)');
 end
 

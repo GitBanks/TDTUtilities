@@ -16,9 +16,9 @@ function trialList = updateStimInfoSynapse(exptDate,exptIndex)
 
 dbConn = dbConnect();
 exptDate_dbForm = houseConvertDateTo_dbForm(exptDate);
-masterResult = fetch(dbConn,['select exptID,animalID,hardware from masterexpt where exptDate=''' exptDate_dbForm ''' and exptIndex=' num2str(str2num(exptIndex))]);
+masterResult = fetchAdjust(dbConn,['select exptID,animalID,hardware from masterexpt where exptDate=''' exptDate_dbForm ''' and exptIndex=' num2str(str2num(exptIndex))]);
 exptID = masterResult{1,1};
-ephysResult = fetch(dbConn,['select sample_freq,filter_highcut,amp_gain,headstage from detail_ephys where exptid=' num2str(exptID)]);
+ephysResult = fetchAdjust(dbConn,['select sample_freq,filter_highcut,amp_gain,headstage from detail_ephys where exptid=' num2str(exptID)]);
 % only load the stim info from the data tank
 % % TODO % can't seem to get away from this stupid 'hardcoding'
 tankFileLoc = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];

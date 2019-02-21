@@ -71,8 +71,8 @@ classdef SynapseAPI < handle
     methods
         function obj = SynapseAPI(varargin)
             
-            [folder, name, ext] = fileparts(which('SynapseAPI'));
-            addpath('C:\TDT\Synapse\SynapseAPI\Matlab\support')
+            %[folder, name, ext] = fileparts(which('SynapseAPI'));
+            % addpath('C:\TDT\Synapse\SynapseAPI\Matlab\support')
             %addpath([folder '\support']);
             
             if numel(varargin) < 1

@@ -47,15 +47,15 @@ S.listOfExperimentsRunToday = {}; % similar to nExptsRecordedToday. initialized 
 if S.enableMultiThread % starting pool here!  we need to be sure to shut it down at end of program
     parpool(2);
 end
-updateDynamicDisplayBox('Starting Synapse');
-S = synapseConnectionProcess(S); % Start Synapse, connect to recording computer
 S.fh = figure('units','pixels',...
     'position',[100 100 1400 700],...
     'menubar','none',...
     'numbertitle','off',...
     'name','Experiment Day Setup',...
-    'resize','off');                    %added Minocycline 2/12/2019 ZS
-S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline'}; % just add manipulations as needed for now.  if there's a funky setup, we need to edit synapseExptSetup to handle it (see how iso is handled)
+    'resize','off');  
+updateDynamicDisplayBox('Starting Synapse');
+S = synapseConnectionProcess(S); % Start Synapse, connect to recording computer            
+S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline'};  %added Minocycline 2/12/2019 ZS % just add manipulations as needed for now.  if there's a funky setup, we need to edit synapseExptSetup to handle it (see how iso is handled)
 uicontrol('style','text',...
     'units','pix',...
     'position',[10 650 120 30],...
@@ -83,12 +83,14 @@ uiwait(S.fh);  % everything set up now. wait for button pushes or exit.
 % END OF PROGRAM %
 if S.enableMultiThread; delete(gcp); end % important to turn off multithreading; if crashed, will need to manually stop this!
 synapseDisconnect(S.syn); % disconnect from synapse
-videoMovementScoreByGridSynapse(animalName,formatDateFive)
+
+
+% videoMovementScoreByGridSynapse(animalName,formatDateFive)
 % if ~isempty(S.exptIndexLast') % this will import the last expt recorded before exiting.
 %     [date,indexLast] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndexLast);
 %     synapseImportingPathway(date,indexLast,S.recordingComputer,S.recordingComputerSubfolder);
 % end
-% ! TODO ! % We may want to run fileMaint (when finished as a function)
+% ! TODO ! %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! We may want to run fileMaint (when finished as a function)
 % before exiting to be sure we've copied, imported, and analyzed everything
 % for the day.  We could then use this point to run analyses that use the
 % whole day. . . . and upload plots to Slack?!? . . . or add this day to a
@@ -101,9 +103,9 @@ if isempty(S.ExperimentsRemaining.exptDescriptionText)
     % the following three lines should be part of a seperate sequence
     % (they're already found in createNotebookEntry), but for now, we'll
     % set these up to run the last import before exiting.
-    lastEntryID = fetch(S.dbConn,'SELECT MAX(exptID) FROM masterexpt');
-    exptDate = fetch(S.dbConn,['SELECT exptDate FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
-    exptIndex = fetch(S.dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
+    lastEntryID = fetchAdjust(S.dbConn,'SELECT MAX(exptID) FROM masterexpt');
+    exptDate = fetchAdjust(S.dbConn,['SELECT exptDate FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
+    exptIndex = fetchAdjust(S.dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
     synapseImportingPathway(exptDate,exptIndex,S.recordingComputer,S.recordingComputerSubfolder);
     uiresume(S.fh);
     return;   %stop user from running nothing.
@@ -134,12 +136,12 @@ else
     % skip analysis
 end
 
-if ~isempty(strfind(S.animalName,'LFP'));
+if ~isempty(strfind(S.animalName,'LFP'))
     sponTime = 610;
-elseif ~isempty(strfind(S.animalName,'EEG'));
+elseif ~isempty(strfind(S.animalName,'EEG'))
     sponTime = 3610;
 else
-    display('I hope you didn''t plan to run any spontaneous recordings...')
+    disp('I hope you didn''t plan to run any spontaneous recordings...')
     sponTime = 610;
 end
 
@@ -148,8 +150,10 @@ if S.enableMultiThread % this will make program unavailable until *both* 1 and 2
     parfor i = 1:2
         if i == 1
             synapseRecordingPathway(S.syn,S.tempnStims,S.tempnTrials,sponTime); %#ok<*PFBNS>
+            disp(['Recording ' date ' ' S.exptIndex ' finished']);
         else
             synapseImportingPathway(date,indexLast,S.recordingComputer,S.recordingComputerSubfolder);
+            disp(['Importing ' date ' ' indexLast{1} ' finished']);
         end
     end
 else
@@ -174,16 +178,27 @@ synapseObj = varargin{1};
 tempnStims = varargin{2};
 tempnTrials = varargin{3};
 sponTime = varargin{4};
+% synapseObj = S.syn
+% tempnStims = S.tempnStims
+% tempnTrials = S.tempnTrials
+% sponTime = sponTime
 waitingForUserToFinishRecording = true;
 updateDynamicDisplayBox('waiting for recording to complete');
 % spontaneous mode
 % TODO % may want to allow time adjustments
 if tempnStims == -1 % represents 'spontaneous' mode
-    pause(sponTime); % this will wait 10 minutes before proceeding (for spon mode)
-    % !!TODO!! % make this a parameter, setting, or something other than a
-    % hard-coded number!!
-    waitingForUserToFinishRecording = false;
-    synapseObj.setMode(0);
+    tic
+    while waitingForUserToFinishRecording
+        elapsedTime = toc;
+        %pause(sponTime); % this will wait 10 minutes before proceeding (for spon mode)
+        % !!TODO!! % make this a parameter, setting, or something other than a
+        % hard-coded number!!
+        if (elapsedTime > sponTime) || (synapseObj.getMode ~= 3)
+            waitingForUserToFinishRecording = false;
+            synapseObj.setMode(0);
+        end
+        pause(1);
+    end
 end
 % evoked / stimulation mode
 while waitingForUserToFinishRecording
@@ -234,7 +249,7 @@ end
 vidFilePath = [dirStrRawData vidFile.name];
 repeatedAttempts = 1;
 maxAttempts = 4;
-if isempty(dir([dirStrRawData '-framegrid.mat']))
+if isempty(dir([dirStrAnalysis '*-framegrid.mat']))
     while repeatedAttempts < maxAttempts
         try
             display('attempting to run mmread on video...')
@@ -270,7 +285,7 @@ while ~sequenceUpdated
             end
         end
     end
-    if result == 0;
+    if result == 0
         updateDynamicDisplayBox(['We are not able to update sequence ' num2str(countX)]);
         S.pb = uicontrol('style','push',...
         'units','pix',...
@@ -340,7 +355,7 @@ exptDescTemp = S.listOfExperimentsRunToday{S.nExptsRecordedToday};
 
 
 
-[S.exptIndexLast,S.exptDate,S.exptIndex] = createNewNotebookEntryTDT(exptDescTemp,S.animalName);
+[S.exptDate,S.exptIndex,S.exptIndexLast] = createNewNotebookEntryTDT(exptDescTemp,S.animalName);
 
 % lastEntryID = fetch(S.dbConn,'SELECT MAX(exptID) FROM masterexpt');
 % hardware = 'TDT'; %this is always a TDT specific program.
@@ -412,7 +427,7 @@ if ~exist('colorI','var')
 end
 uicontrol('style','text',...
     'units','pix',...
-    'position',[320 570 300 40],...
+    'position',[320 570 300 50],...
     'ForegroundColor',colorI,...
     'string', textI,...
     'fontsize',10);

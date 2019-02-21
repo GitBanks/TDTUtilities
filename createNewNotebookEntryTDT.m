@@ -12,6 +12,7 @@ function [exptDate,exptIndex,exptIndexLast] = createNewNotebookEntryTDT(exptDesc
 
 % exptDescTemp = 'this is a test. please ignore';
 % animalName = 'EEGRoboMouse';
+% animalName = 'EEG68';
 % exptIndexLast = -1;
 % exptDate = '2019-02-12';
 % exptIndex = '0';
@@ -19,7 +20,6 @@ function [exptDate,exptIndex,exptIndexLast] = createNewNotebookEntryTDT(exptDesc
 dbConn = dbConnect(); % opens a database connection.  closed at bottom.
 % it's possible a db object exists so this is redundant, so we might want
 % to check for it, or require it as a parameter?  but for now, no big deal.
-
 
 % !!!TODO!!!
 % set this up so that if exptDescTemp doesn't exist, it will behave like 'repeatlastexpt()'
@@ -34,62 +34,55 @@ if ~exist('animalName','var')
     error('Need animal name');
 end
 
-
-
-lastEntryID = fetch(dbConn,'SELECT MAX(exptID) FROM masterexpt');
+lastEntryID = fetchAdjust(dbConn,'SELECT MAX(exptID) FROM masterexpt');
 hardware = 'TDT'; %this is always a TDT specific program.
 grandExpt = 'PassiveEphys'; %this is another assumption
-animalID = fetch(dbConn,['SELECT animalID FROM animals WHERE animalName=''' animalName '''']);
+animalID = fetchAdjust(dbConn,['SELECT animalID FROM animals WHERE animalName=''' animalName '''']);
 % find the last date and index in the notebook
 
+exptDateLast = fetchAdjust(dbConn,['SELECT exptDate FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
+exptIndex = fetchAdjust(dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
+experimenterID = fetchAdjust(dbConn,['SELECT experimenterID FROM masterexpt WHERE exptID= ''' num2str(lastEntryID{1}) '''']);
 
-if isVersionNewerThan(8.5)
-if istable(lastEntryID)
-    lastEntryID = table2cell(lastEntryID);
-end
-if istable(animalID)
-    animalID = table2cell(animalID);
-end
-end
+% Narrow down expts from today to just the named animal's 
+expts = getExperimentsByAnimalAndDate(animalName,formatDateFive(exptDateLast{1}));
 
-exptDate = fetch(dbConn,['SELECT exptDate FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
-exptIndex = fetch(dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
-experimenterID = fetch(dbConn,['SELECT experimenterID FROM masterexpt WHERE exptID= ''' num2str(lastEntryID{1}) '''']);
-if isVersionNewerThan(8.5)
-if istable(exptDate)
-    exptDate = table2cell(exptDate);
-end
-if istable(exptIndex)
-    exptIndex = table2cell(exptIndex);
-end
-if istable(experimenterID)
-    experimenterID = table2cell(experimenterID);
-end
-end
-
-% check today's date, make sure if date is different index is reset
-if isequal(houseTodayDateIn_dbForm,exptDate{1})
-    exptIndexLast = exptIndex{1};
-    exptDate = exptDate{1};
-    exptIndex = exptIndex{1}+1;
-else
-    exptDate = houseTodayDateIn_dbForm;
-    exptIndex = 0;
+exptDate = houseTodayDateIn_dbForm;
+if isempty(expts) % if there are no experiments for this named animal
     exptIndexLast = [];
+    % if there are already entries today 
+    if isequal(houseTodayDateIn_dbForm,exptDateLast{1})
+       exptIndex{1} = exptIndex{1}+1;
+    else
+        exptIndex{1} = 0;
+    end
+else % if there are already experiments for this animal
+    exptIndex{1} = exptIndex{1}+1;
+    exptIndexLast = expts{end,1}(7:9);
 end
+
+
+% % check today's date, make sure if date is different index is reset
+% if isequal(houseTodayDateIn_dbForm,exptDate{1})
+%     exptIndexLast = exptIndex{1};
+%     exptDate = exptDate{1};
+%     exptIndex = exptIndex{1}+1;
+% else
+%     exptDate = houseTodayDateIn_dbForm;
+%     exptIndex = 0;
+%     exptIndexLast = [];
+% end
+
+
 thisID = lastEntryID{1}+1;
 % == Add the main information
 addNotebookEntry = ['INSERT INTO masterexpt (exptIndex, hardware, grandExpt,'...
-    'exptDate, animalID, experimenterID) VALUES (' num2str(exptIndex) ','''...
+    'exptDate, animalID, experimenterID) VALUES (' num2str(exptIndex{:}) ','''...
     hardware ''',''' grandExpt ''',''' exptDate ''',' num2str(animalID{:})...
     ',' num2str(experimenterID{:}) ')'];
 % == Add the details
-SQLdetail_ephys = fetch(dbConn,['SELECT * FROM detail_ephys WHERE exptID= ''' num2str(lastEntryID{1}) '''']);
-if isVersionNewerThan(8.5)
-if istable(SQLdetail_ephys)
-    SQLdetail_ephys = table2cell(SQLdetail_ephys);
-end
-end
+SQLdetail_ephys = fetchAdjust(dbConn,['SELECT * FROM detail_ephys WHERE exptID= ''' num2str(lastEntryID{1}) '''']);
+
 exptID = num2str(thisID);
 if ~isempty(SQLdetail_ephys)
     filter_lowcut = num2str(SQLdetail_ephys{3});
