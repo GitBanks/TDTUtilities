@@ -16,9 +16,22 @@ defaultPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\'; %W: dr
 pars.windowLength = 4; %sec
 pars.windowOverlap = 0.25; %fractional overlap
 
-recForAnimal = getExperimentsByAnimal(animalName); %grab all indices
+timeReInj = -1:3; %hardcoded PLEASE FIX
+% the following prevents evoked stuff from being read in.
+clear recForAnimal %19107 ZS
+%if contains(animalName,'LFP') || contains(animalName,'DREADD')
+% if ~isempty(strfind(animalName,'LFP')) ||
+% ~isempty(strfind(animalName,'DREADD')) ZS 19107
+recForAnimal = getExperimentsByAnimal(animalName,'Spon'); %grab only spon indices
+
+%Set electrode location
 electrodeInfo = getElectrodeLocationFromDateIndex(recForAnimal{1,1}(1:5),recForAnimal{1,1}(7:9));
-ephysInfo.recMode = 'EEG'; % !!! WARNING !!! this is hardcoded, assumes we're looking at EEG.  Channel descriptions will
+
+%the following line is appealing for EEG & LFP animals b/c less hardcoding,
+%but not DREADD or anything else with unique name. Reconsider.
+ephysInfo.recMode = animalName(1:3); 
+
+% !!! WARNING !!! this is hardcoded, assumes we're looking at EEG.  Channel descriptions will
 % be in 'electrodeInfo' if we want to change this, add features, etc.
 tempIndexer = 1;
 for k = 1:length(electrodeInfo)
@@ -29,14 +42,6 @@ for k = 1:length(electrodeInfo)
     end
 end
 ephysInfo.EMGchan = [];
-
-timeReInj = -1:3; %hardcoded
-% the following prevents evoked stuff from being read in.
-clear recForAnimal %19107 ZS
-%if contains(animalName,'LFP') || contains(animalName,'DREADD')
-% if ~isempty(strfind(animalName,'LFP')) ||
-% ~isempty(strfind(animalName,'DREADD')) ZS 19107
-recForAnimal = getExperimentsByAnimal(animalName,'Spon'); %grab only spon indices
 % timeReInj = -1:0.5:3.5; %commented out ZS 1/17/2019
 % end
 

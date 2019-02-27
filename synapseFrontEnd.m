@@ -153,7 +153,7 @@ if S.enableMultiThread % this will make program unavailable until *both* 1 and 2
             disp(['Recording ' date ' ' S.exptIndex ' finished']);
         else
             synapseImportingPathway(date,indexLast,S.recordingComputer,S.recordingComputerSubfolder);
-            disp(['Importing ' date ' ' indexLast{1} ' finished']);
+            disp(['Importing ' date ' ' indexLast ' finished']);
         end
     end
 else
