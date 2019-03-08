@@ -3,10 +3,12 @@ function [tempBehavParams] = fillTempBehavParams(experimentInfo)
 % user still need to save, etc.  needs a fully built experimentInfo
 % structure
 % Calls: [threshEst] = behaviorThresholdEstimation(experimentInfo);
-
 nSecToQualifyForStateChange = 4; % turn this to a parameter?
-[threshEst] = behaviorThresholdEstimation(experimentInfo);
-
+try
+    [threshEst] = behaviorThresholdEstimation(experimentInfo);
+catch
+    threshEst = 3*std(experimentInfo.framesRaw);
+end
 % need to use this: Experiment(iList).frameTimeStamps as the time array
 for iList = 1:length(experimentInfo)
     maxRead = min([length(experimentInfo(iList).frames) length(experimentInfo(iList).frameTimeStamps)]);

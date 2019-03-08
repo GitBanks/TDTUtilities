@@ -57,8 +57,12 @@ if isempty(expts) % if there are no experiments for this named animal
         exptIndex{1} = 0;
     end
 else % if there are already experiments for this animal
-    exptIndex{1} = exptIndex{1}+1;
-    exptIndexLast = expts{end,1}(7:9);
+    if isequal(houseTodayDateIn_dbForm,exptDateLast{1})
+        exptIndex{1} = exptIndex{1}+1;
+        exptIndexLast = expts{end,1}(7:9);
+    else
+        exptIndex{1} = 0;
+    end
 end
 
 

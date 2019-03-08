@@ -19,7 +19,7 @@ function [gBatchParams, mouseEphys_out] = mouseDelirium_specAnalysis_Synapse(ani
 % General parameters
 % Analysis type 0: mean activity in each trial
 % Test case: animalName = 'EEG55';
-synapsePathing;
+% synapsePathing;
  
 noMovtToggle = 0; % WARNING: this is a temporary fix until we can analyze the movement data from Synapse.
 outPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
@@ -63,7 +63,7 @@ minSDCriterion = 0.2;
 rejectAcrossChannels = 1; 
 
 %main analysis section
-for iDate = 1:length(eDates)
+for iDate = length(eDates)%1:length(eDates)
     thisDate = eDates{iDate};
     disp('------------------------');
     disp(['Animal ' animalName ' - Date: ' thisDate]);

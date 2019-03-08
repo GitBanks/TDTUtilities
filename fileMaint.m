@@ -12,7 +12,6 @@ function fileMaint(animal)
 % WARNING this is only operating upon EEGdata files for now!!!
 % WARNING a few locations are hardcoded!!!
 
-
 %animal = 'DREADD07';
 %listOfAnimalExpts = getExperimentsByAnimal(animal,'Spon');
 %animal = 'LFP18';
@@ -20,14 +19,9 @@ function fileMaint(animal)
 
 listOfAnimalExpts = getExperimentsByAnimal(animal);
 
-
-
-% animal = 'LFPU01';
-% listOfAnimalExpts = getExperimentsByAnimal(animal);
 forceReimport = 0;
 forceRegrid = 0;
 forceReimportTrials = 0;
-
 
 % before full automation, we can use this to set drug parameters in the DB
 % so that below we can run
@@ -40,7 +34,6 @@ manuallySetGlobalParamUI(animal);
 % c = unique(b)
 descOfAnimalExpts = listOfAnimalExpts(:,2);
 listOfAnimalExpts = listOfAnimalExpts(:,1);
-
 
 % check to see if probe has been entered, and if not prompt user for that
 % info
@@ -59,7 +52,6 @@ catch
         error('Animal type not recognized.')
     end
 end
-
 
 if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\'],'dir')
     mkdir(['W:\Data\PassiveEphys\EEG animal data\' animal '\']);
@@ -96,8 +88,7 @@ for iList = 1:length(listOfAnimalExpts)
     end
     currentDir = dir(dirStrAnalysis);
     for iDir = 1:length(currentDir) %could add a check to see if files exist to save time (if they do)
-        
-        
+
         if strfind(currentDir(iDir).name,'EEGdata') >0
             fileString = [dirStrAnalysis currentDir(iDir).name];
             load(fileString);
@@ -108,39 +99,39 @@ for iList = 1:length(listOfAnimalExpts)
             clear DSephysData
         end
         if strfind(currentDir(iDir).name,'trial') >0
+            %if 
             display(['Copying ' currentDir(iDir).name]);
             copyfile([dirStrAnalysis currentDir(iDir).name],['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\' currentDir(iDir).name])
+            %else
+                
+            %end
         end
     end
     % MOVIES: grid, prep % 
     addpath('Z:\DataBanks\mmread');
     vidFile = dir([dirStrRawData '*.avi']); % simplified version for Synapse
     if isempty(vidFile)
-        error('video file not found!  This program expects video!')
-    end
-    vidFilePath = [dirStrRawData vidFile.name];
-    repeatedAttempts = 1;
-    maxAttempts = 4;
-    if isempty(dir([dirStrAnalysis '*-framegrid.mat']))|| forceRegrid
-        while repeatedAttempts < maxAttempts
-            try
-                display('attempting to run mmread on video...')
-                videoFrameGridMakerSynapse(vidFilePath);
-                repeatedAttempts = maxAttempts;
-            catch
-                display(['mmread is slightly unstable.  Let''s try ' num2str(maxAttempts-repeatedAttempts) ' more times.' ])
-                repeatedAttempts = repeatedAttempts+1;
+        warning('video file not found!  This program expects video!')
+    else
+        vidFilePath = [dirStrRawData vidFile.name];
+        repeatedAttempts = 1;
+        maxAttempts = 4;
+        if isempty(dir([dirStrAnalysis '*-framegrid.mat']))|| forceRegrid
+            while repeatedAttempts < maxAttempts
+                try
+                    display('attempting to run mmread on video...')
+                    videoFrameGridMakerSynapse(vidFilePath);
+                    repeatedAttempts = maxAttempts;
+                catch
+                    display(['mmread is slightly unstable.  Let''s try ' num2str(maxAttempts-repeatedAttempts) ' more times.' ])
+                    repeatedAttempts = repeatedAttempts+1;
+                end
             end
         end
     end
     
     
-    
-    
     % insert some method to figure out which index is the control index
-    
-    
-    
     
     
     % %% MUA CHECK %% might want to fix up 'artifact rejection' option - some need it, some don't
@@ -159,7 +150,6 @@ for iList = 1:length(listOfAnimalExpts)
 end
 
 
-
 % this section is run after all indices for a whole day have been
 for i =1:length(listOfAnimalExpts)
     a(i) = {listOfAnimalExpts{i}(1:5)};
@@ -174,11 +164,10 @@ for i = 1:length(b)
 end
 
 
-
 % Add a check here to see if plotting is finished !for *each* day otherwise
 % rerunning this each time will take a very long time - possibly add a
 % 'force___' run toggle?
-addpath('Z:\fieldtrip-20170405\','Z:\DataBanks\mouseDeliriumEphysAnalysis');
+addpath('Z:\fieldtrip-20170405\');
 [gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis_Synapse(animal);
 % save mouseEphys_out, gBatchParams, and spectra
 % !! TODO !! need to put this after the behave/video processing !!
@@ -186,11 +175,10 @@ saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out)
 % run Ziyad's plotting program
 plotFieldTripSpectra_ZS({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
 
-
 % phase lag; 
 [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animal,0);
 saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn);
-% update table so we can compare total power between WT and AD
+% update tables so we can compare total power between WT and AD
 
 
 % slope analysis; 

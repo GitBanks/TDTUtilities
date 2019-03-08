@@ -5,7 +5,8 @@ function [threshEst] = behaviorThresholdEstimation(experimentInfo)
 % this is the previous way movement or nonmovement were determined.  Some
 % analysis still expects movement and nonmovement inputs, so this will
 % fulfill that need, and provide a reference comparisons.
-estimationHist = cat(2,experimentInfo(1:4).framesRaw);
+nExpts = length(experimentInfo);
+estimationHist = cat(2,experimentInfo(1:nExpts).framesRaw);
 estimationHist = log(estimationHist);
 estimationHist = estimationHist(estimationHist>0);
 pdf_gaussmix = @(estimationHist,p,mu1,sig1,mu2,sig2) ...

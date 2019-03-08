@@ -41,6 +41,12 @@ for iAnimal = 1:length(animalList)
     for iDate = 1:length(theseDates)
         thisDate = theseDates{iDate};
         thisTreat = batchParams.(thisName).(thisDate).treatment;
+        if size(thisTreat,2) > 1
+            thisTreat = thisTreat{1};
+%             str = sprintf('%s,', thisTreat{:});
+        else
+            thisTreat = thisTreat{:};
+        end
         figureName = ([thisName ' - ' thisDate ' - ' thisTreat ' - no parse']);
         figH = figure('Name',figureName);
         

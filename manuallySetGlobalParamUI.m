@@ -4,7 +4,7 @@ function manuallySetGlobalParamUI(animalName)
 
 
 dbConn = dbConnect();
-S.Preselects = unique(fetch(dbConn,'SELECT paramfield FROM global_stimparams')); 
+S.Preselects = unique(fetchAdjust(dbConn,'SELECT paramfield FROM global_stimparams')); 
 S.animalName = animalName;
 S.fh = figure('units','pixels',...
     'position',[100 100 1050 700],...

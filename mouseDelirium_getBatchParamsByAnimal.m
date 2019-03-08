@@ -64,15 +64,22 @@ for iDate=1:length(dateList)
     pars.expt(iDate).exptDate = ['date' dateList{iDate}];
     pars.expt(iDate).dataPath = [defaultPath animalName filesep dateList{iDate} filesep];
     exptList = getExperimentsByAnimalAndDate(animalName,dateList{iDate});
+    %need to add fix for multiple drugs... 
     for j = 1:size(exptList,1)
-        [nVals(j),parNames(j),parVals(j)] = getGlobalStimParams(exptList{j}(1:5),exptList{j}(7:9));
+        [nVals(j,:),parNames(j,:),parVals(j,:)] = getGlobalStimParams(exptList{j}(1:5),exptList{j}(7:9));
     end
     %!WARNING! % if more than one drug was used, nVals will be 2 (or more)
     if sum(nVals(:)) < size(exptList,1)
         error('Incomplete drug information has been entered for this animal!')
     end
     uniqueDrugs = unique(parNames,'stable');
-    pars.expt(iDate).treatment = uniqueDrugs{:};
+    if size(uniqueDrugs,1) >= 2
+        for i = 1:length(uniqueDrugs)
+            pars.expt(iDate).treatment{i} = uniqueDrugs{i};
+        end
+    else
+       pars.expt(iDate).treatment = uniqueDrugs;
+    end
     pars.expt(iDate).dose = max(parVals(strcmp(parNames,uniqueDrugs))); %WARNING! Not ready for 2-drug experiments!! 19102
     pars.expt(iDate).timeReInj = timeReInj;
     for j = 1:length(recForAnimal)

@@ -28,7 +28,7 @@ function [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(anima
 % animalName = 'EEG52';
 
 %add in relevant paths... 
-synapsePathing;
+% synapsePathing;
 
 if ~exist('animalName','var')
     error('At least select an animal');

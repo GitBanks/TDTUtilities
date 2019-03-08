@@ -2,7 +2,7 @@ function [outputList] = getExperimentsByAnimal(animalName,findExptType,ignoreChe
 % Test params
 %animalName = 'DREADD06';
 %findExptType = 'CNO';
-%animalName = 'EEG53';
+%animalName = 'EEG68';
 %findExptType = 'CNO';
 
 if nargin <1
@@ -51,18 +51,27 @@ end
 
 
 iList = 1;
-% if description says to ignore
-while ignoreCheck  
-    if ~isempty(strfind(outputList{iList,2}{:},'Ignore')) ||...
-            ~isempty(strfind(outputList{iList,2}{:},'ignore'))
-        outputList(iList,:) = [];
-    end
-    iList = iList+1;
-    if iList > size(outputList,1)
-        ignoreCheck = false;
-    end
-end
 
+% if description says to ignore
+% while ignoreCheck  
+%     if ~isempty(strcmp(outputList{iList,2}{:},'Ignore')) ||...
+%             ~isempty(strfind(outputList{iList,2}{:},'ignore'))
+%         outputList(iList,:) = [];
+%     else
+%         iList = iList+1;
+%     end
+%     
+%     if iList > size(outputList,1)
+%         ignoreCheck = false;
+%     end
+% end
+if ignoreCheck
+    exptDesc = cellfun(@(x) x{:}, outputList(:,2), 'un', 0);
+    outputList = outputList(~(contains(exptDesc,'ignore') | contains(exptDesc,'Ignore')),:);
+    exptDesc = cellfun(@(x) x{:}, outputList(:,2), 'un', 0);
+    outputList = outputList(~(contains(exptDesc,'test') | contains(exptDesc,'Test')),:);
+end
+% cellfun(@isempty,contains(exptDesc,'ignore'))
 
 close(dbConn);
 
