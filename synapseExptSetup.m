@@ -12,6 +12,9 @@ function Experiment = synapseExptSetup(animalName,experimentDrugManipulation,nHo
 % experimentDrugManipulation = 'ISO'; 
 
 % %% !!! WARNING !!! %%
+% updated 3/12/2019 to use nHoursPre and nHoursPost to generate
+% indexDescriptionSequence. Vision below is still a goal. 
+
 % as of 10/4/18 nHoursPre and nHoursPost don't do anything.  This whole
 % process needs a rewrite.  Consider using a table lookup for each paradigm
 % . In this state, it works for a limited set of experiments (described
@@ -35,13 +38,9 @@ end
 
 if ~usesIso || (useStims && ~usesIso)
     indexSubdivisions = {'a','b','c','d'};
-    indexDescriptionSequence = {
-    'Pre-Inj'
-    'Post-Inj'
-    'Post-Inj'
-    'Post-Inj'
-    'Post-Inj'
-    };
+    indexDescriptionSequence(1:nHoursPre) = {'Pre-Inj'};
+    indexDescriptionSequence(nHoursPre+1:nHoursPost+nHoursPre) = {'Post-Inj'};
+    
     indexDescriptionRECtype = {
     'Spon'
     'Stim'

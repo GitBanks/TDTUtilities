@@ -16,9 +16,9 @@ defaultPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\'; %W: dr
 pars.windowLength = 4; %sec
 pars.windowOverlap = 0.25; %fractional overlap
 
-timeReInj = -1:3; %hardcoded PLEASE FIX
+% timeReInj = -1:3; %hardcoded PLEASE FIX
 % the following prevents evoked stuff from being read in.
-clear recForAnimal %19107 ZS
+
 %if contains(animalName,'LFP') || contains(animalName,'DREADD')
 % if ~isempty(strfind(animalName,'LFP')) ||
 % ~isempty(strfind(animalName,'DREADD')) ZS 19107
@@ -42,8 +42,6 @@ for k = 1:length(electrodeInfo)
     end
 end
 ephysInfo.EMGchan = [];
-% timeReInj = -1:0.5:3.5; %commented out ZS 1/17/2019
-% end
 
 % 1. find unique dates.
 descForAnimal = recForAnimal(:,2);
@@ -60,6 +58,7 @@ dateList = unique(cellfun(@(recForAnimal){recForAnimal(1:5)},recForAnimal),'stab
 % uniqueDrugs = unique(parNames,'stable');
 
 for iDate=1:length(dateList)
+    thisDate = dateList{iDate};
     tempIndex = 1;
     pars.expt(iDate).exptDate = ['date' dateList{iDate}];
     pars.expt(iDate).dataPath = [defaultPath animalName filesep dateList{iDate} filesep];
@@ -73,15 +72,23 @@ for iDate=1:length(dateList)
         error('Incomplete drug information has been entered for this animal!')
     end
     uniqueDrugs = unique(parNames,'stable');
+    %a first attempt at handling multiple drug experiments. 3/13/2019 ZS
     if size(uniqueDrugs,1) >= 2
         for i = 1:length(uniqueDrugs)
             pars.expt(iDate).treatment{i} = uniqueDrugs{i};
+            pars.expt(iDate).dose{i} = max(parVals(strcmp(parNames,uniqueDrugs{i})));
         end
     else
        pars.expt(iDate).treatment = uniqueDrugs;
+       pars.expt(iDate).dose = max(parVals(strcmp(parNames,uniqueDrugs))); 
     end
-    pars.expt(iDate).dose = max(parVals(strcmp(parNames,uniqueDrugs))); %WARNING! Not ready for 2-drug experiments!! 19102
+    
+    %set timeReInj based on number of experiments! WIP
+    descsThisDate = [exptList{:,2}];
+    nPreInj = sum(cellfun(@(c)contains(c,'Pre'),descsThisDate)); %count number of pre-injection periods
+    timeReInj = (1:size(exptList,1))-(nPreInj+1);
     pars.expt(iDate).timeReInj = timeReInj;
+    
     for j = 1:length(recForAnimal)
         if strfind(recForAnimal{j}(1:5),dateList{iDate})
             pars.expt(iDate).exptIndex{tempIndex} = recForAnimal{j}(7:9);

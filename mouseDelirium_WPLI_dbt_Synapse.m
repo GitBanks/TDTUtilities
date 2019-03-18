@@ -92,7 +92,7 @@ if ~exist([outPath thisName],'file')
     error(['No ephys data for ' thisName]);
 end
 
-for iDate = 1:length(eDates) %ZS UPDATED 1/15/2019
+for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
     thisDate = eDates{iDate};       %eDates{end};      
     disp('------------------------');
     disp(['Animal ' thisName ' - Date: ' thisDate]);
@@ -274,13 +274,13 @@ for iDate = 1:length(eDates) %ZS UPDATED 1/15/2019
                         bandTFR=dbt(seg_dat.trial{iTrial}',seg_dat.fsample,bw,'offset',freqRange(1),'lowpass',freqRange(2)-bw);
                         if iTrial==1
                             [nTimePts,nFreqs,~] = size(bandTFR.blrep);
-                            csdDum = zeros(nTrials,nChanCmbs,nFreqs,nTimePts);
+                            csdDum = gpuArray(zeros(nTrials,nChanCmbs,nFreqs,nTimePts)); %added gpuArray call to prevent crash at line 280... ZS
                         end
                         csdTemp = bandTFR.blrep(:,:,chanCmb(:,1)).*conj(bandTFR.blrep(:,:,chanCmb(:,2)));
-                        csdDum(iTrial,:,:,:) = permute(csdTemp,[3,2,1]);
+                        csdDum(iTrial,:,:,:) = permute(csdTemp,[3,2,1]); %this line will fail on BanksRig
                     end
                     csdDum = squeeze(mean(csdDum,4));
-
+                    csdDum = gather(csdDum); %transferring the 'gpuArray' to local workspace with the 'gather' function:
                     [wpli,sem] = my_wPLI(csdDum);
                     %wPLI is returned as n_ChannCmb x nFreqs. Need to reshape back to
                     %nChanXnChan, and take average across frequency

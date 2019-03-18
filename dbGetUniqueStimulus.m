@@ -35,7 +35,7 @@ dbConn = dbConnect();
 
 % Look to see if the fields in our structure match columns in the database
 tempStimFields = fieldnames(stimPar);
-if isVersionNewerThan(9.4) %added 2/20/2019 ZS
+if isVersionNewerThan(9.3) %updated 3/12/19 %added 2/20/2019 ZS
     dbTable = sqlfind(dbConn,'stimuli');
     dbStimFields = dbTable.Columns{strcmp(dbTable.Table,'stimuli')};
 else

@@ -167,7 +167,7 @@ end
 % Add a check here to see if plotting is finished !for *each* day otherwise
 % rerunning this each time will take a very long time - possibly add a
 % 'force___' run toggle?
-addpath('Z:\fieldtrip-20170405\');
+addpath('Z:\fieldtrip-20170405\','Z:\DataBanks\Kovach Toolbox Rev 751\trunk\DBT');
 [gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis_Synapse(animal);
 % save mouseEphys_out, gBatchParams, and spectra
 % !! TODO !! need to put this after the behave/video processing !!

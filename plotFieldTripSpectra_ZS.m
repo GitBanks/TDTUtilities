@@ -20,7 +20,7 @@ if ~exist('animalList','var')
     error('Please enter animal name(s)')
 elseif ~iscell(animalList) %ZS 1/22/2019 want to try using a try catch loop
     animalList = {animalList};
-    warning('this function expects animal name(s) inside a cell');
+%     warning('this function expects animal name(s) inside a cell');
 end
 
 outDataPath = 'M:\mouseEEG\Power\';
@@ -41,13 +41,13 @@ for iAnimal = 1:length(animalList)
     for iDate = 1:length(theseDates)
         thisDate = theseDates{iDate};
         thisTreat = batchParams.(thisName).(thisDate).treatment;
-        if size(thisTreat,2) > 1
-            thisTreat = thisTreat{1};
-%             str = sprintf('%s,', thisTreat{:});
+        if size(thisTreat,2) > 1 
+%             thisTreat = thisTreat{1};
+            treatStr = sprintf('%s,', thisTreat{:});
         else
-            thisTreat = thisTreat{:};
+            treatStr = thisTreat;
         end
-        figureName = ([thisName ' - ' thisDate ' - ' thisTreat ' - no parse']);
+        figureName = ([thisName ' - ' thisDate ' - ' treatStr ' - no parse']);
         figH = figure('Name',figureName);
         
         set(gcf,'DefaultAxesColorOrder',colorOrder); %set color order for current figure. These are colors I like - ZS 19124 
