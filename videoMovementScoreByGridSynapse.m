@@ -31,6 +31,11 @@ function videoMovementScoreByGridSynapse(animal,exptDate)
 % animal = 'EEG37';
 % exptDate = '17615';
 
+% animal = 'EEGRoboMouse';
+% exptDate = '19310';
+
+
+
 % a few hard-coded variables that should be parameters or from settings file
 masterFileName = 'W:\Data\PassiveEphys\EEG animal data\MouseBehavParams.mat';
 rootDir = 'M:\PassiveEphys\2019\'; % !!TODO!! % get 2018 path a little smarter than you're doing right now.
@@ -45,7 +50,7 @@ for iDays = 1:size(listOfAnimalExpts,1)
     end
     if ~isempty(strfind(listOfAnimalExpts{iDays,1}(1:5),exptDate))
         operationList{listIndex} = listOfAnimalExpts{iDays,1};
-        framesFile = dir([rootDir operationList{listIndex} '\*framegrid*']);
+        framesFile = dir([rootDir operationList{listIndex} '\*framegrid.mat*']);
         if isempty(framesFile)
             error('No framegrid found.  Check that path is OK, and framegrid has been run.');
         end
@@ -94,19 +99,31 @@ for iList = 1:length(operationList)
         end
     end
     framesTemp = framesTemp/nSquares;
-    for iSubt = 1:length(framesTemp)-1
-        framesTemp(iSubt) = abs(framesTemp(iSubt+1)-framesTemp(iSubt));
-    end
-    experimentInfo(iList).framesRaw = framesTemp;
+%     for iSubt = 1:length(framesTemp)-1
+%         
+%         %framesTemp(iSubt) = abs(framesTemp(iSubt+1)-framesTemp(iSubt));
+%     end
+    %framesTemp = 
+    experimentInfo(iList).framesRaw = abs(diff(framesTemp));
+    
+    experimentInfo(iList).framesRaw(1:expectedOneSecondSpan) = 0;
+    experimentInfo(iList).framesRaw(end-expectedOneSecondSpan:end) = 0;
+    
     % smoothing we've been using
     % 'raiseTheRoof' is a smoothing that only pushes values higher (to
     % account for instability when animal moves around)
-    experimentInfo(iList).framesRaw = smooth(raiseTheRoof(experimentInfo(iList).framesRaw,expectedOneSecondSpan*4),expectedOneSecondSpan*4,'sgolay');
+    %experimentInfo(iList).framesRaw = smooth(raiseTheRoof(experimentInfo(iList).framesRaw,expectedOneSecondSpan*4),expectedOneSecondSpan*4,'sgolay');
     
+    a = smooth(experimentInfo(iList).framesRaw,expectedOneSecondSpan,'sgolay');
+    
+    experimentInfo(iList).framesRaw = smooth(experimentInfo(iList).framesRaw,expectedOneSecondSpan);
+    % convol
+    
+    
+    experimentInfo(iList).framesRaw(find(experimentInfo(iList).framesRaw<0)) = 0;
     %set beginning and end .5 seconds to zero 
-    halfS = floor(expectedOneSecondSpan/2);
-    experimentInfo(iList).framesRaw(1:expectedOneSecondSpan*4) = 0;
-    experimentInfo(iList).framesRaw(end-expectedOneSecondSpan*4:end) = 0;
+    %halfS = floor(expectedOneSecondSpan/2);
+   
     
     % == normalized frame value calculation ==
     maxVal = prctile(tempCatAllGrids,99);

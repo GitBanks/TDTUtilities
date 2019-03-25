@@ -1,17 +1,49 @@
 function behaviorVideoImportFrontEnd()
 
-S.nMice = 2;
+S.nMice = 8;
 S.fileSys.rawData = '\\144.92.218.131\Data\Data\PassiveEphys\';
 S.fileSys.analyzedData = '\\MEMORYBANKS\Data\PassiveEphys\';
+
+
+
+% we're still working out details like where to store temp data, raw data,
+% and how other data are stored.  forcedDate is a workaround in case
+% experimental data are not entered into the notebook on the day the
+% experiment took place.
+S.forcedDate = '0';
+S.forcedDate = '19311'; %set to zero if you don't need to create an entry 
+% on a date before *today*.  creating an entry today is default behavior
+
+
+
 % will need to manually move video files to a temp folder, and point to
 % that folder here:
-S.vFileName{1} = 'C:\Users\Grady\Desktop\MinocyclineExpt-190218-120819\Saline-190218-120819\MinocyclineExpt-190218-120819_Saline-190218-120819_Cam1.avi';
-S.vFileName{2} = 'C:\Users\Grady\Desktop\MinocyclineExpt-190218-120819\Saline-190218-131554\MinocyclineExpt-190218-120819_Saline-190218-131554_Cam1.avi';
-S.vFileName{3} = 'C:\Users\Grady\Desktop\MinocyclineExpt-190218-120819\Saline-190218-131819\MinocyclineExpt-190218-120819_Saline-190218-131819_Cam1.avi';
-S.vFileName{4} = 'C:\Users\Grady\Desktop\MinocyclineExpt-190218-120819\Saline-190218-132049\MinocyclineExpt-190218-120819_Saline-190218-132049_Cam1.avi';
-S.vFileName{5} = 'C:\Users\Grady\Desktop\MinocyclineExpt-190218-120819\Saline-190218-132316\MinocyclineExpt-190218-120819_Saline-190218-132316_Cam1.avi';
+% S.vFileName{1} = 'C:\Users\Grady\Desktop\mino temp\19227-000\_19227-000_Cam1.avi';
+% S.vFileName{1} = 'C:\Users\Grady\Desktop\mino temp\19227-001\_19227-001_Cam1.avi';
+% S.vFileName{3} = 'C:\Users\Grady\Desktop\mino temp\19220-002\_19220-002_Cam1.avi';
+% S.vFileName{4} = 'C:\Users\Grady\Desktop\mino temp\19220-003\_19220-003_Cam1.avi';
+% S.vFileName{5} = 'C:\Users\Grady\Desktop\mino temp\19220-004\_19220-004_Cam1.avi';
 
+% S.vFileName{1} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19312-hr1\MCTest-190306-100258_19312-hr1_Cam1.avi';
+% S.vFileName{2} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19312-hr2\MCTest-190306-100258_19312-hr2_Cam1.avi';
+% S.vFileName{3} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19312-hr3\MCTest-190306-100258_19312-hr3_Cam1.avi';
+% S.vFileName{4} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19312-hr4\MCTest-190306-100258_19312-hr4_Cam1.avi';
+% S.vFileName{5} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19312-hr5\MCTest-190306-100258_19312-hr5_Cam1.avi';
+% S.vFileName{6} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19312-hr6\MCTest-190306-100258_19312-hr6_Cam1.avi';
 
+% S.vFileName{1} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19313-hr1\MCTest-190306-100258_19313-hr1_Cam1.avi';
+% S.vFileName{2} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19313-hr2\MCTest-190306-100258_19313-hr2_Cam1.avi';
+% S.vFileName{3} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19313-hr3\MCTest-190306-100258_19313-hr3_Cam1.avi';
+% S.vFileName{4} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19313-hr4\MCTest-190306-100258_19313-hr4_Cam1.avi';
+% S.vFileName{5} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19313-hr5\MCTest-190306-100258_19313-hr5_Cam1.avi';
+% S.vFileName{6} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19313-hr6\MCTest-190306-100258_19313-hr6_Cam1.avi';
+
+S.vFileName{1} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr1\MCTest-190306-100258_19311-hr1_Cam1.avi';
+S.vFileName{2} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr2\MCTest-190306-100258_19311-hr2_Cam1.avi';
+S.vFileName{3} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr3\MCTest-190306-100258_19311-hr3_Cam1.avi';
+S.vFileName{4} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr4\MCTest-190306-100258_19311-hr4_Cam1.avi';
+S.vFileName{5} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr5\MCTest-190306-100258_19311-hr5_Cam1.avi';
+S.vFileName{6} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr6\MCTest-190306-100258_19311-hr6_Cam1.avi';
 
 
 
@@ -63,14 +95,16 @@ S.pbLoad = uicontrol('style','push',...
 
 function [S] = loadNextVideo(varargin)
 S = varargin{3};
-if S.workingFileIndex > length(S.vFileName)
-    disp('Assignment complete.')
-    uiresume;
-end
+
 if isfield(S,'video')
     S = rmfield(S,'video');
 end
 S.workingFileIndex = S.workingFileIndex+1;
+if S.workingFileIndex > length(S.vFileName)
+    disp('Assignment complete.')
+    uiresume(S.fh);
+    return;
+end
 v = VideoReader(S.vFileName{S.workingFileIndex});
 
 iFrames = 1;
@@ -131,7 +165,7 @@ for iList = 1:length(S.finalList) % loop through each animal
     exptDescTemp = ['Behavior of multiple animals, hour ' num2str(S.workingFileIndex) ' zone ' num2str(iList)];
     animalName = S.finalList{iList};
     % assign animal to index in the notebook, create entry
-    [exptDate,exptIndex,~] = createNewNotebookEntryTDT(exptDescTemp,animalName);
+    [exptDate,exptIndex,~] = createNewNotebookEntryTDT(exptDescTemp,animalName,S.forcedDate);
     % move video array subset to appropriate index
     tempW = S.mouseLoc(iList).coords(1):S.mouseLoc(iList).coords(1)+S.mouseLoc(iList).coords(3);
     tempH = S.mouseLoc(iList).coords(2):S.mouseLoc(iList).coords(2)+S.mouseLoc(iList).coords(4);

@@ -1,4 +1,4 @@
-function [exptDate,exptIndex,exptIndexLast] = createNewNotebookEntryTDT(exptDescTemp,animalName)
+function [exptDate,exptIndex,exptIndexLast] = createNewNotebookEntryTDT(exptDescTemp,animalName,exptDateForce)
 
 % animalName = Animal Name
 % exptIndexLast = this is used by calling program to track last index (the
@@ -16,6 +16,11 @@ function [exptDate,exptIndex,exptIndexLast] = createNewNotebookEntryTDT(exptDesc
 % exptIndexLast = -1;
 % exptDate = '2019-02-12';
 % exptIndex = '0';
+% exptDateForce = '19311';
+
+if ~exist('exptDateForce','var')
+    exptDateForce = 0;
+end
 
 dbConn = dbConnect(); % opens a database connection.  closed at bottom.
 % it's possible a db object exists so this is redundant, so we might want
@@ -29,54 +34,56 @@ dbConn = dbConnect(); % opens a database connection.  closed at bottom.
 if ~exist('exptDescTemp','var')
     error('Need animal name');
 end
-
 if ~exist('animalName','var')
     error('Need animal name');
 end
-
 lastEntryID = fetchAdjust(dbConn,'SELECT MAX(exptID) FROM masterexpt');
 hardware = 'TDT'; %this is always a TDT specific program.
 grandExpt = 'PassiveEphys'; %this is another assumption
 animalID = fetchAdjust(dbConn,['SELECT animalID FROM animals WHERE animalName=''' animalName '''']);
-% find the last date and index in the notebook
 
-exptDateLast = fetchAdjust(dbConn,['SELECT exptDate FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
-exptIndex = fetchAdjust(dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
 experimenterID = fetchAdjust(dbConn,['SELECT experimenterID FROM masterexpt WHERE exptID= ''' num2str(lastEntryID{1}) '''']);
-
-% Narrow down expts from today to just the named animal's 
-expts = getExperimentsByAnimalAndDate(animalName,formatDateFive(exptDateLast{1}));
-
-exptDate = houseTodayDateIn_dbForm;
-if isempty(expts) % if there are no experiments for this named animal
-    exptIndexLast = [];
-    % if there are already entries today 
-    if isequal(houseTodayDateIn_dbForm,exptDateLast{1})
-       exptIndex{1} = exptIndex{1}+1;
+% Added a way to specify a date to create an experiment, in the case one
+% wasn't entered, e.g.
+if exptDateForce>0
+    exptIndex = max(cell2mat(fetchAdjust(dbConn,['SELECT exptIndex FROM masterexpt WHERE exptDate ='  '''' houseConvertDateTo_dbForm(exptDateForce) ''''])));
+    if isempty(exptIndex)
+        exptIndex = 0;
     else
-        exptIndex{1} = 0;
+        exptIndex = exptIndex+1;
     end
-else % if there are already experiments for this animal
-    if isequal(houseTodayDateIn_dbForm,exptDateLast{1})
-        exptIndex{1} = exptIndex{1}+1;
-        exptIndexLast = expts{end,1}(7:9);
+    exptIndex = {exptIndex};
+    exptDate = houseConvertDateTo_dbForm(exptDateForce);
+    expts = getExperimentsByAnimalAndDate(animalName,exptDateForce);
+    if isempty(expts)
+        exptIndexLast = [];
     else
-        exptIndex{1} = 0;
+        exptIndexLast = expts{end,1}(7:9);
+    end
+else % otherwise create an entry in today's ledger
+    % find the last date and index in the notebook
+    exptDateLast = fetchAdjust(dbConn,['SELECT exptDate FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
+    exptIndex = fetchAdjust(dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
+    exptDate = houseTodayDateIn_dbForm;
+    % Narrow down expts from today to just the named animal's 
+    expts = getExperimentsByAnimalAndDate(animalName,formatDateFive(exptDateLast{1}));
+    if isempty(expts) % if there are no experiments for this named animal
+        exptIndexLast = [];
+        % if there are already entries today 
+        if isequal(houseTodayDateIn_dbForm,exptDateLast{1})
+           exptIndex{1} = exptIndex{1}+1;
+        else
+            exptIndex{1} = 0;
+        end
+    else % if there are already experiments for this animal
+        if isequal(houseTodayDateIn_dbForm,exptDateLast{1})
+            exptIndex{1} = exptIndex{1}+1;
+            exptIndexLast = expts{end,1}(7:9);
+        else
+            exptIndex{1} = 0;
+        end
     end
 end
-
-
-% % check today's date, make sure if date is different index is reset
-% if isequal(houseTodayDateIn_dbForm,exptDate{1})
-%     exptIndexLast = exptIndex{1};
-%     exptDate = exptDate{1};
-%     exptIndex = exptIndex{1}+1;
-% else
-%     exptDate = houseTodayDateIn_dbForm;
-%     exptIndex = 0;
-%     exptIndexLast = [];
-% end
-
 
 thisID = lastEntryID{1}+1;
 % == Add the main information
@@ -121,6 +128,7 @@ addDescription = ['UPDATE masterexpt SET notebookDesc= ''' ...
     num2str(thisID) ''''];
 display(['Description will be: ' exptDescTemp ' Be sure you are happy with that']);
 %! we're editing the notebook here!!! be careful when changing syntax!
+
 exec(dbConn,addNotebookEntry);
 exec(dbConn,addDetailEphys);
 exec(dbConn,addDescription);
