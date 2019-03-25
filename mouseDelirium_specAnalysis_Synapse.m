@@ -1,4 +1,4 @@
-function [gBatchParams, mouseEphys_out] = mouseDelirium_specAnalysis_Synapse(animalName,runICA)
+function [gBatchParams, mouseEphys_out] = mouseDelirium_specAnalysis_Synapse(animalName,runICA,forceReRun)
 %
 % Computes the power spectrum for 
 % mouse ephys data from delirium project (either EEG or LFP). Workflow is 
@@ -26,10 +26,18 @@ outPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
 outFileName = 'mouseEphys_out_noParse_Synapse.mat';
 disp(['Data will be saved to `' outPath '`']);
 
-if nargin < 2
-    runICA = 0;
+switch nargin
+    case 0 
+        error('at least select an animal!');
+    case 1
+        runICA = 0;     %default not to run ICA 
+        forceReRun = 0; %default to not re-analyze previous dates, just most recent
+    case 2
+        forceReRun = 0;    
 end
-gBatchParams = mouseDelirium_getBatchParamsByAnimal(animalName); %grab batchParams
+
+%generate batchParams
+gBatchParams = mouseDelirium_getBatchParamsByAnimal(animalName); 
 
 bands.delta = [2,4];
 bands.theta = [5,12];
@@ -53,6 +61,11 @@ for i = 1:length(tempFields)
         iDate = iDate+1;
     end
 end
+% if forceReRun is false, then just use the most recent date in
+% batchParams.
+if ~forceReRun
+    eDates = eDates(end);
+end
 
 %Downsampled Fs
 dsFs = 200; % Hz
@@ -63,7 +76,7 @@ minSDCriterion = 0.2;
 rejectAcrossChannels = 1; 
 
 %main analysis section
-for iDate = length(eDates)%1:length(eDates)
+for iDate = 1:length(eDates)%1:length(eDates)
     thisDate = eDates{iDate};
     disp('------------------------');
     disp(['Animal ' animalName ' - Date: ' thisDate]);
@@ -77,19 +90,18 @@ for iDate = length(eDates)%1:length(eDates)
         % loadedData is matrix of nChan x nSamples
         [loadedData,eParams] = loadMouseEphysData(eParams,thisDate,iExpt); 
         
-        %Load behav data, divide into segments w/ overlap,
-        %calculate mean of each segment
-        if noMovtToggle %WARNING: This is a TEMPORARY fix.
+        %Load behav data, divide into segments w/ overlap, calculate mean of each segment
+        if noMovtToggle %WARNING: movement will not be added if this is = 1!!!
             meanMovementPerWindow = zeros(10000,1);
             meanMovementPerWindow(:,:) = NaN;
         else
             fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
                 '\' thisDate(5:end) '-' thisExpt(5:end) '-movementInfoAdjusted.mat'];
             try
-                load(['W:\Data\' fileNameStub],'finalLEDTimes','finalMovementArray','frameTimeStampsAdj');
+                load(['W:\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj');
             catch
                 try
-                    load(['M:\' fileNameStub],'finalLEDTimes','finalMovementArray','frameTimeStampsAdj');
+                    load(['M:\' fileNameStub],'finalMovementArray','frameTimeStampsAdj');
                 catch
                     error(['Can not find ' fileNameStub])
                 end
@@ -98,7 +110,7 @@ for iDate = length(eDates)%1:length(eDates)
             windowLength = gBatchParams.(animalName).windowLength;
             windowOverlap = gBatchParams.(animalName).windowOverlap;
 
-            indexLength = frameTimeStampsAdj(end);  %#ok<COLND>
+            indexLength = frameTimeStampsAdj(end);  
             for iWindow = 1:indexLength
                 if ((iWindow-1)*windowLength)*(1-windowOverlap) + windowLength < indexLength
                     windowTimeLims(iWindow,1) = ((iWindow-1)*windowLength)*(1-windowOverlap);
@@ -129,7 +141,7 @@ for iDate = length(eDates)%1:length(eDates)
         cfg.detrend    = 'yes';
         % the following line avoids numeric round off issues in the time axes upon resampling
         %data_MouseEphys.time(1:end) = data_MouseEphys.time(1);
-        addpath('Z:\fieldtrip-20170405\','Z:\DataBanks\mouseDeliriumEphysAnalysis');
+        
         data_MouseEphysDS = ft_resampledata(cfg, data_MouseEphys);     %%%% Returning an error in 2018a - ZS
         data_MouseEphysDS.sampleinfo = [1, size(data_MouseEphysDS.trial{1,1},2)];
         clear data_MouseEphys
@@ -219,9 +231,6 @@ for iDate = length(eDates)%1:length(eDates)
     end %Loop over expts
     gBatchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
 end %Loop over recording dates for this animal
-
-% Add back in new params info to original batchParams structure
-% batchParams.(thisName) = eParams;
 
 
 

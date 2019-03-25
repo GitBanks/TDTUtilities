@@ -163,25 +163,38 @@ for i = 1:length(b)
     end
 end
 
+% Ephys analysis and plotting 
+%============================================================%
+% To-do: add a check here to see if analysis/plotting is finished! 
 
-% Add a check here to see if plotting is finished !for *each* day otherwise
-% rerunning this each time will take a very long time - possibly add a
-% 'force___' run toggle?
-addpath('Z:\fieldtrip-20170405\','Z:\DataBanks\Kovach Toolbox Rev 751\trunk\DBT');
-[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis_Synapse(animal);
-% save mouseEphys_out, gBatchParams, and spectra
-% !! TODO !! need to put this after the behave/video processing !!
-saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out)
-% run Ziyad's plotting program
+% calculate spectra for a single day (is this preferable?) and save
+disp('starting spec analysis'); tic
+addpath('Z:\fieldtrip-20170405\');
+runICA = 0; 
+forceReRun = 1;
+[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis_Synapse(animal,runICA,forceReRun);
+saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); toc
+
+% spectra
 plotFieldTripSpectra_ZS({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
 
-% phase lag; 
+% grady plots
+plotTimeDActivityAndBP('animal','delta',1);
+
+% slope plots
+
+% update power and slope tables
+
+% calculate phase lag for a single day (is this preferable?) and save
+disp('starting wpli analysis'); tic
+addpath('Z:\DataBanks\Kovach Toolbox Rev 751\trunk\DBT');
 [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animal,0);
-saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn);
-% update tables so we can compare total power between WT and AD
+saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn); toc
 
+% update WPLI table
 
-% slope analysis; 
+end
+
 
 
 
