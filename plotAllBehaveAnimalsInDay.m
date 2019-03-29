@@ -17,7 +17,7 @@ yMax = max(max(fullDayMovement));
 fullDayTimestamps = fullDayTimestamps(1,:); % careful! this assumes they're all the same
 fullDayTimestamps = fullDayTimestamps/60/60;
 
-figure('Name',['Daily Activity - ' exptDate]);
+figure('Name',['Daily Activity - ' exptDate],'Position',[60 80 1511 868]);
 for i=1:length(animals)
     subtightplot(length(animals),1,i);
     plot(fullDayTimestamps,fullDayMovement(i,:));

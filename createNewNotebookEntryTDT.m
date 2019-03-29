@@ -12,7 +12,7 @@ function [exptDate,exptIndex,exptIndexLast] = createNewNotebookEntryTDT(exptDesc
 
 % exptDescTemp = 'this is a test. please ignore';
 % animalName = 'EEGRoboMouse';
-% animalName = 'EEG68';
+% animalName = 'EEG72';
 % exptIndexLast = -1;
 % exptDate = '2019-02-12';
 % exptIndex = '0';
@@ -32,7 +32,7 @@ dbConn = dbConnect(); % opens a database connection.  closed at bottom.
 % and exptIndexLast,exptDate,exptIndex are only needed in specific cases.
 
 if ~exist('exptDescTemp','var')
-    error('Need animal name');
+    error('Need expt description');
 end
 if ~exist('animalName','var')
     error('Need animal name');
@@ -41,7 +41,7 @@ lastEntryID = fetchAdjust(dbConn,'SELECT MAX(exptID) FROM masterexpt');
 hardware = 'TDT'; %this is always a TDT specific program.
 grandExpt = 'PassiveEphys'; %this is another assumption
 animalID = fetchAdjust(dbConn,['SELECT animalID FROM animals WHERE animalName=''' animalName '''']);
-
+exptIndexLast = '-1';
 experimenterID = fetchAdjust(dbConn,['SELECT experimenterID FROM masterexpt WHERE exptID= ''' num2str(lastEntryID{1}) '''']);
 % Added a way to specify a date to create an experiment, in the case one
 % wasn't entered, e.g.
@@ -55,9 +55,7 @@ if exptDateForce>0
     exptIndex = {exptIndex};
     exptDate = houseConvertDateTo_dbForm(exptDateForce);
     expts = getExperimentsByAnimalAndDate(animalName,exptDateForce);
-    if isempty(expts)
-        exptIndexLast = [];
-    else
+    if ~isempty(expts)
         exptIndexLast = expts{end,1}(7:9);
     end
 else % otherwise create an entry in today's ledger
@@ -65,23 +63,15 @@ else % otherwise create an entry in today's ledger
     exptDateLast = fetchAdjust(dbConn,['SELECT exptDate FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
     exptIndex = fetchAdjust(dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
     exptDate = houseTodayDateIn_dbForm;
+    exptIndex{1} = exptIndex{1}+1;
+    if ~isequal(houseTodayDateIn_dbForm,exptDateLast{1})
+        exptIndex{1} = 0;
+    end
     % Narrow down expts from today to just the named animal's 
     expts = getExperimentsByAnimalAndDate(animalName,formatDateFive(exptDateLast{1}));
-    if isempty(expts) % if there are no experiments for this named animal
-        exptIndexLast = [];
-        % if there are already entries today 
-        if isequal(houseTodayDateIn_dbForm,exptDateLast{1})
-           exptIndex{1} = exptIndex{1}+1;
-        else
-            exptIndex{1} = 0;
-        end
-    else % if there are already experiments for this animal
-        if isequal(houseTodayDateIn_dbForm,exptDateLast{1})
-            exptIndex{1} = exptIndex{1}+1;
-            exptIndexLast = expts{end,1}(7:9);
-        else
-            exptIndex{1} = 0;
-        end
+    if ~isempty(expts) && isequal(houseTodayDateIn_dbForm,exptDateLast{1})
+        % if there are experiments for this named animal AND they are from today
+        exptIndexLast = expts{end,1}(7:9);
     end
 end
 

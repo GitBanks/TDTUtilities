@@ -123,10 +123,15 @@ updateDynamicDisplayBox('Creating new notebook entry');
 S = createNewNotebookEntry(S); % create notebook entry
 pause(.5);
 % !!!TODO!!! % shut off other buttons?
+
+disp(['notebook ' S.exptDate ' ' S.exptIndex ' made, and ' S.exptIndexLast ' will be analyzed']);
+
 updateDynamicDisplayBox('loading in parameter set');
 S = parameterCreationProcess(S); % create a parameter set and load it in. This starts recording and playing sequence automatically.
 % Here we use parallel computing to run a command to setup (and wait for)
 % next expt while it analyzes the last one.
+
+
 [date,~] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
 if ~isempty(S.exptIndexLast')
     [~,indexLast] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndexLast);
@@ -144,7 +149,6 @@ else
     disp('I hope you didn''t plan to run any spontaneous recordings...')
     sponTime = 610;
 end
-
 
 if S.enableMultiThread % this will make program unavailable until *both* 1 and 2 are finished completely.
     parfor i = 1:2
