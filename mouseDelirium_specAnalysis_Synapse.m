@@ -125,7 +125,12 @@ for iDate = 1:length(eDates)%1:length(eDates)
                     for iFrame = 1:length(timeStampsInWindow)
                         framesToUse(iFrame) = find(frameTimeStampsAdj == timeStampsInWindow(iFrame));
                     end
-                    meanMovementPerWindow(iWindow,1) = mean(finalMovementArray(framesToUse));
+                    try %added 4/8/2019 ZS in case video ran too long and framesToUse has frames outside finalMovementArray... 
+                        meanMovementPerWindow(iWindow,1) = mean(finalMovementArray(framesToUse));
+                    catch
+                        framesToUse = framesToUse(framesToUse <= finalMovementArray);
+                        meanMovementPerWindow(iWindow,1) = mean(finalMovementArray(framesToUse));
+                    end
                 else
                     meanMovementPerWindow(iWindow,1) = NaN;
                 end

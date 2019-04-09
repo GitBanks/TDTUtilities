@@ -19,7 +19,7 @@ for iExpt = 1:size(listOfExpts,1)
                 listIndex = listIndex+1;
             end
         catch %for old system WIP TODO: find how old system data were named.
-            vidFile = dir([rootDir operationList{listIndex} '\operationList{listIndex}*.']);
+            vidFile = dir([rootDir operationList{listIndex} '\' operationList{listIndex}]); %'*.'
             if isempty(vidFile)
                 warning(['No video found for ' operationList{listIndex}  '. Check that path is OK.']);
             else
