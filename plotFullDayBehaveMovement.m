@@ -1,4 +1,4 @@
-function [fullDayMovement] = loadFullDayBehaveMovement(animalName,exptDate)
+function [fullDayMovement] = plotFullDayBehaveMovement(animalName,exptDate)
 
 % animalName = 'MC12';
 % exptDate = '19312';

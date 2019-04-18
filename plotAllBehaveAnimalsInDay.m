@@ -1,12 +1,12 @@
 
 
 
-animals = {'MC09','MC11','MC12','MC15','MC08','MC10','MC13','MC14'};
-treatmentOne = {'PBS','PBS','PBS','PBS','mino','mino','mino','mino'};
+animals = {'MC04';'MC07';'MC16';'MC18';'MC20';'MC21';'MC22';'MC23'}; %{'MC09','MC11','MC12','MC15','MC08','MC10','MC13','MC14'};
+treatmentOne = {'L-655,708';'PBS+DMSO';'L-655,708';'PBS+DMSO';'PBS+DMSO';'L-655,708';'PBS+DMSO';'L-655,708'}; %{'PBS','PBS','PBS','PBS','mino','mino','mino','mino'};
 treatmentTwo = {'PBS','PBS','PBS','PBS','PBS','PBS','PBS','PBS'};
-%treatmentTwo = {'LPS','LPS','LPS','LPS','LPS','LPS','LPS','LPS'};
+% treatmentTwo = {'LPS','LPS','LPS','LPS','LPS','LPS','LPS','LPS'};
 
-exptDate = '19311';
+exptDate = '19410';
 
 for i=1:length(animals)
     disp(['Loading ' animals{i}]);

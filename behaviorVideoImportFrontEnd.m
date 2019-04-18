@@ -10,8 +10,8 @@ S.fileSys.analyzedData = '\\MEMORYBANKS\Data\PassiveEphys\';
 % and how other data are stored.  forcedDate is a workaround in case
 % experimental data are not entered into the notebook on the day the
 % experiment took place.
-S.forcedDate = '0';
-S.forcedDate = '19311'; %set to zero if you don't need to create an entry 
+% S.forcedDate = '0';
+S.forcedDate = '19409'; %set to zero if you don't need to create an entry 
 % on a date before *today*.  creating an entry today is default behavior
 
 
@@ -38,18 +38,38 @@ S.forcedDate = '19311'; %set to zero if you don't need to create an entry
 % S.vFileName{5} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19313-hr5\MCTest-190306-100258_19313-hr5_Cam1.avi';
 % S.vFileName{6} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19313-hr6\MCTest-190306-100258_19313-hr6_Cam1.avi';
 
-S.vFileName{1} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr1\MCTest-190306-100258_19311-hr1_Cam1.avi';
-S.vFileName{2} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr2\MCTest-190306-100258_19311-hr2_Cam1.avi';
-S.vFileName{3} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr3\MCTest-190306-100258_19311-hr3_Cam1.avi';
-S.vFileName{4} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr4\MCTest-190306-100258_19311-hr4_Cam1.avi';
-S.vFileName{5} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr5\MCTest-190306-100258_19311-hr5_Cam1.avi';
-S.vFileName{6} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr6\MCTest-190306-100258_19311-hr6_Cam1.avi';
+% S.vFileName{1} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr1\MCTest-190306-100258_19311-hr1_Cam1.avi';
+% S.vFileName{2} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr2\MCTest-190306-100258_19311-hr2_Cam1.avi';
+% S.vFileName{3} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr3\MCTest-190306-100258_19311-hr3_Cam1.avi';
+% S.vFileName{4} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr4\MCTest-190306-100258_19311-hr4_Cam1.avi';
+% S.vFileName{5} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr5\MCTest-190306-100258_19311-hr5_Cam1.avi';
+% S.vFileName{6} = '\\GILGAMESH\Tanks\MCTest-190306-100258\19311-hr6\MCTest-190306-100258_19311-hr6_Cam1.avi';
+
+% % alpha-5 experiment day 1
+S.vFileName{1} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19409-hr1\MCTest-190306-100258_19409-hr1_Cam1.avi';
+S.vFileName{2} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19409-hr2\MCTest-190306-100258_19409-hr2_Cam1.avi';
+S.vFileName{3} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19409-hr3\MCTest-190306-100258_19409-hr3_Cam1.avi';
+S.vFileName{4} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19409-hr4\MCTest-190306-100258_19409-hr4_Cam1.avi';
+S.vFileName{5} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19409-hr5\MCTest-190306-100258_19409-hr5_Cam1.avi';
 
 
+% % alpha-5 experiment day 1 (re-do)
+% S.vFileName{1} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19410-hr1\MCTest-190306-100258_19410-hr1_Cam1.avi';
+% S.vFileName{2} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19410-hr2\MCTest-190306-100258_19410-hr2_Cam1.avi';
+% S.vFileName{3} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19410-hr3\MCTest-190306-100258_19410-hr3_Cam1.avi';
+% S.vFileName{4} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19410-hr4\MCTest-190306-100258_19410-hr4_Cam1.avi';
+% S.vFileName{5} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19410-hr5\MCTest-190306-100258_19410-hr5_Cam1.avi';
+% S.vFileName{6} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19410-hr6\MCTest-190306-100258_19410-hr6_Cam1.avi';
 
+% % alpha-5 experiment day 2
+% S.vFileName{1} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19411-hr1\MCTest-190306-100258_19411-hr1_Cam1.avi';
+% S.vFileName{2} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19411-hr2\MCTest-190306-100258_19411-hr2_Cam1.avi';
+% S.vFileName{3} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19411-hr3\MCTest-190306-100258_19411-hr3_Cam1.avi';
+% S.vFileName{4} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19411-hr4\MCTest-190306-100258_19411-hr4_Cam1.avi';
+% S.vFileName{5} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19411-hr5\MCTest-190306-100258_19411-hr5_Cam1.avi';
+% S.vFileName{6} = 'C:\TDT\Synapse\Tanks\MCTest-190306-100258\19411-hr6\MCTest-190306-100258_19411-hr6_Cam1.avi';
 
-
-S.workingFileIndex = 0;
+S.workingFileIndex = 2;
 S.fh = figure('units','pixels',...
     'position',[100 100 1400 700],...
     'menubar','none',...
