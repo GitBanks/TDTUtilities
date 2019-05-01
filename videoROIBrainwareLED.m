@@ -1,4 +1,4 @@
-function videoROIBrainwareLED(vidFileName,finalMovementArrayNew,timeGridNew)
+function [finalMovementArrayNew,timeGridNew,finalLEDTimes] = videoROIBrainwareLED(vidFileName,finalMovementArrayNew,timeGridNew)
 
 
 % procedure for aligning existing LED pulse information with corresponding
@@ -41,11 +41,20 @@ tempEphysTrialTime = loadTrialList(ephysDirName);
 
 % 2.5 compare loaded variables and passed parameters
 % 'finalMovementArray','timeGrid' finalMovementArrayNew,timeGridNew
+if length(finalMovementArray)~=length(finalMovementArrayNew)
+    error('finalMovementArrayNew not equal in length to finalMovementArray (old)');
+end
+
+if ~isequal(timeGrid,timeGridNew)
+    error('timeGridNew not equal to timeGrid (old)');
+end
+
+clear timeGrid finalMovementArray % delete loaded timeGrid and finalMovementArray.
 
 
 % 3. determine ephys trial start times
 tempEphysTrialTime = tempEphysTrialTime(:) - tempEphysTrialTime(1); % relative to beginning of ephys start time
-tempLEDTrialTime = timeGrid(finalLEDTimes)';
+tempLEDTrialTime = timeGridNew(finalLEDTimes)';
 if length(tempEphysTrialTime) ~= length(tempLEDTrialTime)
    tempEphysTrialTime = tempEphysTrialTime(1:length(tempLEDTrialTime)); %Occurs when end of video is cut off
 end
@@ -58,8 +67,8 @@ tempEphysLEDDiff = tempEphysTrialTime-tempLEDTrialTime;
 % we want to reassign tempLEDTrialTime because we fixed any
 % calculated times to a real, nearest frame
 for iTimes = 1:length(tempLEDTrialTime)
-    tempNewFrameTimes = timeGrid;
-    tempLEDTrialTime = timeGrid(finalLEDTimes)';
+    tempNewFrameTimes = timeGridNew;
+    tempLEDTrialTime = timeGridNew(finalLEDTimes)';
     tempEphysLEDDiff = tempEphysTrialTime-tempLEDTrialTime;
     % correct jitter (lack of frame precision) and drift (unexplained video desynchronization) 
     % if we need to adjust the LED start time more than a full
@@ -83,17 +92,17 @@ for iTimes = 1:length(tempLEDTrialTime)
         tempNewFrameTimes(framesToKill) = [];
         %also change movement array, timestamps, and LED timestamps from
         %Expt structure
-        timeGrid(framesToKill) = [];
-        finalMovementArray(framesToKill) = [];
+        timeGridNew(framesToKill) = [];%timeGrid(framesToKill) = [];
+        finalMovementArrayNew(framesToKill) = []; %finalMovementArray(framesToKill) = []; 
         finalLEDTimes(iTimes:end) = finalLEDTimes(iTimes:end)-length(framesToKill);
     end
 
     %NOW we can match the LED to ephys directly (and make
     %whatever small adjustments we need to)
-    timeAdj = timeGrid(finalLEDTimes(iTimes)) - tempEphysTrialTime(iTimes);
+    timeAdj = timeGridNew(finalLEDTimes(iTimes)) - tempEphysTrialTime(iTimes); %timeGrid(finalLEDTimes(iTimes)) - tempEphysTrialTime(iTimes);
     thisTrialIndex = finalLEDTimes(iTimes);
     %nextTrialIndex = Experiment(iList).LEDTimesAdj(iTimes+1);
-    timeGrid(thisTrialIndex:end) = timeGrid(finalLEDTimes(iTimes):end)-timeAdj;
+    timeGridNew(thisTrialIndex:end) = timeGridNew(finalLEDTimes(iTimes):end)-timeAdj; %timeGrid(thisTrialIndex:end) = timeGrid(finalLEDTimes(iTimes):end)-timeAdj;
     %Experiment(iList).frameTimeStampsAdj(Experiment(iList).LEDTimesAdj(iTimes):end)
 end
 

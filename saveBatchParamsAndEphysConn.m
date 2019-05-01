@@ -25,6 +25,16 @@ batchDates = batchDates(contains(batchDates,'date'));
 ephysDates = fieldnames(gMouseEphys_conn.WPLI.(gName));
 eDates = intersect(batchDates,ephysDates);
 
+animals = fieldnames(batchParams);
+
+if ~sum(contains(animals,gName)) > 0 %added 4/22/19
+    batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
+elseif ~contains(fieldnames(batchParams.(gName)),'ephysInfo')
+    batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;   
+end
+
+
+
 for iDate = 1:length(eDates)
     thisDate = eDates{iDate};
     batchParams.(gName).(thisDate) = gBatchParams.(gName).(thisDate);

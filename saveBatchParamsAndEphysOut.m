@@ -22,6 +22,17 @@ dates = fieldnames(gMouseEphys_out.(gName));
 
 % this take like 30 sec to load... is this sustainable?
 load([computerSpecPath outFileName],'mouseEphys_out','batchParams');
+
+
+animals = fieldnames(batchParams);
+
+%add check to see if ephys info has already been entered for this animal. 
+if ~sum(contains(animals,gName)) > 0 %added 4/22/19
+    batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
+elseif ~contains(fieldnames(batchParams.(gName)),'ephysInfo')
+    batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;   
+end
+
 for iDate = 1:length(dates)
     thisDate = dates{iDate};
     batchParams.(gName).(thisDate) = gBatchParams.(gName).(thisDate);
