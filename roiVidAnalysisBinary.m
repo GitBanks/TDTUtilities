@@ -193,9 +193,8 @@ temp_dFrames = abs(diff(frames,1,3));
 
 
 temp_dFrames = temp_dFrames(:,:,framesToKeep(1:end-1));
-if ~synapseData
-    times = times(framesToKeep(1:end-1));
-end
+
+times = times(framesToKeep(1:end-1));
 
 %% Debug
 % figure()
@@ -209,7 +208,7 @@ end
 
 disp('2D smoothing')
 %sm_temp_dFrames = nan(h,w,nFrames-1);
-sm_temp_dFrames_avg = nan(nFrames-1,1);
+sm_temp_dFrames_avg = nan(size(temp_dFrames,3),1);
 parfor i = 1:size(temp_dFrames,3)
     sm_temp = imfilter(temp_dFrames(:,:,i), ones(7)/7^2); % 2D smoothing filter - are we satisfied with this?
     
