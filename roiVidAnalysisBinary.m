@@ -89,29 +89,28 @@ end
 
 
 
-
-% read whole video into wholeVid structure
 tic
+% read whole video into wholeVid structure
 disp('reading video using mmread');
 wholeVid = mmread(vidFileName);
-toc
+
 
 %preallocate arrays
-tic
+
 disp('preallocating arrays');
 nFrames = length(wholeVid.frames);
 frames = zeros(h,w,nFrames,'uint8');
-toc
+
 
 %convert each frame to grayscale and set pixels outside ROI to zero. 
-tic
+
 disp('converting frames to grayscale & excluding pixels outside ROI');
 for iFrame = 1:nFrames
     frames(:,:,iFrame) = rgb2gray(wholeVid.frames(iFrame).cdata); % store in frames variable for this iteration
    
 end
 times = wholeVid.times;
-toc 
+
 
 
 
@@ -126,8 +125,7 @@ if ~synapseData
     %frames = frames(:,:,framesToKeep);
     
 else
-    times = synapseFrameTimeAdjust(times,frameTimeStamps);
-    framesToKeep = true(size(times));
+    [framesToKeep,times] = synapseFrameTimeAdjust(times,frameTimeStamps);
 end
 
 
@@ -163,13 +161,13 @@ scale(scale<50) = 0;
 %    pause(.01);
 % end
 
-figure()
-tic
-for i = 1:size(frames,3)
-   imagesc(squeeze(frames(:,:,i)));
-   title(i);
-   pause(.01);
-end
+% figure()
+% tic
+% for i = 1:size(frames,3)
+%    imagesc(squeeze(frames(:,:,i)));
+%    title(i);
+%    pause(.01);
+% end
 % toc
 %%
 
@@ -186,14 +184,13 @@ parfor i = 1:size(frames,3)
    %imshow(scaleframe);
    %pause(.01);
 end
-toc
 
 % compute 1st derivative across frames dimension (3)
 
-tic
+
 disp('calculating diff(frames)');
 temp_dFrames = abs(diff(frames,1,3));
-toc
+
 
 temp_dFrames = temp_dFrames(:,:,framesToKeep(1:end-1));
 if ~synapseData
@@ -209,7 +206,7 @@ end
 
 %%
 % 2D smoothing (this takes >100 seconds
-tic
+
 disp('2D smoothing')
 %sm_temp_dFrames = nan(h,w,nFrames-1);
 sm_temp_dFrames_avg = nan(nFrames-1,1);
@@ -225,7 +222,7 @@ parfor i = 1:size(temp_dFrames,3)
     
 
 end
-toc
+
 
 % figure()
 % for i=1:(size(frames,3)-1)
@@ -236,32 +233,27 @@ toc
 
 % smooth the difference array across time and subtract minimum value to
 % correct floor differences
-tic
+avg_FR = size(frames,3)/max(times);
 % finalMovementArray = smooth(sm_temp_dFrames_avg);
-finalMovementArray = smooth(sm_temp_dFrames_avg-min(sm_temp_dFrames_avg),14);
-toc
+finalMovementArray = smooth(sm_temp_dFrames_avg-min(sm_temp_dFrames_avg),2*floor(avg_FR)+1);
 
 % perform adjustment based on size and luminance of mouse/background 
 %finalMovementArray = finalMovementArray/((musArea/bkgdArea)*(bkgdLum-musLum)); 
 
 % calculate average frame rate & divid movement signal by that
-avg_FR = size(frames,3)/max(times);
-finalMovementArray = finalMovementArray*avg_FR; %multiply by average frame rate
-mean(finalMovementArray(100:end-2000))
+%avg_FR = size(frames,3)/max(times);
+%finalMovementArray = finalMovementArray*avg_FR; %multiply by average frame rate
 
 toc;
 
-
 frameTimeStampsAdj = times;
-
-finalMovementArrayNoScale = finalMovementArray;
 
 
 if ~exist(['M:\PassiveEphys\2019\' date '-' index],'dir')
    mkdir(['M:\PassiveEphys\2019\' date '-' index]);
 end
 
-save(['M:\PassiveEphys\2019\' date '-' index '\' date '-' index '-movementBinary.mat'],'finalMovementArray','frameTimeStampsAdj','roiPix','fullROI','mouseROI','finalMovementArrayNoScale');
+save(['M:\PassiveEphys\2019\' date '-' index '\' date '-' index '-movementBinary.mat'],'finalMovementArray','frameTimeStampsAdj','roiPix','fullROI','mouseROI','avg_FR');
 
 end
 
