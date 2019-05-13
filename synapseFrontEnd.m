@@ -28,8 +28,8 @@ function [] = synapseFrontEnd(animalName)
 % ! TODO ! %  add a check to see if we can connect to recording computer path (sometimes network logs us out!) otherwise we can't guarantee importing will work consistantly
 % example path: \\144.92.237.187\c\Data\2018\
 S.enableMultiThread = 1; % for testing or using without parfor, set to 0
-S.recordingComputer = '144.92.237.187';
-S.recordingComputerSubfolder = '\c\Data\';
+S.recordingComputer = '144.92.237.183'; %'\\ANESBL2'; %
+S.recordingComputerSubfolder = '\Data\PassiveEphys\';%'\c\Data\';
 S.dbConn = dbConnect();
 % TODO % animalName is presently a parameter, but a menu selection might be better?  or auto-populate with recent (living) animal? 
 S.animalName = animalName;
@@ -55,7 +55,7 @@ S.fh = figure('units','pixels',...
     'resize','off');  
 updateDynamicDisplayBox('Starting Synapse');
 S = synapseConnectionProcess(S); % Start Synapse, connect to recording computer            
-S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline','a5 Inverse Agonist'};  %added Minocycline 2/12/2019 ZS % just add manipulations as needed for now.  if there's a funky setup, we need to edit synapseExptSetup to handle it (see how iso is handled)
+S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline','a5 Inverse Agonist','Piroxicam'};  %added Minocycline 2/12/2019 ZS % just add manipulations as needed for now.  if there's a funky setup, we need to edit synapseExptSetup to handle it (see how iso is handled)
 uicontrol('style','text',...
     'units','pix',...
     'position',[10 650 120 30],...
@@ -124,7 +124,7 @@ S = createNewNotebookEntry(S); % create notebook entry
 pause(.5);
 % !!!TODO!!! % shut off other buttons?
 
-disp(['notebook ' S.exptDate ' ' S.exptIndex ' made, and ' S.exptIndexLast ' will be analyzed']);
+disp(['notebook ' S.exptDate ', index ' num2str(S.exptIndex{:}) ' made, and ' S.exptIndexLast ' will be analyzed']);
 
 updateDynamicDisplayBox('loading in parameter set');
 S = parameterCreationProcess(S); % create a parameter set and load it in. This starts recording and playing sequence automatically.
@@ -154,10 +154,10 @@ if S.enableMultiThread % this will make program unavailable until *both* 1 and 2
     parfor i = 1:2
         if i == 1
             synapseRecordingPathway(S.syn,S.tempnStims,S.tempnTrials,sponTime); %#ok<*PFBNS>
-            disp(['Recording ' date ' ' S.exptIndex ' finished']);
+            disp(['Recording ' date ' ' num2str(S.exptIndex{:}) ' finished']);
         else
             synapseImportingPathway(date,indexLast,S.recordingComputer,S.recordingComputerSubfolder);
-            disp(['Importing ' date ' ' indexLast ' finished']);
+            disp(['Importing ' date ' index ' indexLast ' finished']);
         end
     end
 else
@@ -228,13 +228,14 @@ function synapseImportingPathway(varargin)
 % TODO % add error handling so if a single day doesn't analyze we don't shit ourselves
 date = varargin{1};
 index = varargin{2}; %this is set to the previous index (see call)
-recordingComputer = varargin{3};
+recordingComputer = varargin{3}; %'ANESBL2'; hotfix 4/23/2019 ZS
 subfolder = varargin{4};
 if ~isempty(strfind(index,'-1')); return; end; % don't run on first index - if nothing has been run today yet.
 dirStrRecSource = ['\\' recordingComputer subfolder '20' date(1:2) '\' date '-' index '\'];
 % TODO %  the following shouldn't be hard coded as they are.  Pass as parameters to synapseImportingPathway
 dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
-dirStrAnalysis = ['M:\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+% dirStrAnalysis = ['M:\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+dirStrAnalysis = ['\\MEMORYBANKS\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
 % MOVE RECORDED DATA TO RAW %
 moveDataRecToRaw(dirStrRecSource,dirStrRawData); % move recorded files to raw data server
 % IMPORT DATA % 
@@ -272,23 +273,30 @@ S = varargin{1};
 sequenceUpdated = false;
 countX = 1;
 while ~sequenceUpdated
+    
     csvAssembler(S.exptDate,S.exptIndex,S.tempnStims,S.tempnTrials); %setup trial file (writes to folder)
+    
     [date,index] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex); % need to set tank name here if we're going to just start recording!
     pause(1);
     S.syn.setCurrentBlock([date '-' index]); % update and send parameters to Synapse
     S.syn.setMode(3); % recording set to auto start (3 is rec).
     pause(2); % reduced this from 4 8/30/18
-    seqList = S.syn.getParameterValues('ParSeq1','SequenceFileList');
-    result = 0;
-    if iscell(seqList) % do we need to check this?
-        for iList = 1:length(seqList)
-            [exptDate,exptIndex] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
-            if ~isempty(strfind([exptDate '-' exptIndex],seqList{iList}))
-                result = S.syn.setParameterValue('ParSeq1','SequenceFileIndex',iList-1); %index starts at 0
-                
+    
+    if ~isempty(strfind(S.animalName,'EEG'))
+        result = 1;
+    else
+        seqList = S.syn.getParameterValues('ParSeq1','SequenceFileList');
+        result = 0;
+        if iscell(seqList) % do we need to check this?
+            for iList = 1:length(seqList)
+                [exptDate,exptIndex] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
+                if ~isempty(strfind([exptDate '-' exptIndex],seqList{iList}))
+                    result = S.syn.setParameterValue('ParSeq1','SequenceFileIndex',iList-1); %index starts at 0
+                end
             end
         end
     end
+    
     if result == 0
         updateDynamicDisplayBox(['We are not able to update sequence ' num2str(countX)]);
         S.pb = uicontrol('style','push',...
@@ -303,10 +311,10 @@ while ~sequenceUpdated
         pause(1);
         updateDynamicDisplayBox(['Starting sequence!']); 
         S.syn.setParameterValue('ParSeq1','Reset',0); % do we need to check to see if it's spon rec?  this may reset recording
-        
         sequenceUpdated = true;
     end
-    countX = countX+2;
+    countX = countX+1;
+    
 end
 % auto start seq here? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

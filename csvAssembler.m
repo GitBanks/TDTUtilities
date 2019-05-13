@@ -19,7 +19,8 @@ function csvAssembler(date,index,nStimTypes,nTrialsPerStim)
 textA = 'Seq-1'; %will we have multiple sequences?  change if so.
 textB = 'Idx-';
 textC = 'Row-';
-fileName = ['\\Anesbl2\C\TDT\Synapse\ParFiles\' date '-' index '.seq.csv'];
+%fileName = ['\\Anesbl2\C\TDT\Synapse\ParFiles\' date '-' index '.seq.csv'];
+fileName = ['\\144.92.237.183\TDT\Synapse\ParFiles\' date '-' index '.seq.csv'];
 
 sequenceCellArray = cell(nStimTypes*nTrialsPerStim+1,2);
 trialPattern = createTrialPattern(nStimTypes,nTrialsPerStim);
