@@ -43,7 +43,11 @@ for iAnimal = 1:length(animalList)
         thisTreat = batchParams.(thisName).(thisDate).treatment;
         if size(thisTreat,2) > 1 
 %             thisTreat = thisTreat{1};
-            treatStr = sprintf('%s,', thisTreat{:});
+            if iscell(thisTreat)
+                treatStr = sprintf('%s,', thisTreat{:});
+            else
+                treatStr = sprintf('%s,', thisTreat);
+            end
         else
             treatStr = thisTreat;
         end

@@ -48,6 +48,10 @@ batchDates = fields(batchParams.(animalName));
 dates = intersect(batchDates,ephysDates);
 chanLabels = batchParams.(animalName).ephysInfo.chanLabels;
 
+%WARNING: ASSUMES 4SEC WINDOWLENGTH AND .25SEC OVERLAP
+windowLength = 4;
+windowOverlap = .25;
+
 disp('extracting band power and activity');
 for iDate = 1:length(dates)
     expts = fields(mouseEphys_out.(animalName).(dates{iDate}));
@@ -60,7 +64,7 @@ for iDate = 1:length(dates)
         for iWindow = 1:length(ephysDataThisExpt)
             if ismember(iWindow,trialsKeptThisExpt)
                 ephysDataThisExpt(iWindow) = mouseEphys_out.(animalName).(dates{iDate}).(expts{iExpt}).bandPow.(band)(trialsKeptThisExpt == iWindow,chan)/...
-                    mouseEphys_out.(animalName).(dates{iDate}).(expts{iExpt}).bandPow.all(trialsKeptThisExpt == iWindow,chan);
+                    mouseEphys_out.(animalName).(dates{iDate}).(expts{iExpt}).bandPow.all(trialsKeptThisExpt== iWindow,chan); %commented out 5/23/2019
                 movementDataThisExpt(iWindow) = mouseEphys_out.(animalName).(dates{iDate}).(expts{iExpt}).activity(trialsKeptThisExpt == iWindow);
             else
                 ephysDataThisExpt(iWindow) = NaN;
@@ -76,8 +80,8 @@ for iDate = 1:length(dates)
         tempExptActivity = [tempExptActivity movementDataThisExpt];
         if iExpt ~=length(expts)
             nWindowsBetweenIndices = round((batchParams.(animalName).(dates{iDate}).trialInfo(iExpt+1).trialTimes(1) - ...
-                (batchParams.(animalName).(dates{iDate}).trialInfo(iExpt).trialTimes(end) + 20))/batchParams.(animalName).windowLength*...
-                (1-batchParams.(animalName).windowOverlap));
+                (batchParams.(animalName).(dates{iDate}).trialInfo(iExpt).trialTimes(end) + 20))/windowLength*...
+                (1-windowOverlap));
             tempExptBandpower = [tempExptBandpower NaN(1,nWindowsBetweenIndices)];
             tempExptActivity = [tempExptActivity NaN(1,nWindowsBetweenIndices)];
         end
@@ -98,49 +102,51 @@ for iDate = 1:length(dates)
     activeMn(iDate) = nanmean(timeRelation(iDate).Activity);
     clear tempExptBandpower tempExptActivity tempIndexPop tempTimeReInj
 end
-yMaxCalc = max(yMaxCalc)/5;
+yMaxCalc = max(yMaxCalc)/5;%/6;
 bpMn = nanmean(bpMn);           %band power mean
 activeMn = nanmean(activeMn);   %active power mean
 
 % determine offset for movement to allow plotting on same scale
-offset = 10^(log10(bpMn))*2;
-scaleFactor = activeMn/bpMn*6;%/2
+offset = 10^(log10(bpMn))*2;%*6;
+scaleFactor = activeMn/bpMn*6;%/2 %*6 for non normalized
 
 disp('plotting band power and activity');
 datesStr = sprintf('%s, ', dates{:});
 figureName = ['Time Series Activity and ' band ' power - ' animalName ' - ' chanLabels{chan} ' - ' datesStr(1:end-2)];
 figure('Name',figureName,'Renderer', 'painters', 'Position', [-2 624 1680 340]);
 for iPlot = 1:length(timeRelation)
-    subtightplot(length(timeRelation),1,iPlot);
+    h(iPlot) = subtightplot(length(timeRelation),1,iPlot);
     plot(timeRelation(iPlot).Bandpower);
     hold on
     plot((timeRelation(iPlot).Activity)/scaleFactor+offset);
-    try 
+    xlim([-20,length(timeRelation(iPlot).Activity)+20])
+    ylim([0,yMaxCalc*10]);
         if size(batchParams.(animalName).(dates{iPlot}).treatment,2) > 1
             treatments = batchParams.(animalName).(dates{iPlot}).treatment;
         end
-        for iTreat = 1:size(treatments,2)
-            thisTreat = treatments{iTreat};
+        for iTreat = 1%:size(treatments,2)
+            tempX = timeRelation(iPlot).indexPop(iTreat);
+            tempY = max(ylim);
+            plot([tempX tempX],[0 tempY],'k--','LineWidth',1.5);
+            if iscell(treatments)
+                thisTreat = treatments{iTreat};
+            else
+                thisTreat = treatments;
+            end
             thisTreat = strrep(thisTreat,'_',' ');
-            vline(timeRelation(iPlot).indexPop(iTreat),'k--',thisTreat);
+            text(tempX,tempX,thisTreat)
         end
-    catch
-        thisTreat = batchParams.(animalName).(dates{iPlot}).treatment;
-        vline(timeRelation.indexPop(2),'k--',thisTreat);
-    end
-    xlim([-20,length(timeRelation(iPlot).Activity)+20])
-    ylim([0,yMaxCalc*10]);
     if iPlot == 1; title([animalName ' ' band ' ' chanLabels{chan}]); end
     set(gca,'XTick',[0 timeRelation(iPlot).indexPop(1:length(timeRelation(iPlot).indexPop))],'YTick',[])
     set(gca,'XTickLabel',[timeRelation(iPlot).timeReInj 4])
     ylabel(dates{iPlot});
-%     ylabel(batchParams.(animalName).(dates{iPlot}).treatment);
     if iPlot == length(timeRelation)
        xlabel('Time re: inj (hr)');
        legend([band ' power'],'activity','Location','NorthEast');
     end
 end
 clear timeRelation
+linkaxes(h,'xy');
 
 %save plot here:
 if saveP 

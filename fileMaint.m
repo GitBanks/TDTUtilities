@@ -10,7 +10,7 @@ function fileMaint(animal)
 % notes
 % absolutely do not run on anything except synapse data!!!!
 % WARNING this is only operating upon EEGdata files for now!!!
-% WARNING a few locations are hardcoded!!!
+% WARNING a few locations are hardcoded!
 
 %animal = 'DREADD07';
 %listOfAnimalExpts = getExperimentsByAnimal(animal,'Spon');
@@ -40,8 +40,8 @@ listOfAnimalExpts = listOfAnimalExpts(:,1);
 try
     [electrodeLocation] = getElectrodeLocationFromDateIndex(listOfAnimalExpts{1}(1:5),listOfAnimalExpts{1}(7:9));
 catch
-    display('Probe information not found.  Using template.');
-    display('WARNING!!! if probe configuration has changed, stop now and correct in database!!!');
+    disp('Probe information not found.  Using template.');
+    disp('WARNING!!! if probe configuration has changed, stop now and correct in database!!!');
     if strcmp(animal(1:3),'EEG')
         setElectrodeLocationFromAnimal('EEG52',animal);
     elseif strcmp(animal(1:3),'LFP')
@@ -55,36 +55,35 @@ end
 
 if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\'],'dir')
     mkdir(['W:\Data\PassiveEphys\EEG animal data\' animal '\']);
-    display(['making dir: W:\Data\PassiveEphys\EEG animal data\' animal '\']);
+    disp(['making dir: W:\Data\PassiveEphys\EEG animal data\' animal '\']);
 end
 
 for iList = 1:length(listOfAnimalExpts)
-%for iList = 26:length(listOfAnimalExpts)
     date = listOfAnimalExpts{iList}(1:5);
     index = listOfAnimalExpts{iList}(7:9);
-    dirStrAnalysis = ['M:\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
-    dirStrRecSource = ['\\144.92.237.187\c\Data\20' date(1:2) '\' date '-' index '\'];
+    dirStrAnalysis = ['\\MEMORYBANKS\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+    dirStrRecSource = ['\\144.92.237.183\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\']; 
     dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
-    display(['$$$ Processing ' date '-' index ' $$$']);
+    disp(['$$$ Processing ' date '-' index ' $$$']);
     % %% STEP 1 MOVE 
     moveDataRecToRaw(dirStrRecSource,dirStrRawData);
     % %% STEP 2 IMPORT 
     dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
     if isempty(dirCheck) || forceReimport
-        display('Handing info to existing importData function.  This will take a few minutes.');
+        disp('Handing info to existing importData function.  This will take a few minutes.');
         try
             importDataSynapse(date,index);
         catch
-            display([date '-' index 'not imported!!']);
+            disp([date '-' index ' not imported!!']);
         end
     elseif forceReimportTrials
-        display('Data already imported, but updating trialinfo');
+        disp('Data already imported, but updating trialinfo');
         updateStimInfoSynapse(date,index);
     end
     % %% STEP 3 (sadly) move to W (sadly because analyzed data are going to 'raw data' storage zone)
     if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\'],'dir')
         mkdir(['W:\Data\PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
-        display(['making dir: W:\Data\PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
+        disp(['making dir: W:\Data\PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
     end
     currentDir = dir(dirStrAnalysis);
     for iDir = 1:length(currentDir) %could add a check to see if files exist to save time (if they do)
@@ -119,11 +118,11 @@ for iList = 1:length(listOfAnimalExpts)
         if isempty(dir([dirStrAnalysis '*-framegrid.mat']))|| forceRegrid
             while repeatedAttempts < maxAttempts
                 try
-                    display('attempting to run mmread on video...')
+                    disp('attempting to run mmread on video...')
                     videoFrameGridMakerSynapse(vidFilePath);
                     repeatedAttempts = maxAttempts;
                 catch
-                    display(['mmread is slightly unstable.  Let''s try ' num2str(maxAttempts-repeatedAttempts) ' more times.' ])
+                    disp(['mmread is slightly unstable.  Let''s try ' num2str(maxAttempts-repeatedAttempts) ' more times.' ])
                     repeatedAttempts = repeatedAttempts+1;
                 end
             end
@@ -136,7 +135,7 @@ for iList = 1:length(listOfAnimalExpts)
     
     % %% MUA CHECK %% might want to fix up 'artifact rejection' option - some need it, some don't
     if ~isempty(strfind(descOfAnimalExpts{iList}{:},'Stim'))
-        display('Running MUA analysis')
+        disp('Running MUA analysis')
         dirCheck = dir([dirStrAnalysis '*TrshldMUA_Stim*']);
         if isempty(dirCheck)
             analyzeMUAthresholdArtifactRejection('PassiveEphys',date,index,index,0,1,0,1,0,-.5,1.5,-.001,3,2,1,false);
@@ -151,27 +150,27 @@ end
 
 
 % this section is run after all indices for a whole day have been
-for i =1:length(listOfAnimalExpts)
-    a(i) = {listOfAnimalExpts{i}(1:5)};
-end
-b = unique(a)';
-for i = 1:length(b)
-    try
-        videoMovementScoreByGridSynapse(animal,b{i}) 
-    catch
-        disp([b{i} ' didn''t process.'])
-    end
-end
+% for i =1:length(listOfAnimalExpts)
+%     a(i) = {listOfAnimalExpts{i}(1:5)};
+% end
+% b = unique(a)';
+% for i = 1:length(b)
+%     try
+%         videoMovementScoreByGridSynapse(animal,b{i}) 
+%     catch
+%         disp([b{i} ' didn''t process.'])
+%     end
+% end
+runBatchROIAnalysis(animal) %ADDED 5/13/2019 as first step to implementing new analysis!
 
 % Ephys analysis and plotting 
 %============================================================%
 % To-do: add a check here to see if analysis/plotting is finished! 
 
-% calculate spectra for a single day (is this preferable?) and save
-disp('starting spec analysis'); tic
-addpath('Z:\fieldtrip-20170405\');
-runICA = 0; 
-forceReRun = 1;
+addpath('Z:\fieldtrip-20170405\','Z:\DataBanks\mouseDeliriumEphysAnalysis');
+disp('starting spec analysis') ; tic
+runICA = 0; %
+forceReRun = 1; %will run all dates found for this animal
 [gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis_Synapse(animal,runICA,forceReRun);
 saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); toc
 
@@ -179,17 +178,23 @@ saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); toc
 plotFieldTripSpectra_ZS({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
 
 % grady plots
-plotTimeDActivityAndBP('animal','delta',1);
+plotTimeDActivityAndBP(animal,'delta',1);
 
-% slope plots
+% make slope plots
+plotPeakVsBaselineLinearFit(animal);
 
 % update power and slope tables
+% TODO: generate master power and slope tables and add functionality to
+% just add entries
 
 % calculate phase lag for a single day (is this preferable?) and save
-disp('starting wpli analysis'); tic
+disp('starting wpli analysis'); 
 addpath('Z:\DataBanks\Kovach Toolbox Rev 751\trunk\DBT');
+addpath('C:\Users\Matt Banks\Documents\Code\mouse-delirium\wpli');
+tic
 [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animal,0);
-saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn); toc
+saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn); 
+toc
 
 % update WPLI table
 

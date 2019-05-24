@@ -4,7 +4,7 @@ function [roiPix,fullROI] = roiVidAnalysisBinary(vidFileName,date,index,loadRoiP
 % time & exclude pixels outside ROI; calculate 1st derivative across all pixels, average, and
 % save the difference array and output pixROI for subsequent use
 
-% updated 4/28/2019
+% updated 5/13/2019
 
 % calls: loadTrialList (in TDTUtilities); mmread
 % (Z:\DataBanks\mmread); roipoly & imfilter (Image Processing Toolbox)
@@ -46,9 +46,11 @@ try
         end
         
         imshow(currentFrame);
-        prompt = 'True/False: is this frame appropriate? e.g. mouse wholly on filter paper, not standing';
-        temp = inputdlg(prompt); %my initial attempt at having the user evaluate if the mouse is in frame or not.
-        frameSet = str2double(temp{:});
+        opts.Interpreter = 'tex'; % Use the TeX interpreter to format the question
+        opts.Default = 'Yes'; % default answer is yes... 
+        quest = 'Is this frame appropriate? e.g. mouse wholly on filter paper';
+        answer = questdlg(quest,'INPUT REQUIRED','Yes','No',opts);
+        if strcmp(answer,'Yes'); frameSet = true; else frameSet = false; end
         frameToShow = frameToShow+100;
         clf
     end
@@ -69,7 +71,7 @@ if nargin<6
 end
 
 if loadRoiPix
-    load(['M:\PassiveEphys\2019\' date '-' index '\' date '-' index '-movement.mat'],'roiPix');
+    load(['M:\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index '-movement.mat'],'roiPix');
 end
 
 
@@ -84,9 +86,6 @@ else
     currentFrame(~roiPix) = nan;
     imshow(currentFrame);
 end
-
-
-
 
 
 tic
@@ -145,8 +144,6 @@ imshow(ptoneth);
 scale = double(ninetyfifth-ptoneth);
 scale(scale<50) = 0;
 
-
-
 %% DEBUG
 % figure()
 % tic
@@ -171,7 +168,6 @@ scale(scale<50) = 0;
 % toc
 %%
 
-
 %figure()
 tic
 parfor i = 1:size(frames,3)
@@ -186,7 +182,6 @@ parfor i = 1:size(frames,3)
 end
 
 % compute 1st derivative across frames dimension (3)
-
 
 disp('calculating diff(frames)');
 temp_dFrames = abs(diff(frames,1,3));
@@ -248,19 +243,19 @@ toc;
 frameTimeStampsAdj = times;
 
 
-if ~exist(['M:\PassiveEphys\2019\' date '-' index],'dir')
-   mkdir(['M:\PassiveEphys\2019\' date '-' index]);
+if ~exist(['M:\PassiveEphys\20' date(1:2) '\' date '-' index],'dir')
+   mkdir(['M:\PassiveEphys\20' date(1:2) '\' date '-' index]);
 end
 
-save(['M:\PassiveEphys\2019\' date '-' index '\' date '-' index '-movementBinary.mat'],'finalMovementArray','frameTimeStampsAdj','roiPix','fullROI','mouseROI','avg_FR');
+save(['M:\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index '-movementBinary.mat'],'finalMovementArray','frameTimeStampsAdj','roiPix','fullROI','mouseROI','avg_FR');
 
 end
 
 function [roiPix,musPix,musArea,bkgdArea,musLum,bkgdLum,fullROI,mouseROI] = drawMouseROI(firstFrame,currentFrame,fullROI,skipMouse,useOldROI)
 %it's in the title. Use with final product of videoROI analysis
 figure('name',['time = ' num2str(firstFrame.times) 'sec'],'Position',[520,100,461,700]);
-subtightplot(3,1,1);
-disp('step 1) draw a closed shape around bottom of cage');
+% subtightplot(1,2,1);
+disp('INPUT REQUIRED: draw a closed shape around bottom of cage');
 %[roiPix] = roipoly(currentFrame); % background + mouse ROI selection
 
 if nargin<5
@@ -277,7 +272,6 @@ else
     %fullROI.Image = h;
     %fullROI.Parent = gca;
     %fullROI.Selected = true;
-    
     [newfullROI] = drawassisted(h,'Position',fullROI.Position,'Waypoints',fullROI.Waypoints);
     if ~useOldROI
         customWait(newfullROI);
@@ -300,8 +294,9 @@ roiPix = createMask(fullROI);
 disp('background ROI selected!');
 bkgd = currentFrame;
 bkgd(~roiPix) = nan;
-subtightplot(3,1,2);
-disp('step 2) draw a closed shape around ANIMAL');
+% subtightplot(1,2,2);
+% disp('step 2) draw a closed shape around animal');
+figure
 h2 = imshow(bkgd);
 mus = bkgd; % create mouse image variable before drawing ROI
 %[musPix] = roipoly(bkgd); % mouse ROI selection

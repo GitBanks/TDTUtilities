@@ -111,7 +111,7 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
         %calculate mean of each segment
         fileFound = 0;
         fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
-                    '\' thisDate(5:end) '-' thisExpt(5:end) '-movementInfoAdjusted.mat'];
+                    '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat']; %changed 5/17
         try
             load(['W:\Data\' fileNameStub],'finalLEDTimes','finalMovementArray','frameTimeStampsAdj');
             fileFound = 1;

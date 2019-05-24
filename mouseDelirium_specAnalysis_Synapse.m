@@ -21,7 +21,7 @@ function [gBatchParams, mouseEphys_out] = mouseDelirium_specAnalysis_Synapse(ani
 % Test case: animalName = 'EEG55';
 % synapsePathing;
  
-noMovtToggle = 0; % WARNING: this is a temporary fix until we can analyze the movement data from Synapse.
+noMovtToggle =0; % WARNING: this is a temporary fix until we can analyze the movement data from Synapse.
 outPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
 outFileName = 'mouseEphys_out_noParse_Synapse.mat';
 disp(['Data will be saved to `' outPath '`']);
@@ -92,16 +92,15 @@ for iDate = 1:length(eDates)%1:length(eDates)
         
         %Load behav data, divide into segments w/ overlap, calculate mean of each segment
         if noMovtToggle %WARNING: movement will not be added if this is = 1!!!
-            meanMovementPerWindow = zeros(10000,1);
-            meanMovementPerWindow(:,:) = NaN;
+            meanMovementPerWindow = nan(10000,1);
         else
             fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
-                '\' thisDate(5:end) '-' thisExpt(5:end) '-movementInfoAdjusted.mat'];
+                '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat']; %WARNING: EDITED ON 5/6/2019
             try
                 load(['W:\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj');
             catch
                 try
-                    load(['M:\' fileNameStub],'finalMovementArray','frameTimeStampsAdj');
+                    load(['\\MEMORYBANKS\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj'); %WARNING: EDITED ON 5/2/2019
                 catch
                     error(['Can not find ' fileNameStub])
                 end

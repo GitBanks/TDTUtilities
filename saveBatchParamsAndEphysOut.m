@@ -29,8 +29,10 @@ animals = fieldnames(batchParams);
 %add check to see if ephys info has already been entered for this animal. 
 if ~sum(contains(animals,gName)) > 0 %added 4/22/19
     batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
+    batchParams.(gName).ephysInfo = gBatchParams.(gName).bandInfo;
 elseif ~contains(fieldnames(batchParams.(gName)),'ephysInfo')
-    batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;   
+    batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;  
+    batchParams.(gName).ephysInfo = gBatchParams.(gName).bandInfo;
 end
 
 for iDate = 1:length(dates)
