@@ -167,7 +167,7 @@ end
 
 % smooth the difference array across time and subtract minimum value to
 % correct floor differences
-avg_FR = size(frames,3)/max(times);
+avg_FR = size(frames,3)/(times(end) - times(1));
 finalMovementArray = smooth(sm_temp_dFrames_avg-min(sm_temp_dFrames_avg),2*floor(avg_FR)+1);
 
 toc;

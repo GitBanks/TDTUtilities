@@ -38,38 +38,24 @@ end
 ephysDirName = ['\\memorybanks' rawPath(delims(1):delims(end))];
 tempEphysTrialTime = loadTrialList(ephysDirName);
 
-% check if timeGrid (saved) and times (new) are the same length. If they're not equal length,
-% then we need to see which times and trials we actually have and adjust accordingly. 
-if ~isequal(timeGrid,times) 
-    warning('timeGridNew not equal to timeGrid (old) ?_?');
-    figure; plot(frameGridLEDElement); % plot frameGridLEDElement, which is the saved LED flash array 
-    
-    % ask user to verify which section the frames are missing frameGridLEDElement
-    opts.Interpreter = 'tex'; % Use the TeX interpreter to format the question
-    opts.Default = 'start'; % default answer
-    quest = 'Based on the current figure, which segment of the video has no associated trials (LED pulses)?';
-    answer = questdlg(quest,'INPUT REQUIRED','start','end',opts);
-    
-    if strcmp(answer,'start')
-        
-        finalLEDTimes(1:nMissingTrials) = [];    % remove padded trials from video trial array
-        finalLEDTimes = finalLEDTimes - find(frameGridLEDElement>0,1); % subtract missing number of elements from the formerly padded array
-        tempEphysTrialTime(1:nMissingTrials) = [];  % remove padded trials from ephys trial array   
-    
-    elseif strcmp(answer,'end')
-        
-        finalLEDTimes(nMissingTrials:end) = [];
-        error(['haven' 't dealt with this case yet ¯\_(?)_/¯']); %not sure what to do in this case...
-        
-    end
-end
+ephysStartTime = tempEphysTrialTime(1);
 
+
+if exist('nMissingTrials','var')
+    ephysFirstLEDTime = tempEphysTrialTime(nMissingTrials+1);
+    finalLEDTimes(1:nMissingTrials) = [];    % remove padded trials from video trial array
+    finalLEDTimes = finalLEDTimes - find(frameGridLEDElement>0,1); % subtract missing number of elements from the formerly padded array
+    tempEphysTrialTime(1:nMissingTrials) = [];  % remove padded trials from ephys trial array
+else
+    ephysFirstLEDTime = tempEphysTrialTime(1);
+end
+        
 clear timeGrid % delete timeGrid (we don't need it)
 
 finalLEDFrames = finalLEDTimes; % rename, since finalLEDTimes isn't actually a time array, but contains the timeGrid elements with associated LED pulses
 
 % 3. determine ephys trial start times relative to start
-tempEphysTrialTime = tempEphysTrialTime(:) - tempEphysTrialTime(1); % relative to beginning of ephys trials
+tempEphysTrialTime = tempEphysTrialTime(:) - ephysStartTime; % relative to beginning of ephys trials
 
 
 tempLEDTrialTime = times(finalLEDFrames)'; 
@@ -78,7 +64,7 @@ if length(tempEphysTrialTime) ~= length(tempLEDTrialTime)
    warning('length(tempEphysTrialTime) ~= length(tempLEDTrialTime)');
 end
 
-newTimes = times - times(finalLEDFrames(1)); % times is now relative to the first LED pulse and cast as a different variable
+newTimes = times - times(finalLEDFrames(1)) + (ephysFirstLEDTime-ephysStartTime); % times is now relative to the first LED pulse and cast as a different variable
 
 for iLED = 2:length(finalLEDFrames)
     
@@ -110,3 +96,9 @@ for iLED = 1:length(finalLEDFrames)
     discardInterval = find(newTimes>(newTimes(ledFrame)+.7),1,'first');
     keepFrames(ledFrame:discardInterval) = false;
 end
+
+
+figure()
+plot(newTimes)
+hold on;
+scatter(finalLEDFrames,tempEphysTrialTime)
