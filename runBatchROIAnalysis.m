@@ -27,7 +27,7 @@ for ii = 1:length(dates)
         index = indices{jj};
 %         vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\2019_' date '-' index '_Cam1.avi'];
         vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index ];
-        [~,fullROI] = roiVidAnalysisBinary(vidFileName,date,index,false,fullROI,true);
+        [~,fullROI] = roiVidAnalysisBinary(vidFileName,date,index,fullROI,true);
     end
 end
 
