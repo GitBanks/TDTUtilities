@@ -1,9 +1,6 @@
-function runBatchROIAnalysis(animal,useOldROI)
+function runBatchROIAnalysis(animal)
 % animal = 'EEG74';
 % animal = 'EEG68';
-if nargin < 2
-   useOldROI = false; % if there are no saved ROIs for this animal/date, set firstTime equal to true 6/3/2019 
-end
 
 query = 'Spon';
 listOfExpts = getExperimentsByAnimal(animal,query);
@@ -32,6 +29,6 @@ for ii = 1:length(dates)
         else
             vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index ];
         end
-        [~,fullROI] = roiVidAnalysisBinary(vidFileName,date,index,fullROI,useOldROI);
+        [~,fullROI] = roiVidAnalysisBinary(vidFileName,date,index,fullROI,false);
     end
 end

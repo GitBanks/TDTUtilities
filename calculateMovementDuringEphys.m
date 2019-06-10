@@ -19,18 +19,25 @@ end
 % Load behav data, divide into segments w/ overlap, calculate mean of each segment
 fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
     '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat']; %WARNING: EDITED ON 5/6/2019
-try
-    load(['W:\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj');
-catch
-    try
-        load(['\\MEMORYBANKS\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj'); %WARNING: EDITED ON 5/2/2019
-    catch
-        error(['Can not find ' fileNameStub])
-    end
-end
 
-windowLength = gBatchParams.(animalName).windowLength;
-windowOverlap = gBatchParams.(animalName).windowOverlap;
+% try
+%     load(['W:\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj');
+% catch
+try
+    load(['\\MEMORYBANKS\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj'); %WARNING: EDITED ON 5/2/2019
+catch
+    error(['Can not find ' fileNameStub])
+end
+% end
+FileInfo = dir(['\\MEMORYBANKS\Data\' fileNameStub]);
+time = FileInfo.date
+try
+    windowLength = gBatchParams.(animalName).windowLength;
+    windowOverlap = gBatchParams.(animalName).windowOverlap;
+catch
+    windowLength = 4;
+    windowOverlap = 0.25;
+end
 
 indexLength = frameTimeStampsAdj(end);  
 for iWindow = 1:indexLength

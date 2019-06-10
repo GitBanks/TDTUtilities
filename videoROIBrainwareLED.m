@@ -41,11 +41,24 @@ tempEphysTrialTime = loadTrialList(ephysDirName);
 ephysStartTime = tempEphysTrialTime(1);
 
 
-if exist('nMissingTrials','var')
-    ephysFirstLEDTime = tempEphysTrialTime(nMissingTrials+1);
-    finalLEDTimes(1:nMissingTrials) = [];    % remove padded trials from video trial array
-    finalLEDTimes = finalLEDTimes - find(frameGridLEDElement>0,1); % subtract missing number of elements from the formerly padded array
-    tempEphysTrialTime(1:nMissingTrials) = [];  % remove padded trials from ephys trial array
+if exist('nMissingTrials','var') 
+    if nMissingTrials~=0
+        ephysFirstLEDTime = tempEphysTrialTime(nMissingTrials+1);
+        finalLEDTimes(1:nMissingTrials) = [];    % remove padded trials from video trial array
+        finalLEDTimes = finalLEDTimes - (find(frameGridLEDElement>0,1)-1); % subtract missing number of elements from the formerly padded array
+        tempEphysTrialTime(1:nMissingTrials) = [];  % remove padded trials from ephys trial array
+        
+        %Check finalLEDTimes & frameGridLEDElement vs what you see in the
+        %playback to determine the number of padded zeros
+        abc = mmread(vidFileName,1:500);
+        figure; for ii=1:500; imshow(abc.frames(ii).cdata); title(num2str(ii)); pause(.10); end
+        answer = inputdlg(' the number of padded LED frames',...
+                     'Fix Stupid Shit');
+        user_val = str2double(answer{1});
+        finalLEDTimes = finalLEDTimes+user_val;
+    else
+        ephysFirstLEDTime = tempEphysTrialTime(1);
+    end
 else
     ephysFirstLEDTime = tempEphysTrialTime(1);
 end
@@ -53,7 +66,7 @@ end
 clear timeGrid % delete timeGrid (we don't need it)
 
 finalLEDFrames = finalLEDTimes; % rename, since finalLEDTimes isn't actually a time array, but contains the timeGrid elements with associated LED pulses
-
+% finalLEDFrames = finalLEDFrames(finalLEDFrames>0); %added 6/6 but is this correct??
 % 3. determine ephys trial start times relative to start
 tempEphysTrialTime = tempEphysTrialTime(:) - ephysStartTime; % relative to beginning of ephys trials
 
