@@ -13,7 +13,6 @@ if ~exist([computerSpecPath outFileName],'file')
     error([outFileName ' does not exist! check path.'])
 end
 
-% this takes like 30 sec to load... is this sustainable?
 load([computerSpecPath outFileName],'mouseEphys_conn','batchParams');
 
 gName = fieldnames(gBatchParams);
@@ -27,11 +26,7 @@ eDates = intersect(batchDates,ephysDates);
 
 animals = fieldnames(batchParams);
 
-if ~sum(contains(animals,gName)) > 0 %added 4/22/19
-    batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
-elseif ~contains(fieldnames(batchParams.(gName)),'ephysInfo')
-    batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;   
-end
+batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
 
 
 
