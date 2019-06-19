@@ -1,4 +1,6 @@
-function importDataSynapse(exptDate,exptIndex)
+function importDataSynapse_dual(exptDate,exptIndex,blockLocation)
+% FOR DUAL RECORDING DUMMY!
+
 % Given: a date and index
 % Do: Save data and trial files in the expected formats for subsequent
 % exptDate = '18924';
@@ -34,7 +36,7 @@ postStim = 500;
 
 signalTypes = {'EEG','LFP','SU'};
 % TODO don't hardcode any of the following:
-dirStrRawData = ['W:\Data\PassiveEphys\' '20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %input
+dirStrRawData = ['W:\Data\PassiveEphys\' '20' exptDate(1:2) '\' blockLocation '\']; %input
 dirStrAnalysis = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %output
 
 
@@ -46,6 +48,11 @@ trialList = updateStimInfoSynapse(exptDate,exptIndex);
 
 % loading ephys data
 display('Loading in raw data.  This sometimes takes a while.');
+
+% check block location
+
+
+
 data = TDTbin2mat(dirStrRawData); % this step may take a while depending on how long the recording is.  We can limit the length if necessary,
 % data = TDTbin2mat(dirStrRawData,'TYPE',{'epocs'}); consider this format with
 % the limited 'TYPE' could be useful 
