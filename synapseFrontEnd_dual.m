@@ -75,13 +75,10 @@ uicontrol('style','text',...
     'fontweight','bold',...
     'string','Right Chamber (Cam1)');
 
-% updateDynamicDisplayBox('Starting Synapse');
+updateDynamicDisplayBox('Starting Synapse');
 S = synapseConnectionProcess(S); % Start Synapse, connect to recording computer            
 S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline','a5 Inverse Agonist','Piroxicam'}; 
-% uicontrol('style','text',...
-%     'units','pix',...
-%     'position',[10 650 120 30],...
-%     'string',S.animalName); 
+
 % LEFT
 S.pp(1) = uicontrol('style','pop',...
     'unit','pix',...
@@ -130,7 +127,7 @@ if isempty(S.ExperimentsRemaining(1).exptDescriptionText) %does it matter if I h
     lastEntryID = fetchAdjust(S.dbConn,'SELECT MAX(exptID) FROM masterexpt');
     exptDate = fetchAdjust(S.dbConn,['SELECT exptDate FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
     exptIndex = fetchAdjust(S.dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID=' num2str(lastEntryID{1})]);
-    synapseImportingPathway(exptDate,exptIndex,S.recordingComputer,S.recordingComputerSubfolder);
+    synapseImportingPathway(exptDate,exptIndex,S.recordingComputer,S.recordingComputerSubfolder,S);
     uiresume(S.fh);
     return;   %stop user from running nothing.
 end
@@ -163,7 +160,7 @@ S = parameterCreationProcess(S); % create a parameter set and load it in. This s
 
 % [date{1,1},~] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
 if ~isempty(S.exptIndexLast')
-    [~,indexLast{1}] = fixDateIndexToFiveForSynapse(S.exptDate{1},S.exptIndexLast{1});
+    [date,indexLast{1}] = fixDateIndexToFiveForSynapse(S.exptDate{1},S.exptIndexLast{1});
     [~,indexLast{2}] = fixDateIndexToFiveForSynapse(S.exptDate{1},S.exptIndexLast{2});
 else
     indexLast = '-1'; %this will hand synapseImportingPathway a -1 val
@@ -186,9 +183,10 @@ if S.enableMultiThread % this will make program unavailable until *both* 1 and 2
             synapseRecordingPathway(S.syn,S.tempnStims(1),S.tempnTrials(1),sponTime); %#ok<*PFBNS>
             disp(['Recording ' date ' ' num2str(S.exptIndex{:,1}) ' finished']);
         else
-            synapseImportingPathway(date,indexLast{1},S.recordingComputer,S.recordingComputerSubfolder);
+            blockLocation = [date '-' indexLast{1}];
+            synapseImportingPathway(date,indexLast{1},S.recordingComputer,S.recordingComputerSubfolder,blockLocation);
             disp(['Importing ' date ' index ' indexLast{1} ' finished']);
-            synapseImportingPathway(date,indexLast{2},S.recordingComputer,S.recordingComputerSubfolder);
+            synapseImportingPathway(date,indexLast{2},S.recordingComputer,S.recordingComputerSubfolder,blockLocation);
             disp(['Importing ' date ' index ' indexLast{2} ' finished']);
         end
     end
@@ -262,6 +260,7 @@ dateX = varargin{1};
 index = varargin{2}; %this is set to the previous index (see call)
 recordingComputer = varargin{3}; %'ANESBL2'; hotfix 4/23/2019 ZS
 subfolder = varargin{4};
+blockLocation = varargin{5}; %added 6/18
 if ~isempty(strfind(index,'-1')); return; end; % don't run on first index - if nothing has been run today yet.
 dirStrRecSource = ['\\' recordingComputer subfolder '20' dateX(1:2) '\' dateX '-' index '\'];
 % TODO %  the following shouldn't be hard coded as they are.  Pass as parameters to synapseImportingPathway
@@ -278,7 +277,7 @@ end
 dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
 if isempty(dirCheck)
     display('Handing info to existing importData function.  This will take a few minutes.');
-    importDataSynapse_dual(dateX,index,S.blockLocation)
+    importDataSynapse_dual(dateX,index,blockLocation);  %WARNING: blockLocation is assigned to the date-index associated with the "left" cage data stream. 
 else
     display('Data already imported.');
 end
@@ -294,9 +293,9 @@ while ~sequenceUpdated
     csvAssembler(S.exptDate{1},S.exptIndex{1},S.tempnStims(1),S.tempnTrials(1)); %setup trial file (writes to folder)
     
     [date,index] = fixDateIndexToFiveForSynapse(S.exptDate{1},S.exptIndex{1}); % need to set tank name here if we're going to just start recording!
-    S.blockLocation = [date '-' index];
+%     S.blockLocation = [date '-' index];
     pause(1);
-    S.syn.setCurrentBlock(S.blockLocation); % update and send parameters to Synapse
+    S.syn.setCurrentBlock([date '-' index]); % update and send parameters to Synapse
     S.syn.setMode(3); % recording set to auto start (3 is rec).
     pause(2); % reduced this from 4 8/30/18
     
@@ -393,7 +392,7 @@ if ~exist('colorI','var')
 end
 uicontrol('style','text',...
     'units','pix',...
-    'position',[50 100 300 50],...
+    'position',[50 100 150 50],...
     'ForegroundColor',colorI,...
     'string', textI,...
     'fontsize',10);
@@ -424,7 +423,7 @@ function [S] = refreshIndicesCompletedToday(varargin)
 % refresh today's finished experiments
 S.listFromToday = uicontrol('style','list',...
     'units','pix',...
-    'position',[320 10 300 540],...
+    'position',[275 205 320 200],...205 120 20
     'string', S.listOfExperimentsRunToday,...
     'fontsize',10);
 
@@ -508,7 +507,7 @@ uicontrol('style','text',...
     'units','pix',...
     'position',[500 600 320 40],...
     'fontweight','bold',...
-    'string','Finished Indices');
+    'string','Finished Indices - all time');
 % uicontrol('style','text',...
 %     'units','pix',...
 %     'position',[10 600 300 40],...
@@ -521,7 +520,7 @@ uicontrol('style','text',...
 %     'string','Completed experiments across animals'); 
 S.existingListHand = uicontrol('style','list',...
     'units','pix',...
-    'position',[500 10 320 610],...
+    'position',[500 10 320 325],... 
     'string', '',...
     'fontsize',10);
 % S.ls = uicontrol('style','list',...
