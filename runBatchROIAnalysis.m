@@ -1,7 +1,9 @@
-function runBatchROIAnalysis(animal)
+function runBatchROIAnalysis(animal,rerun)
 % animal = 'EEG74';
 % animal = 'EEG68';
-
+if nargin < 2
+   rerun = 0; 
+end
 query = 'Spon';
 listOfExpts = getExperimentsByAnimal(animal,query);
 if isempty(listOfExpts{1})
@@ -13,6 +15,9 @@ for k = 1:length(listOfExpts)
     a(k) = {listOfExpts{k}(1:5)};
 end
 dates = unique(a)';
+if ~rerun
+   dates = dates(end); %use most recent experiment... 
+end
 % dates = dates(end-2:end); %for EEG68 and 69... 
 
 for ii = 1:length(dates)

@@ -34,7 +34,7 @@ S.dbConn = dbConnect();
 [S.livingAnimals,S.livingAnimalsID] = getLivingAnimals; % get list of living animals for user to select
 
 % TODO % add nHoursPre to the GUI as a toggle or parameter
-S.nHoursPre = 2; %1 % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
+S.nHoursPre = 1; %1 % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
 S.nHoursPost = 4; % we've been doing 4, but consider adding it as a toggle in addition to nHoursPre
 
 % !! TODO !! % create parameter here to check for when inj is, and auto-next index stuff? urgent because this will allow us to streamline data collection
@@ -62,7 +62,7 @@ uicontrol('style','text',...
     'units','pix',...
     'position',[45 620 130 20],...
     'fontweight','bold',...
-    'string','Left Chamber (Cam2)');
+    'string','Left Chamber (Cam1)');
 
 % Right chamber
 S.aa(2) = uicontrol('style','pop',...
@@ -73,7 +73,7 @@ uicontrol('style','text',...
     'units','pix',...
     'position',[270 620 130 20],...
     'fontweight','bold',...
-    'string','Right Chamber (Cam1)');
+    'string','Right Chamber (Cam2)');
 
 updateDynamicDisplayBox('Starting Synapse');
 S = synapseConnectionProcess(S); % Start Synapse, connect to recording computer            
@@ -258,7 +258,7 @@ function synapseImportingPathway(varargin)
 % TODO % add error handling so if a single day doesn't analyze we don't shit ourselves
 dateX = varargin{1};
 index = varargin{2}; %this is set to the previous index (see call)
-recordingComputer = varargin{3}; %'ANESBL2'; hotfix 4/23/2019 ZS
+recordingComputer = varargin{3};
 subfolder = varargin{4};
 blockLocation = varargin{5}; %added 6/18
 if ~isempty(strfind(index,'-1')); return; end; % don't run on first index - if nothing has been run today yet.
@@ -273,6 +273,24 @@ try
 catch
     warning('moveDataRecToRaw failed to run.');
 end
+
+% IMPORT CAM2 APPROPRIATELY
+if ~strcmp([dateX '-' index],blockLocation)
+    tankDir = ['W:\Data\PassiveEphys\' '20' dateX(1:2) '\' blockLocation '\'];
+    dirCheck = dir(dirStrRawData);
+    if isempty(dirCheck)
+        mkdir(dirStrRawData);
+        tank_Cam2_name = [tankDir '2019_' blockLocation '_Cam2.avi'];
+        if isfile(tank_Cam2_name)
+           copy_Cam2_name = [dirStrRawData '2019_' dateX '-' index '_Cam2.avi'];
+           copyfile(tank_Cam2_name,copy_Cam2_name); %TODO - TURN THIS INTO A MOVEFILE COMMAND ONCE CONFIDENT IT'S WORKING PROPERLY
+           disp([tank_Cam2_name ' copied to ' copy_Cam2_name]);
+        end
+    else
+        warning([dirStrRawData ' exists, are you sure you wanted to copy Cam2 here?']);
+    end
+end
+
 % IMPORT DATA % 
 dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
 if isempty(dirCheck)
@@ -423,7 +441,7 @@ function [S] = refreshIndicesCompletedToday(varargin)
 % refresh today's finished experiments
 S.listFromToday = uicontrol('style','list',...
     'units','pix',...
-    'position',[275 205 320 200],...205 120 20
+    'position',[275 75 200 150],...205 120 20
     'string', S.listOfExperimentsRunToday,...
     'fontsize',10);
 
@@ -518,11 +536,11 @@ uicontrol('style','text',...
 %     'position',[320 530 300 40],...
 %     'fontweight','bold',...
 %     'string','Completed experiments across animals'); 
-S.existingListHand = uicontrol('style','list',...
-    'units','pix',...
-    'position',[500 10 320 325],... 
-    'string', '',...
-    'fontsize',10);
+% S.existingListHand = uicontrol('style','list',...
+%     'units','pix',...
+%     'position',[500 10 320 325],... 
+%     'string', '',...
+%     'fontsize',10);
 % S.ls = uicontrol('style','list',...
 %     'units','pix',...
 %     'position',[10 10 300 610],...
