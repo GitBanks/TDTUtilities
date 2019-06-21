@@ -43,7 +43,30 @@ dirStrAnalysis = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex 
 % All stim info is now handled in here.  and saved, so there may be no
 % reason to pull trialList info out.
 display('Updating stim info.')
-trialList = updateStimInfoSynapse(blockLocation(1:5),blockLocation(end-2:end)); %DEBUG
+try
+    trialList = updateStimInfoSynapse(exptDate,exptIndex); %DEBUG
+catch
+    warning(['updateStimInfoSynapse failed to run on ' exptDate '-' exptIndex]);
+    if strcmp([exptDate '-' exptIndex],blockLocation)
+        error(['updateStimInfoSynapse appears to never have been run on ' exptDate ' ' exptIndex])
+    else
+        sourceFileLoc = ['\\Memorybanks\Data\PassiveEphys\20' exptDate(1:2) '\' blockLocation '\'];
+        trialFileName = [sourceFileLoc blockLocation '_' 'trial0.mat'];
+        dirCheck = dir(trialFileName); %check the block location dir before copying to the actual directory
+        if ~isempty(dirCheck)
+            load(trialFileName); %load existing trial list from block location
+%             destinationFile = [dirStrAnalysis exptDate '-' exptIndex '_' 'trial0.mat'];
+            % check if output directory exists
+            analysisDir = dir(dirStrAnalysis);
+            if isempty(analysisDir)
+                mkdir(dirStrAnalysis);
+            end
+            save([dirStrAnalysis exptDate '-' exptIndex '_trial0'],'trialList');
+        else
+            error('no trial file found!');
+        end
+    end
+end
 
 
 % loading ephys data
@@ -51,15 +74,13 @@ display('Loading in raw data.  This sometimes takes a while.');
 
 % check block location by comparing the block location vs exptDate & exptIndex
 if strcmp([exptDate '-' exptIndex],blockLocation)
-    streamToUse = 'NPr1'; % if blockLocation == exptDate-exptIndex, use the FIRST stream (left cage, chans 1-4, Cam1, etc)
+    streamToUse = 'EEG1'; % if blockLocation == exptDate-exptIndex, use the FIRST stream (left cage, chans 1-4, Cam1, etc)
 else
-    streamToUse = 'NPr2'; % if  blockLocation ~= exptDate-exptIndex, use the SECOND stream (right cage, chans 5-8, Cam2, etc)
+    streamToUse = 'EEG2'; % if  blockLocation ~= exptDate-exptIndex, use the SECOND stream (right cage, chans 5-8, Cam2, etc)
 end
 
 
 data = TDTbin2mat(dirStrRawData); % this step may take a while depending on how long the recording is.  We can limit the length if necessary,
-
-
 % data = TDTbin2mat(dirStrRawData,'TYPE',{'epocs'}); consider this format with the limited 'TYPE' could be useful 
 display('Loading complete.');
 
@@ -129,8 +150,6 @@ for iSignal = 1:length(signalTypes)
                 else
                     ephysData(:,:,iStim) = data.streams.(streamList{iList}).data(:,stimRange(iStim,:));
                 end
-                
-                
             end
             
             dT = tempdT; %#ok<NASGU>
