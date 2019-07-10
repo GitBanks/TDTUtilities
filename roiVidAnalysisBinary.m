@@ -68,7 +68,7 @@ else
     currentFrame(~roiPix) = nan;
     imshow(currentFrame);
 end
-
+vidFileName
 tic
 disp('reading video using mmread');
 wholeVid = mmread(vidFileName);
@@ -102,16 +102,13 @@ figure()
 ptoneth = prctile(frames(:,:,framesToKeep),0.01,3);
 imshow(ptoneth);
 
-
 %figure()
 %imshow(ninetyfifth-ptoneth);
 
 % Binarize
 scale = double(ninetyfifth-ptoneth);
 scale(scale<50) = 0;
-
 %%
-
 %figure()
 tic
 parfor i = 1:size(frames,3)
@@ -125,15 +122,43 @@ parfor i = 1:size(frames,3)
    %pause(.01);
 end
 
-% compute 1st derivative across frames dimension (3)
 
-disp('calculating diff(frames)');
-temp_dFrames = abs(diff(frames,1,3));
+%%%%%%%%%% frame length downsampling! added 6/12/2019 %%%%%%%%
+avg_FR = size(frames,3)/(times(end) - times(1));
+
+if avg_FR > 12 %if framerate is too high, downsample!
+    
+    warning('avg_FR too high');
+    frames = frames(:,:,1:4:end-3);
+    times = times(1:4:end-3);
+    
+    %recalculate avg_FR 
+    avg_FR = size(frames,3)/(times(end) - times(1));
+    
+    for ii = 1:floor(size(framesToKeep,2)/4)
+        shortFramesToKeep(ii) = all(framesToKeep((ii*4-3):ii*4));
+    end
+    
+    framesToKeep = shortFramesToKeep;
+    
+    disp('calculating diff(frames)');
+    temp_dFrames = abs(diff(frames,1,3));
+    temp_dFrames = temp_dFrames(:,:,framesToKeep(1:end-1));
+        
+    times = times(framesToKeep(1:end-1));
+    
+else
+    % compute 1st derivative across frames dimension (3)
+    disp('calculating diff(frames)');
+    temp_dFrames = abs(diff(frames,1,3));
+    temp_dFrames = temp_dFrames(:,:,framesToKeep(1:end-1));
+
+    times = times(framesToKeep(1:end-1));
+end
+    
+    
 
 
-temp_dFrames = temp_dFrames(:,:,framesToKeep(1:end-1));
-
-times = times(framesToKeep(1:end-1));
 
 %% Debug
 % figure()
@@ -143,7 +168,7 @@ times = times(framesToKeep(1:end-1));
 % end
 
 %%
-% 2D smoothing (this takes >100 seconds
+% 2D smoothing 
 
 disp('2D smoothing')
 sm_temp_dFrames_avg = nan(size(temp_dFrames,3),1);
@@ -167,7 +192,6 @@ end
 
 % smooth the difference array across time and subtract minimum value to
 % correct floor differences
-avg_FR = size(frames,3)/(times(end) - times(1));
 finalMovementArray = smooth(sm_temp_dFrames_avg-min(sm_temp_dFrames_avg),2*floor(avg_FR)+1);
 
 toc;
@@ -246,3 +270,24 @@ if strcmp(evt.SelectionType,'double')
 end
 
 end
+
+% short_temp_dFrames = nan(size(temp_dFrames,1),size(temp_dFrames,2),floor(size(temp_dFrames,3)/4));
+% 
+% for ii = 1:floor(size(temp_dFrames,3)/4)
+%     short_temp_dFrames(:,:,ii) = max(temp_dFrames(:,:,(ii*4-3):ii*4),[],3);
+% end
+% disp('2D smoothing')
+% sm_temp_dFrames_avg = nan(size(short_temp_dFrames,3),1);
+% parfor i = 1:size(short_temp_dFrames,3)
+%     sm_temp = imfilter(short_temp_dFrames(:,:,i), ones(7)/7^2); % 2D smoothing filter - are we satisfied with this?
+%     
+%     %imshow(sm_temp*255);
+%     %pause(.01);
+%     
+%     sm_temp(~roiPix) = nan; % exclude nans
+%     sm_temp_dFrames_avg(i) = nanmean(sm_temp,'all');
+%     
+% end
+% tempTimes = times(1:4:end-3);
+
+% avg_FR = size(short_temp_dFrames,3)/(tempTimes(end) - tempTimes(1));

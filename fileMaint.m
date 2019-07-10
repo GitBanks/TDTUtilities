@@ -181,7 +181,7 @@ plotFieldTripSpectra_ZS({animal},1,gMouseEphys_out,gBatchParams); %spectra will 
 plotTimeDActivityAndBP(animal,'delta',1);
 
 % make slope plots
-plotPeakVsBaselineLinearFit(animal);
+% plotPeakVsBaselineLinearFit(animal);
 
 % update power and slope tables
 % TODO: generate master power and slope tables and add functionality to

@@ -1,11 +1,12 @@
 %'EEG21','EEG27','EEG28','EEG30','EEG22','EEG24','LFP2','EEG26','EEG29',
 % animals = {'Opto-01'};%'EEG34','EEG33','EEG35','EEG36','EEG37','EEG49','EEG55','EEG56','EEG57','EEG58','EEG59','EEG60','EEG61','EEG62','EEG65','EEG66','EEG52','EEG53','EEG54','EEG63','EEG64','EEG70','EEG68','EEG69','EEG74','EEG75','EEG76','EEG77','EEG78','EEG79','EEG80','EEG81','EEG14','EEG19'}; %'EEG10'
 %'EEG10','EEG11',
-animals = {'EEG18','EEG48',...%125
-    'EEG22','EEG24','LFP2','EEG26','EEG29','EEG34','Opto-01',...%25 %,'Opto01'
-    'EEG21','EEG27','EEG28','EEG30',... %12.5 'EEG19',
-    'EEG14','EEG39','EEG40','EEG41','EEG50','EEG51',... %sham %,'EEG43'
-    'EEG33','EEG35','EEG36','EEG37','EEG49'}; %historic aged
+animals = {'EEG78'};
+% animals = {'EEG18','EEG48',...%125
+%     'EEG22','EEG24','LFP2','EEG26','EEG29','EEG34','Opto-01',...%25 %,'Opto01'
+%     'EEG21','EEG27','EEG28','EEG30',... %12.5 'EEG19',
+%     'EEG14','EEG39','EEG40','EEG41','EEG50','EEG51',... %sham %,'EEG43'
+%     'EEG33','EEG35','EEG36','EEG37','EEG49'}; %historic aged
 for iAnimal = 1:length(animals)
     animal = animals{iAnimal};
     query = 'Spon';

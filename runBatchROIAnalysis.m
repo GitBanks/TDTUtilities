@@ -37,7 +37,12 @@ for ii = 1:length(dates)
         end
         dirCheck = dir(vidFileName);
         if ~isempty(dirCheck)
-            vidFileName = [dirCheck.folder '\' dirCheck.name];
+%             if size(dirCheck,1) > 1 
+%                 vidFileName = [dirCheck.folder '\' dirCheck(1).name];
+%             else
+                vidFileName = [dirCheck(1).folder '\' dirCheck(1).name];
+%             end
+            
             [~,fullROI] = roiVidAnalysisBinary(vidFileName,date,index,fullROI,false);
         else 
             disp([vidFileName ' not found']);
