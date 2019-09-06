@@ -49,7 +49,7 @@ for iAnimal = 1:length(animalList)
                 treatStr = sprintf('%s,', thisTreat);
             end
         else
-            treatStr = thisTreat;
+            treatStr = thisTreat{:};
         end
         figureName = ([thisName ' - ' thisDate ' - ' treatStr ' - no parse']);
         figH = figure('Name',figureName);

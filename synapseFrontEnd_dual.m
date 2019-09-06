@@ -1,9 +1,6 @@
 function [] = synapseFrontEnd_dual
 % FOR DUAL RECORDING DUMMY!
 
-% test inputs
-% animalName = 'EEG85'
-
 % This GUI will allow user to select an experiment type for two animals
 % for which the program will create all expected indices
 % with related 'stim' and 'spontaneous' settings for Synapse.  This
@@ -398,8 +395,8 @@ synapseObj.delete();
 
 function [S] = createNewNotebookEntry(varargin)
 S = varargin{1};
-for iList = 1:length(S.listOfExperimentsRunToday)
-    exptDescTemp{iList} = S.listOfExperimentsRunToday{iList,S.nExptsRecordedToday};
+for iList = 1:size(S.listOfExperimentsRunToday,1)
+    exptDescTemp{iList} = S.listOfExperimentsRunToday{iList,S.nExptsRecordedToday}; %
     [S.exptDate{iList},S.exptIndex(iList),S.exptIndexLast{iList}] = createNewNotebookEntryTDT(exptDescTemp{iList},S.animalName{iList});
 end
 

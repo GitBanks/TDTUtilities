@@ -30,12 +30,13 @@ catch
 end
 % end
 FileInfo = dir(['\\MEMORYBANKS\Data\' fileNameStub]);
-time = FileInfo.date
+% time = FileInfo.date;
 try
     windowLength = gBatchParams.(animalName).windowLength;
     windowOverlap = gBatchParams.(animalName).windowOverlap;
 catch
-    windowLength = 4;
+    warning('window duration and overlap not set');
+    windowLength = 20;
     windowOverlap = 0.25;
 end
 
@@ -54,10 +55,11 @@ for iWindow = 1:size(windowTimeLims,1)
         for iFrame = 1:length(timeStampsInWindow)
             framesToUse(iFrame) = find(frameTimeStampsAdj == timeStampsInWindow(iFrame));
         end
-        try %added 4/8/2019 ZS in case video ran too long and framesToUse has frames outside finalMovementArray... 
+         %added 4/8/2019 ZS in case video ran too long and framesToUse has frames outside finalMovementArray... 
+        try
             meanMovementPerWindow(iWindow,1) = mean(finalMovementArray(framesToUse));
         catch
-            disp('my dumbass try-catch was triggered');
+            warning('framesToUse has elements outside of finalMovementArray');
             framesToUse = framesToUse(framesToUse <= finalMovementArray);
             meanMovementPerWindow(iWindow,1) = mean(finalMovementArray(framesToUse));
         end
@@ -67,13 +69,61 @@ for iWindow = 1:size(windowTimeLims,1)
     clear timeStampsInWindow framesToUse
 end 
 
-% grab the trials that were kept
-try 
-    theseTrials = gMouseEphys_out.(animalName).(thisDate).(thisExpt).trialsKept;
-    % exclude the corresponding trials from the mean movement structure
-    gMouseEphys_out.(animalName).(thisDate).(thisExpt).activity = ...
-            meanMovementPerWindow(theseTrials);
-    disp('discarded trials excluded!');
-catch
-    warning('theseTrials no existe')
+% check if this is wPLI data and exclude trials that were excluded in the
+% ephys structure
+fieldnombres = fieldnames(gMouseEphys_out.(animalName).(thisDate).(thisExpt).delta);
+if sum(contains(fieldnombres,'conn')) > 1
+    disp('WPLI data detected')
+    theseTrials = ~isnan(gMouseEphys_out.(animalName).(thisDate).(thisExpt).delta.connVal(:,1));%!!!!! CHECK THIS PLEASE 6/16/2019
+    excludeTrials = find(theseTrials==0);
+    if ~isempty(excludeTrials)
+        meanMovementPerWindow(excludeTrials) = nan;
+        gMouseEphys_out.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
+        disp('discarded trials!');
+    else
+        disp('No trials to exclude based on ephys. Checking length of array'); 
+        % WIP/DEBUG
+        % exclude trials at the end... uhhh
+        oldNWindows = length(gMouseEphys_out.(animalName).(thisDate).(thisExpt).delta.activity);
+        currentNWindows = length(meanMovementPerWindow);
+        if oldNWindows < currentNWindows
+            disp('Detected too many movement windows. Removing elements from end of current array');
+            meanMovementPerWindow(oldNWindows+1:currentNWindows) = nan; % is it better to have nan or delete these trials?
+            gMouseEphys_out.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
+        elseif oldNWindows > currentNWindows
+            warning('Detected fewer windows than previously saved. Using current array');
+
+            %plot to check!
+%             figure; h(1) = subplot(1,2,1); plot(gMouseEphys_out.(animalName).(thisDate).(thisExpt).delta.activity); 
+%             h(2) = subplot(1,2,2); plot(meanMovementPerWindow);
+%             sgtitle([animalname ' ' thisDate ' ' thisExpt]);
+%             linkaxes(h,'x');
+            
+            gMouseEphys_out.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
+        else
+            excludeMovementTrials = isnan(gMouseEphys_out.(animalName).(thisDate).(thisExpt).delta.activity);
+            if any(excludeMovementTrials==1) %if there are any trials to exclude
+                warning('found movement trials to exclude within old movement structure but not ephys...');
+                meanMovementPerWindow(excludeMovementTrials) = nan;
+                gMouseEphys_out.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
+            else %if there are NO trials to exclude
+                gMouseEphys_out.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
+                disp('Detected no trials to exclude');
+            end
+        end
+
+    end
+else % if not wPLI data, use the following lines to exclude trials
+    try
+        theseTrials = gMouseEphys_out.(animalName).(thisDate).(thisExpt).trialsKept;
+        % exclude the corresponding trials from the mean movement structure
+        gMouseEphys_out.(animalName).(thisDate).(thisExpt).activity = ...
+                meanMovementPerWindow(theseTrials);
+        disp('discarded trials excluded!');
+        % grab the trials that were kept
+    catch
+        warning('theseTrials no existe');
+    end
 end
+
+

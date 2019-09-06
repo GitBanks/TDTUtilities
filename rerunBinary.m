@@ -15,6 +15,8 @@ for iExpt = 1:length(exptIDs)
             vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\20' date(1:2) '_' date '-' index '_Cam1.avi'];
         else
             vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index ];
+%             vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index '-converted.mp4']; %ONLY FOR EEG43 and 47
+     
         end
         roiVidAnalysisBinary(vidFileName,date,index,fullROI,true);
     catch

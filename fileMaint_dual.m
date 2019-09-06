@@ -64,7 +64,12 @@ for iList = 1:length(listOfAnimalExpts)
     if hasTankIndices
         blockLocation = [date '-' index];
     else %if not, then assume the index immediately before is the tank index... TODO: find a better way to handle this
-        tempIndex = ['0' num2str(str2double(index)-1)];
+        tempIndex = str2double(index)-1;
+        if length(num2str(tempIndex)) < 2
+            tempIndex = ['00' num2str(tempIndex)];
+        else
+            tempIndex = ['0' num2str(tempIndex)];
+        end
         blockLocation = [date '-' tempIndex];
     end
 
@@ -84,7 +89,7 @@ for iList = 1:length(listOfAnimalExpts)
     if ~strcmp([date '-' index],blockLocation)
         tankDir = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' blockLocation '\'];
         dirCheck = dir(dirStrRawData);
-        if isempty(dirCheck)
+        if isempty(dirCheck) || dirCheck(1).bytes==0
             mkdir(dirStrRawData);
             tank_Cam2_name = [tankDir '2019_' blockLocation '_Cam2.avi'];
             if isfile(tank_Cam2_name)
@@ -173,7 +178,7 @@ plotFieldTripSpectra_ZS({animal},1,gMouseEphys_out,gBatchParams); %spectra will 
 plotTimeDActivityAndBP(animal,'delta',1);
 
 % make slope plots
-plotPeakVsBaselineLinearFit(animal);
+% plotPeakVsBaselineLinearFit(animal);
 
 % update power and slope tables
 % TODO: generate master power and slope tables and add functionality to

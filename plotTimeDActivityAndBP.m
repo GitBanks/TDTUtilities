@@ -5,7 +5,7 @@ function [] = plotTimeDActivityAndBP(animalName,band,saveP)
 
 % HISTORY: 
 %   3/21/19 I inherited this script from Liz & Sean and am now making my own
-%   edits. My previous copy was not saved due to a git mistake - Ziyad Sultan
+%   edits. - Ziyad Sultan
 %   Switched from cubic method to pchip based on matlab warnings. Add
 %   saving feature. Adjust xticklabels to represent hours. 
 
@@ -41,7 +41,7 @@ if ~exist('mouseEphys_out','var')
     disp('mouseEphys_out loaded')
 end
 
-chan = 1; % only set to do one chan for now!!!
+chan = 2; % only set to do one chan for now!!!
 
 ephysDates = fields(mouseEphys_out.(animalName));
 batchDates = fields(batchParams.(animalName));
@@ -49,6 +49,7 @@ dates = intersect(batchDates,ephysDates);
 chanLabels = batchParams.(animalName).ephysInfo.chanLabels;
 
 %WARNING: ASSUMES 4SEC WINDOWLENGTH AND .25SEC OVERLAP
+disp('using 4sec windowLength and .25 overlap');
 windowLength = 4;
 windowOverlap = .25;
 
@@ -121,9 +122,9 @@ for iPlot = 1:length(timeRelation)
     plot((timeRelation(iPlot).Activity)/scaleFactor+offset);
     xlim([-20,length(timeRelation(iPlot).Activity)+20])
     ylim([0,yMaxCalc*10]);
-        if size(batchParams.(animalName).(dates{iPlot}).treatment,2) > 1
+%         if size(batchParams.(animalName).(dates{iPlot}).treatment,2) > 1
             treatments = batchParams.(animalName).(dates{iPlot}).treatment;
-        end
+%         end
         for iTreat = 1%:size(treatments,2)
             tempX = timeRelation(iPlot).indexPop(iTreat);
             tempY = max(ylim);
