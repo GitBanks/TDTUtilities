@@ -12,9 +12,6 @@ function fileMaint(animal)
 % WARNING this is only operating upon EEGdata files for now!!!
 % WARNING a few locations are hardcoded!
 
-%animal = 'DREADD07';
-%listOfAnimalExpts = getExperimentsByAnimal(animal,'Spon');
-%animal = 'LFP18';
 %animal = 'EEG55';
 
 listOfAnimalExpts = getExperimentsByAnimal(animal);
@@ -27,11 +24,6 @@ forceReimportTrials = 0;
 % so that below we can run
 manuallySetGlobalParamUI(animal); 
 
-% % possibly use in getBatchParams program?
-% for iList = 1:length(listOfAnimalExpts)
-%     b(iList,1) = str2num(listOfAnimalExpts{iList,1}(1:5));
-% end
-% c = unique(b)
 descOfAnimalExpts = listOfAnimalExpts(:,2);
 listOfAnimalExpts = listOfAnimalExpts(:,1);
 
@@ -66,7 +58,11 @@ for iList = 1:length(listOfAnimalExpts)
     dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
     disp(['$$$ Processing ' date '-' index ' $$$']);
     % %% STEP 1 MOVE 
-    moveDataRecToRaw(dirStrRecSource,dirStrRawData);
+    try
+        moveDataRecToRaw(dirStrRecSource,dirStrRawData);
+    catch
+        disp('moveDataRecToRaw didn''t run.');
+    end
     % %% STEP 2 IMPORT 
     dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
     if isempty(dirCheck) || forceReimport
@@ -106,61 +102,8 @@ for iList = 1:length(listOfAnimalExpts)
             %end
         end
     end
-    % MOVIES: grid, prep % 
-    addpath('Z:\DataBanks\mmread');
-    vidFile = dir([dirStrRawData '*.avi']); % simplified version for Synapse
-    if isempty(vidFile)
-        warning('video file not found!  This program expects video!')
-    else
-        vidFilePath = [dirStrRawData vidFile.name];
-        repeatedAttempts = 1;
-        maxAttempts = 4;
-        if isempty(dir([dirStrAnalysis '*-framegrid.mat']))|| forceRegrid
-            while repeatedAttempts < maxAttempts
-                try
-                    disp('attempting to run mmread on video...')
-                    videoFrameGridMakerSynapse(vidFilePath);
-                    repeatedAttempts = maxAttempts;
-                catch
-                    disp(['mmread is slightly unstable.  Let''s try ' num2str(maxAttempts-repeatedAttempts) ' more times.' ])
-                    repeatedAttempts = repeatedAttempts+1;
-                end
-            end
-        end
-    end
-    
-    
-    % insert some method to figure out which index is the control index
-    
-    
-    % %% MUA CHECK %% might want to fix up 'artifact rejection' option - some need it, some don't
-    if ~isempty(strfind(descOfAnimalExpts{iList}{:},'Stim'))
-        disp('Running MUA analysis')
-        dirCheck = dir([dirStrAnalysis '*TrshldMUA_Stim*']);
-        if isempty(dirCheck)
-            analyzeMUAthresholdArtifactRejection('PassiveEphys',date,index,index,0,1,0,1,0,-.5,1.5,-.001,3,2,1,false);
-%             analyzeMUAthresholdArtifactRejection(exptType,exptDate,exptIndex,threshIndex,rejectAcrossChannels,...
-%     filterMUA,subtrCommRef,detection,interpolation,tPltStart,tPltStop,PSTHPlotMin,...
-%     PSTHPlotMax,threshFac,batchBoolean,isArduino)
-        else
-            disp([date '-' index ' analyze MUA already done.']);
-        end
-    end
 end
 
-
-% this section is run after all indices for a whole day have been
-% for i =1:length(listOfAnimalExpts)
-%     a(i) = {listOfAnimalExpts{i}(1:5)};
-% end
-% b = unique(a)';
-% for i = 1:length(b)
-%     try
-%         videoMovementScoreByGridSynapse(animal,b{i}) 
-%     catch
-%         disp([b{i} ' didn''t process.'])
-%     end
-% end
 runBatchROIAnalysis(animal) %ADDED 5/13/2019 as first step to implementing new analysis!
 
 % Ephys analysis and plotting 
@@ -195,12 +138,23 @@ tic
 [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animal,0);
 saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn); 
 toc
-
 % update WPLI table
 
 end
 
-
+%     % %% MUA CHECK %% might want to fix up 'artifact rejection' option - some need it, some don't
+%     if ~isempty(strfind(descOfAnimalExpts{iList}{:},'Stim'))
+%         disp('Running MUA analysis')
+%         dirCheck = dir([dirStrAnalysis '*TrshldMUA_Stim*']);
+%         if isempty(dirCheck)
+%             analyzeMUAthresholdArtifactRejection('PassiveEphys',date,index,index,0,1,0,1,0,-.5,1.5,-.001,3,2,1,false);
+% %             analyzeMUAthresholdArtifactRejection(exptType,exptDate,exptIndex,threshIndex,rejectAcrossChannels,...
+% %     filterMUA,subtrCommRef,detection,interpolation,tPltStart,tPltStop,PSTHPlotMin,...
+% %     PSTHPlotMax,threshFac,batchBoolean,isArduino)
+%         else
+%             disp([date '-' index ' analyze MUA already done.']);
+%         end
+%     end
 
 
 
