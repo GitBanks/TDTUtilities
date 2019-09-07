@@ -1,10 +1,9 @@
 function [roiPix,fullROI] = roiVidAnalysisBinary(vidFileName,date,index,fullROI,useOldROI)
 % GIVEN: a file location and (optional) existing 240x320 logical. 
-% DO: load video file; prompt user to draw ROI; read video 60s at a
-% time & exclude pixels outside ROI; calculate 1st derivative across all pixels, average, and
+% DO: load video file; prompt user to draw ROI; read entire video & exclude pixels outside ROI; calculate 1st derivative across all pixels, average, and
 % save the difference array and output pixROI for subsequent use
 
-% updated 5/13/2019
+% updated 6/20/2019
 
 % calls: loadTrialList (in TDTUtilities); mmread
 % (Z:\DataBanks\mmread); roipoly & imfilter (Image Processing Toolbox)
@@ -83,14 +82,38 @@ for iFrame = 1:nFrames
 end
 times = wholeVid.times; % important! this is going to become the new time array
 
-
-% determine if this is synapse data or old data
+% determine if this is Synapse data or old data
 [synapseData,frameTimeStamps] = isSynapseData(vidFileName);
 
 if ~synapseData
     [framesToKeep,times,~] = videoROIBrainwareLED(vidFileName,times);    
 else
     [framesToKeep,times] = synapseFrameTimeAdjust(times,frameTimeStamps);
+end
+
+% manual removal of frames, mostly due to cage being open during these
+% periods...
+
+if strcmp(date,'19717')
+    if strcmp(index,'002')
+        framesToKeep(8111:8335) = 0;
+    elseif strcmp(index,'003')
+        framesToKeep(8111:8326) = 0;
+    elseif strcmp(index,'004')
+        framesToKeep([388:746,5825:6070]) = 0;
+    elseif strcmp(index,'005')
+        framesToKeep([374:741,5816:6061]) = 0;
+    elseif strcmp(index,'006')
+        framesToKeep(28904:29095) = 0;
+    elseif strcmp(index,'007')
+        framesToKeep(28904:29089) = 0;
+    elseif strcmp(index,'008')
+        framesToKeep(2060:2240) = 0;
+    elseif strcmp(index,'009')
+        framesToKeep(2060:2252) = 0;
+    end
+elseif strcmp(date,'19830') && (strcmp(index,'006') || strcmp(index,'007')) 
+    framesToKeep(1:129) = 0;
 end
 
 % display Bryan's magic
@@ -126,7 +149,7 @@ end
 %%%%%%%%%% frame length downsampling! added 6/12/2019 %%%%%%%%
 avg_FR = size(frames,3)/(times(end) - times(1));
 
-if avg_FR > 12 %if framerate is too high, downsample!
+if avg_FR > 12 % if framerate is above the normal limits, downsample the video signal!
     
     warning('avg_FR too high');
     frames = frames(:,:,1:4:end-3);
@@ -155,10 +178,6 @@ else
 
     times = times(framesToKeep(1:end-1));
 end
-    
-    
-
-
 
 %% Debug
 % figure()
@@ -174,15 +193,12 @@ disp('2D smoothing')
 sm_temp_dFrames_avg = nan(size(temp_dFrames,3),1);
 parfor i = 1:size(temp_dFrames,3)
     sm_temp = imfilter(temp_dFrames(:,:,i), ones(7)/7^2); % 2D smoothing filter - are we satisfied with this?
-    
     %imshow(sm_temp*255);
     %pause(.01);
     
     sm_temp(~roiPix) = nan; % exclude nans
     sm_temp_dFrames_avg(i) = nanmean(sm_temp,'all');
-    
 end
-
 
 % figure()
 % for i=1:(size(frames,3)-1)
@@ -270,24 +286,3 @@ if strcmp(evt.SelectionType,'double')
 end
 
 end
-
-% short_temp_dFrames = nan(size(temp_dFrames,1),size(temp_dFrames,2),floor(size(temp_dFrames,3)/4));
-% 
-% for ii = 1:floor(size(temp_dFrames,3)/4)
-%     short_temp_dFrames(:,:,ii) = max(temp_dFrames(:,:,(ii*4-3):ii*4),[],3);
-% end
-% disp('2D smoothing')
-% sm_temp_dFrames_avg = nan(size(short_temp_dFrames,3),1);
-% parfor i = 1:size(short_temp_dFrames,3)
-%     sm_temp = imfilter(short_temp_dFrames(:,:,i), ones(7)/7^2); % 2D smoothing filter - are we satisfied with this?
-%     
-%     %imshow(sm_temp*255);
-%     %pause(.01);
-%     
-%     sm_temp(~roiPix) = nan; % exclude nans
-%     sm_temp_dFrames_avg(i) = nanmean(sm_temp,'all');
-%     
-% end
-% tempTimes = times(1:4:end-3);
-
-% avg_FR = size(short_temp_dFrames,3)/(tempTimes(end) - tempTimes(1));

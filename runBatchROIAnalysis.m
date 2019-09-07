@@ -20,6 +20,13 @@ if ~rerun
 end
 % dates = dates(end-2:end); %for EEG68 and 69... 
 
+animalNum = str2double(animal(end-2:end));
+if isnan(animalNum)
+   animalNum = str2double(animal(end-1:end));
+end
+% if animalNum
+
+
 for ii = 1:length(dates)
     date = dates{ii};
     list = getExperimentsByAnimalAndDate(animal,date);

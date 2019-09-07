@@ -31,7 +31,7 @@ S.dbConn = dbConnect();
 [S.livingAnimals,S.livingAnimalsID] = getLivingAnimals; % get list of living animals for user to select
 
 % TODO % add nHoursPre to the GUI as a toggle or parameter
-S.nHoursPre = 1; %1 % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
+S.nHoursPre = 2; %1 % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
 S.nHoursPost = 4; % we've been doing 4, but consider adding it as a toggle in addition to nHoursPre
 
 % !! TODO !! % create parameter here to check for when inj is, and auto-next index stuff? urgent because this will allow us to streamline data collection
@@ -74,7 +74,7 @@ uicontrol('style','text',...
 
 updateDynamicDisplayBox('Starting Synapse');
 S = synapseConnectionProcess(S); % Start Synapse, connect to recording computer            
-S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline','a5 Inverse Agonist','Piroxicam'}; 
+S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline','a5 Inverse Agonist','Piroxicam','SeCl4','Caffeine'}; 
 
 % LEFT
 S.pp(1) = uicontrol('style','pop',...
@@ -168,6 +168,8 @@ end
 if ~isempty(strfind(S.animalName{1},'LFP'))
     sponTime = 610;
 elseif ~isempty(strfind(S.animalName{1},'EEG'))
+    sponTime = 3610;
+elseif ~isempty(strfind(S.animalName{1},'BX'))
     sponTime = 3610;
 else
     disp('I hope you didn''t plan to run any spontaneous recordings...')
@@ -314,7 +316,7 @@ while ~sequenceUpdated
     S.syn.setMode(3); % recording set to auto start (3 is rec).
     pause(2); % reduced this from 4 8/30/18
     
-    if ~isempty(strfind(S.animalName{1},'EEG')) % Assumes both animals are EEG!!!!!!!!!!!!!!!!!!!!!!
+    if ~isempty(strfind(S.animalName{1},'EEG')) || ~isempty(strfind(S.animalName{1},'BX'))% Assumes both animals are EEG!!!!!!!!!!!!!!!!!!!!!!
         result = 1;
     else
         seqList = S.syn.getParameterValues('ParSeq1','SequenceFileList');

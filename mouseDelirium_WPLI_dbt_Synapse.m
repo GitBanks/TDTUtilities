@@ -1,4 +1,4 @@
-function [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animalName,runICA)
+function [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animalName,runICA,forceReRun)
 %
 % Computes the debiased weighted phase-lag index (Vinvk et al 2011) for 
 % mouse ephys data from delirium project (either EEG or LFP). Workflow is 
@@ -86,6 +86,10 @@ if str2double(ver(end-3:end-2)) < 16
     eDates = tempFields(strfind(tempFields,'date')); %for matlab versions <2016
 else
     eDates = tempFields(contains(tempFields,'date')); %Only use for >2016b
+end
+
+if ~forceReRun
+    eDates = eDates(end); %if false, only do most recent expt
 end
 
 if ~exist([outPath thisName],'file')
