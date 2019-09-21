@@ -51,7 +51,7 @@ for iAnimal = 1:length(animalList)
         else
             treatStr = thisTreat{:};
         end
-        figureName = ([thisName ' - ' thisDate ' - ' treatStr ' - no parse']);
+        figureName = ([thisName ' - ' thisDate ' - ' treatStr(1:end-1) ' - no parse']);
         figH = figure('Name',figureName);
         
         set(gcf,'DefaultAxesColorOrder',colorOrder); %set color order for current figure. These are colors I like - ZS 19124 
@@ -59,7 +59,7 @@ for iAnimal = 1:length(animalList)
         iCount = 1;
         for iChan = [4 1 3 2] %Plots AL AR PL PR in 2x2 subplots (in that order) - 18n13 ZS 
             subtightplot(2,2,iCount,[.02 .02]);
-            for iExpt = 1:length(fieldnames(mouseEphys_out.(thisName).(thisDate)))
+            for iExpt = 1:size(expts,1)
                 thisExpt = expts{iExpt};
                 if ~isempty(mouseEphys_out.(thisName).(thisDate).(thisExpt).spec)
                     f = mouseEphys_out.(thisName).(thisDate).(thisExpt).spec.freq;
@@ -82,7 +82,7 @@ for iAnimal = 1:length(animalList)
             if iChan == 3
                xlabel('Freq');
                ylabel('Power (mV^2)');  
-               legend(expts,'Location','Best');
+               legend([repmat('hr ',size(expts,1),1) sprintf('%d',1:size(expts,1))'],'Location','Best');
             end
             iCount = iCount+1;
         end        

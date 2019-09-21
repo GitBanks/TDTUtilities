@@ -114,6 +114,13 @@ if strcmp(date,'19717')
     end
 elseif strcmp(date,'19830') && (strcmp(index,'006') || strcmp(index,'007')) 
     framesToKeep(1:129) = 0;
+    
+elseif strcmp(date,'19918') && (strcmp(index,'000') || strcmp(index,'001')) 
+    if strcmp(index,'000')
+        framesToKeep(17923:18081) = 0;
+    elseif strcmp(index,'001')
+        framesToKeep(17923:18100) = 0;
+    end
 end
 
 % display Bryan's magic
