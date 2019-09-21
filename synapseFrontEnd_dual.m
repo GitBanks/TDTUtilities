@@ -31,7 +31,7 @@ S.dbConn = dbConnect();
 [S.livingAnimals,S.livingAnimalsID] = getLivingAnimals; % get list of living animals for user to select
 
 % TODO % add nHoursPre to the GUI as a toggle or parameter
-S.nHoursPre = 2; %1 % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
+S.nHoursPre = 1; %1 % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
 S.nHoursPost = 4; % we've been doing 4, but consider adding it as a toggle in addition to nHoursPre
 
 % !! TODO !! % create parameter here to check for when inj is, and auto-next index stuff? urgent because this will allow us to streamline data collection

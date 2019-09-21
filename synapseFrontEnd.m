@@ -34,7 +34,7 @@ S.dbConn = dbConnect();
 % TODO % animalName is presently a parameter, but a menu selection might be better?  or auto-populate with recent (living) animal? 
 S.animalName = animalName;
 % TODO % we may want to add nHoursPre to the GUI as a toggle or parameter
-S.nHoursPre = 2; %1 % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
+S.nHoursPre = 1; %1 % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
 S.nHoursPost = 4; % we've been doing 4, but consider adding it as a toggle in addition to nHoursPre
 
 % !! TODO !! % create parameter here to check for when inj is, and auto-next index stuff? urgent because this will allow us to streamline data collection
