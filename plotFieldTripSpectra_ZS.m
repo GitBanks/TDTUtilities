@@ -58,7 +58,13 @@ for iAnimal = 1:length(animalList)
         expts = fieldnames(mouseEphys_out.(thisName).(thisDate));
         iCount = 1;
         for iChan = [4 1 3 2] %Plots AL AR PL PR in 2x2 subplots (in that order) - 18n13 ZS 
-            subtightplot(2,2,iCount,[.02 .02]);
+            subtightplot(2,2,iCount,[.04 .04],[.1 .04],[.1 .04]);
+            
+            timeReInj = batchParams.(thisName).(thisDate).timeReInj;
+            for iTime = 1:length(timeReInj)
+                timeStr{iTime} = ['hr ' num2str(timeReInj(iTime))];
+            end
+            
             for iExpt = 1:size(expts,1)
                 thisExpt = expts{iExpt};
                 if ~isempty(mouseEphys_out.(thisName).(thisDate).(thisExpt).spec)
@@ -80,9 +86,10 @@ for iAnimal = 1:length(animalList)
 %             axis square
             box off
             if iChan == 3
-               xlabel('Freq');
-               ylabel('Power (mV^2)');  
-               legend([repmat('hr ',size(expts,1),1) sprintf('%d',1:size(expts,1))'],'Location','Best');
+                xlabel('Freq');
+                ylabel('Power (mV^2)');
+                hleg = legend(timeStr,'Location','Best');
+                title(hleg,'Time re: inj (LPS)');   
             end
             iCount = iCount+1;
         end        
@@ -91,8 +98,14 @@ for iAnimal = 1:length(animalList)
         %rescale plots here
         iCount = 1;
         for iChan = [4 1 3 2] 
-            subtightplot(2,2,iCount,[.02 .02]);
+            subtightplot(2,2,iCount,[.04 .04],[.1 .04],[.1 .04]);
             ylim([minForPlot maxForPlot]);
+            if iChan ==4 || iChan==1
+               xticklabels('');
+            end
+            if iChan==1 || iChan==2
+               yticklabels(''); 
+            end
             iCount = iCount+1;
         end        
         clear iCount

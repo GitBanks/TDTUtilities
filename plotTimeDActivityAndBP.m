@@ -155,17 +155,3 @@ if saveP
     outPath = 'M:\mouseEEG\Power vs activity\';
     savePlot(outPath,figureName)
 end
-
-
-% OLD SHIT:
-%     plot(timeRelation(iPlot).indexPop,0,'k*');
-%     xlim([0,length(timeRelation(length(timeRelation)).Activity)]);
-%what the fuck is this??
-% for iDate = 1:2 
-%     timeRelation(iDate).Activity = timeRelation(iDate).Activity/4;
-% end
-%     set(gca,'xticklabel',timeRelation(iPlot).timeSincePoke);
-%timeRelation(iDate).div = tempExptBandpower./tempExptActivity; %what is this???
-
-
-

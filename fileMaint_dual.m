@@ -164,7 +164,7 @@ runBatchROIAnalysis(animal,rerunMovt) %ADDED 5/13/2019 as first step to implemen
 %============================================================%
 % To-do: add a check here to see if analysis/plotting is finished! 
 
-addpath('Z:\fieldtrip-20170405\','Z:\DataBanks\mouseDeliriumEphysAnalysis');
+addpath('Z:\fieldtrip-20170405\');
 disp('starting spec analysis') ; tic
 runICA = 0; %
 forceReRun = 0; %will run all dates found for this animal

@@ -158,7 +158,8 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
 
         for iBand = 1:length(mouseDeliriumFreqBands.Names)
             thisBand = mouseDeliriumFreqBands.Names{iBand};
-            gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).activity = meanMovementPerWindow;
+            gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
+%             gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).activity = meanMovementPerWindow;
             disp('Movement calculated & added to ephys structure');
         end
 

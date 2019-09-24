@@ -29,7 +29,7 @@ end
 
 for ii = 1:length(dates)
     date = dates{ii};
-    list = getExperimentsByAnimalAndDate(animal,date);
+    list = getExperimentsByAnimalAndDate(animal,date,query);
     fullROI = [];
     for qq = 1:size(list,1)
         indices{qq} = list{qq,1}(7:9);
@@ -39,8 +39,8 @@ for ii = 1:length(dates)
         if animalNum > 51 % assumes animal name has a number associated with it (and follows the EEG animal order). New system videos started with EEG52
             vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\20' date(1:2) '_' date '-' index '_Cam*.avi'];
         else
-%             vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index ];
-            vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index '-converted.mp4']; %ONLY FOR EEG43 and 47
+            vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index ];
+%             vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index '-converted.mp4']; %ONLY FOR EEG43 and 47
         end
         dirCheck = dir(vidFileName);
         if ~isempty(dirCheck)

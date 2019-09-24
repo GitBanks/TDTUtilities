@@ -29,8 +29,8 @@ catch
     error(['Can not find ' fileNameStub])
 end
 % end
-FileInfo = dir(['\\MEMORYBANKS\Data\' fileNameStub]);
-% time = FileInfo.date;
+fileInfo = dir(['\\MEMORYBANKS\Data\' fileNameStub]);
+% time = fileInfo.date;
 try
     windowLength = gBatchParams.(animalName).windowLength;
     windowOverlap = gBatchParams.(animalName).windowOverlap;
@@ -71,8 +71,8 @@ end
 
 % check if this is wPLI data and exclude trials that were excluded in the
 % ephys structure
-fieldnombres = fieldnames(gMouseEphys_out.(animalName).(thisDate).(thisExpt).delta);
-if sum(contains(fieldnombres,'conn')) > 1
+fieldnombres = fieldnames(gMouseEphys_out.(animalName).(thisDate).(thisExpt));
+if sum(contains(fieldnombres,'delta')) > 1 %assume wpli structure has band names listed
     disp('WPLI data detected')
     theseTrials = ~isnan(gMouseEphys_out.(animalName).(thisDate).(thisExpt).delta.connVal(:,1));%!!!!! CHECK THIS PLEASE 6/16/2019
     excludeTrials = find(theseTrials==0);
@@ -123,6 +123,8 @@ else % if not wPLI data, use the following lines to exclude trials
         % grab the trials that were kept
     catch
         warning('theseTrials no existe');
+%         gMouseEphys_out.(animalName).(thisDate).(thisExpt).activity = ...
+%                 meanMovementPerWindow;
     end
 end
 
