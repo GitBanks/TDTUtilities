@@ -16,7 +16,6 @@ defaultPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\'; %W: dr
 pars.windowLength = 4; %sec
 pars.windowOverlap = 0.25; %fractional overlap
 
-% timeReInj = -1:3; %hardcoded PLEASE FIX
 % the following prevents evoked stuff from being read in.
 
 %if contains(animalName,'LFP') || contains(animalName,'DREADD')
@@ -24,24 +23,32 @@ pars.windowOverlap = 0.25; %fractional overlap
 % ~isempty(strfind(animalName,'DREADD')) ZS 19107
 recForAnimal = getExperimentsByAnimal(animalName,'Spon'); %grab only spon indices
 
+if isempty(recForAnimal{1})
+    recForAnimal = getExperimentsByAnimal(animalName); %rerun above line without the 'Spon' query
+end
+
 %Set electrode location
 electrodeInfo = getElectrodeLocationFromDateIndex(recForAnimal{1,1}(1:5),recForAnimal{1,1}(7:9));
 
 %the following line is appealing for EEG & LFP animals b/c less hardcoding,
 %but not DREADD or anything else with unique name. Reconsider.
 ephysInfo.recMode = animalName(1:3); 
+tempEphysTypes = {'EEG','LFP'};
+if strcmp(ephysInfo.recMode,'LFP')
+   ephysInfo.recMode = 'EEG'; %just hardcoding for now... EEK!! 
+end
 
 % !!! WARNING !!! this is hardcoded, assumes we're looking at EEG.  Channel descriptions will
 % be in 'electrodeInfo' if we want to change this, add features, etc.
 tempIndexer = 1;
 for k = 1:length(electrodeInfo)
-    if strfind(electrodeInfo{k},ephysInfo.recMode)
+    if contains(electrodeInfo{k},tempEphysTypes)
         ephysInfo.chanNums(tempIndexer) = k; %brain ephys channels
         ephysInfo.chanLabels{tempIndexer,1} = electrodeInfo{k}([5,7]); %Labels for EEG channels
         tempIndexer = tempIndexer+1;
     end
 end
-ephysInfo.EMGchan = [];
+ephysInfo.EMGchan = []; %set to ignore EMG chans for now...
 
 % 1. find unique dates.
 descForAnimal = recForAnimal(:,2);

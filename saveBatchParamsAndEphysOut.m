@@ -5,25 +5,29 @@ function saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out)
 % 2. add updated animal
 % 3. save
 
-% TO-DO: Fix how dates are handled. Right now only one date is saved in
-% ephys. Attempted a fix - 3/21/2019 ZS
-
 % Hardcoded :( please consider making a config file...
-outFileName = 'mouseEphys_out_noParse.mat';
+outFileName = 'mouseEphys_out_noParse_nu.mat';
 computerSpecPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
 
-if ~exist([computerSpecPath outFileName],'file')
-    error([outFileName ' does not exist! check path.'])
+% if ~exist([computerSpecPath outFileName],'file')
+%     error([outFileName ' does not exist! check path.'])
+% end
+try
+    load([computerSpecPath outFileName],'mouseEphys_out','batchParams');
+catch
+    warning([computerSpecPath outFileName ' not found. Creating new save file']);
 end
 
 gName = fieldnames(gBatchParams);
 gName = gName{1,1};
 dates = fieldnames(gMouseEphys_out.(gName));
 
-load([computerSpecPath outFileName],'mouseEphys_out','batchParams');
+
 
 batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
 batchParams.(gName).bandInfo = gBatchParams.(gName).bandInfo;
+batchParams.(gName).windowLength = gBatchParams.(gName).windowLength;
+batchParams.(gName).windowOverlap = gBatchParams.(gName).windowOverlap;
 
 for iDate = 1:length(dates)
     thisDate = dates{iDate};

@@ -25,7 +25,7 @@ tankFileLoc = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptInde
 saveFileLoc = ['\\Memorybanks\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
 stimInfo = TDTbin2mat(tankFileLoc,'TYPE',{'scalars'});
 % scan the list of stims and get them ready to sort
-if ~isempty(stimInfo.scalars)
+if ~isempty(stimInfo)
     stimName = fields(stimInfo.scalars);
     stimTimes = stimInfo.scalars.(stimName{1}).ts;
     stimData = stimInfo.scalars.(stimName{1}).data;
@@ -78,7 +78,7 @@ else % if there is no 'scalar' field, it's a spontaneous recording.  set that up
     %stimsUnique(1).stimVals = 1;
     stimTimes = 0;
 end
-% Seperate function to fetch global stim parameters (drug dose, light intensity, etc.)
+% Separate function to fetch global stim parameters (drug dose, light intensity, etc.)
 [nGlobalPars,globalParNames,globalParVals] = getGlobalStimParams(exptDate,exptIndex);
 % following borrowed from previos import: a fine way to do it, and will
 % help keep at least some things consistant.

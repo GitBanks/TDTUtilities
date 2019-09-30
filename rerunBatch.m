@@ -1,20 +1,24 @@
+% use this script to automatically gather relevant recordings for selected
+% animals and run movement analysis roiVidAnalysisBinary
 
-animals = {'LFP11','LFP13'};
+%list of animals to run batch analysis on
+animals = {'EEG82'}; 
+
+%set search criterion
+query = 'Spon'; 
 
 for iAnimal = 1:length(animals)
     animal = animals{iAnimal};
-    query = 'Spon';
-    listOfExpts = getExperimentsByAnimal(animal,query);
+    
+    % get list of experiments
+    listOfExpts = getExperimentsByAnimal(animal,query); 
     if isempty(listOfExpts{1})
         warning(['No experiments found for ' animal ' under ' query '. Trying again with no query']);
         listOfExpts = getExperimentsByAnimal(animal);
     end
     
-    for k = 1:length(listOfExpts)
-        a(k) = {listOfExpts{k}(1:5)};
-    end
-    dates = unique(a)';
-    
+    dates = unique(cellfun(@(x) x(1:5), listOfExpts(:,1), 'UniformOutput',false),'stable'); 
+
     for idate = 1:length(dates)
         date = dates{idate};
         list = getExperimentsByAnimalAndDate(animal,date,query);
@@ -23,13 +27,5 @@ for iAnimal = 1:length(animals)
             failed.(animal)(idate,:) = rerunBinary(animal,date,exptIDs);
         end
     end
-    clear dates a listOfExpts
+    clear dates listOfExpts list
 end
-
-
-% if contains(animal,'Opto') %since Opto-01 has a dash, and dashes don't play nicely with structures
-%     name = 'Opto01';
-%     failed.(name)(idate,:) = rerunBinary(animal,date,exptIDs);
-% else
-% end
-    

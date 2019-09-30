@@ -118,7 +118,7 @@ forceReRun = 0; %will run all dates found for this animal
 saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); toc
 
 % spectra
-plotFieldTripSpectra_ZS({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
+plotFieldTripSpectra({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
 
 % grady plots
 plotTimeDActivityAndBP(animal,'delta',1);

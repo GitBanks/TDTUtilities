@@ -1,6 +1,6 @@
 function runBatchROIAnalysis(animal,rerun)
 % animal = 'EEG74';
-% animal = 'EEG68';
+
 if nargin < 2
    rerun = 0; 
 end
@@ -11,21 +11,13 @@ if isempty(listOfExpts{1})
    listOfExpts = getExperimentsByAnimal(animal);
 end
 
-for k = 1:length(listOfExpts) 
-    a(k) = {listOfExpts{k}(1:5)};
-end
-dates = unique(a)';
+dates = unique(cellfun(@(x) x(1:5), listOfExpts(:,1), 'UniformOutput',false),'stable'); 
+
 if ~rerun
    dates = dates(end); %use most recent experiment... 
 end
-% dates = dates(end-2:end); %for EEG68 and 69... 
 
-animalNum = str2double(animal(end-2:end));
-if isnan(animalNum)
-   animalNum = str2double(animal(end-1:end));
-end
-% if animalNum
-
+animalNum = getAnimalNumber(animalName);
 
 for ii = 1:length(dates)
     date = dates{ii};
