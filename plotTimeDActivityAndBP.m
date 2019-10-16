@@ -37,7 +37,7 @@ end
 
 if ~exist('mouseEphys_out','var')
     disp('loading mouseEphys_out structure')
-    load('\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse.mat');
+    load('\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse_nu.mat');
     disp('mouseEphys_out loaded')
 end
 

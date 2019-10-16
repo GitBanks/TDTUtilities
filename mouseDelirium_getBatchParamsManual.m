@@ -1,5 +1,5 @@
 
-function [batchParams] = mouseDelirium_getBatchParams(outPath,defaultPath)
+function [batchParams] = mouseDelirium_getBatchParamsManual(outPath,defaultPath)
 batchParams = struct;
 if ~exist('outPath','var')
     outPath = '\\MEMORYBANKS\Data\mouseEEG\videoScoring\';

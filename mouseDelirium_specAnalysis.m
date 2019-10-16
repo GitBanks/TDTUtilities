@@ -1,5 +1,5 @@
 function [gBatchParams, mouseEphys_out,failedTable] = mouseDelirium_specAnalysis(animalName,runICA,forceReRun)
-% Computes the power spectrum for
+% Computes the power spectrum (and Lempel-Ziv complexity (WIP) for
 % mouse ephys data from delirium project (either EEG or LFP).
 % Workflow is
 %   (a) get parameters for analysis using the function mouseDelirium_getBatchParamsByAnimal
@@ -31,8 +31,8 @@ end
 gBatchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
 
 % list of frequency bands in Hz
-bands.lowDelta = [1,4]; %
-bands.deltaExtended = [1,6]; %extended delta range for exploratory analyses
+% bands.lowDelta = [1,4]; %
+% bands.deltaExtended = [1,6]; %extended delta range for exploratory analyses
 bands.delta = [2,4];
 bands.theta = [5,12];
 bands.alpha = [13,20];
@@ -202,6 +202,11 @@ for iDate = 1:length(eDates)%1:length(eDates)
             elseif strcmp(animalName,'EEG34') && strcmp(thisDate,'date17601') && strcmp(thisExpt,'expt004')
                 theseTrials(592:790) = [];
             end
+            
+            % COMPLEXITY ANALYSIS
+            [C,Cnorm] = runLZC(data_MouseEphysDS.trial);
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZC = C;
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCnorm = Cnorm;
             
             % First compute keeping trials to get band power as time series
             cfg           = [];

@@ -62,14 +62,15 @@ for iAnimal = 1:length(animalList)
         
         set(gcf,'DefaultAxesColorOrder',colorOrder); %set color order for current figure. These are colors I like - ZS 19124 
         expts = fieldnames(mouseEphys_out.(thisName).(thisDate));
+        
+        timeReInj = batchParams.(thisName).(thisDate).timeReInj;
+        for iTime = 1:length(timeReInj)
+            timeStr{iTime} = ['hr ' num2str(timeReInj(iTime))];
+        end
+        
         iCount = 1;
         for iChan = [4 1 3 2] %Plots AL AR PL PR in 2x2 subplots (in that order) - 18n13 ZS 
             subH(iChan) = subtightplot(2,2,iCount,[.04 .04],[.1 .04],[.1 .04]);
-            
-            timeReInj = batchParams.(thisName).(thisDate).timeReInj;
-            for iTime = 1:length(timeReInj)
-                timeStr{iTime} = ['hr ' num2str(timeReInj(iTime))];
-            end
             
             for iExpt = 1:size(expts,1)
                 thisExpt = expts{iExpt};

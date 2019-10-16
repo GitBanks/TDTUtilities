@@ -1,5 +1,13 @@
 function runBatchROIAnalysis(animal,rerun)
-% animal = 'EEG74';
+% a function to run the movement analysis on all found dates & experiments
+% for a given animal. Second parameter 'rerun' is a boolean to say whether
+% you want to run the analysis on only the most recent experiment or all
+% found experiments. NOTE: the movement analysis roiVidAnalysisBinary is
+% pretty computationally taxing. Should only be run on computers with >
+% 32gb RAM (e.g. HELMMHOLTZ, THOR). 
+
+% example inputs: 
+% animal = 'EEG74'; rerun = 0;
 
 if nargin < 2
    rerun = 0; 
@@ -17,7 +25,7 @@ if ~rerun
    dates = dates(end); %use most recent experiment... 
 end
 
-animalNum = getAnimalNumber(animalName);
+animalNum = getAnimalNumber(animal); %utility to find the animal ID number (e.g. 116 in EEG116)
 
 for ii = 1:length(dates)
     date = dates{ii};

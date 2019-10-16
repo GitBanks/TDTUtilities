@@ -212,7 +212,14 @@ for iDate = 1:length(eDates)%1:length(eDates)
             mouseEphys_out.(animalName).(thisDate).(thisExpt).bandPow.(thisBand) = ...
                 squeeze(mean(tempSpec.powspctrm(:,:,tempSpec.freq>=fLims(1) & tempSpec.freq<=fLims(2)),3));
         end
-
+        
+        %added 10/15/2019... debugging WIP. If number of ephys windows is
+        %somehow longer than number of movement windows
+        if find(theseTrials > length(meanMovementPerWindow))
+            warning('trial index exceeds number of movement windows...');
+            theseTrials  = theseTrials(theseTrials <= length(meanMovementPerWindow));
+        end
+        
         cfg           = [];
         cfg.trials    = theseTrials;
         cfg.method    = 'mtmfft';

@@ -1,6 +1,11 @@
 function fileMaint_dual(animal,hasTankIndices)
 % FOR ANIMALS RECORDED USING DUAL SYSTEM DUMMY
 
+% animal is animal ID as a string
+% hasTankIndices is a boolean which is necessarily true if the animal was
+% on cam1/EEG1/cage 1 on synapse (and thus associated with the tank files)
+% or false if the animal was on cam2/EEG2/cage 2
+
 % A utility  to run that replicates the import data pathway in
 % synapseFrontEnd
 % 1. move files
@@ -14,7 +19,6 @@ function fileMaint_dual(animal,hasTankIndices)
 % WARNING this is only operating upon EEGdata files for now!!!
 % WARNING a few locations are hardcoded!
 
-%animal = 'EEG55';
 
 if nargin < 2
     disp('hasTankIndices not set. Assuming this animal is associated with the tank indices');
@@ -168,7 +172,7 @@ addpath('Z:\fieldtrip-20170405\');
 disp('starting spec analysis') ; tic
 runICA = 0; %
 forceReRun = 0; %will run all dates found for this animal
-[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis_Synapse(animal,runICA,forceReRun);
+[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis(animal,runICA,forceReRun); %mouseDelirium_specAnalysis_Synapse
 saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); toc
 
 % spectra
@@ -177,10 +181,6 @@ plotFieldTripSpectra({animal},1,gMouseEphys_out,gBatchParams); %spectra will sav
 % grady plots
 plotTimeDActivityAndBP(animal,'delta',1);
 
-% make slope plots
-% plotPeakVsBaselineLinearFit(animal);
-
-% update power and slope tables
 % TODO: generate master power and slope tables and add functionality to
 % just add entries
 

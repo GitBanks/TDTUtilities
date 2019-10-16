@@ -25,7 +25,7 @@ tankFileLoc = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptInde
 saveFileLoc = ['\\Memorybanks\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
 stimInfo = TDTbin2mat(tankFileLoc,'TYPE',{'scalars'});
 % scan the list of stims and get them ready to sort
-if ~isempty(stimInfo)
+if ~isempty(stimInfo.scalars)
     stimName = fields(stimInfo.scalars);
     stimTimes = stimInfo.scalars.(stimName{1}).ts;
     stimData = stimInfo.scalars.(stimName{1}).data;

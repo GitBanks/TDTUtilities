@@ -35,7 +35,7 @@ electrodeInfo = getElectrodeLocationFromDateIndex(recForAnimal{1,1}(1:5),recForA
 ephysInfo.recMode = animalName(1:3); 
 tempEphysTypes = {'EEG','LFP'};
 if strcmp(ephysInfo.recMode,'LFP')
-   ephysInfo.recMode = 'EEG'; %just hardcoding for now... EEK!! 
+   ephysInfo.recMode = {'EEG','LFP'}; %just hardcoding for now... EEK!! 
 end
 
 % !!! WARNING !!! this is hardcoded, assumes we're looking at EEG.  Channel descriptions will
