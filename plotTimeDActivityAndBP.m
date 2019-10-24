@@ -143,7 +143,7 @@ for iPlot = 1:length(timeRelation)
     ylabel(dates{iPlot});
     if iPlot == length(timeRelation)
        xlabel('Time re: inj (hr)');
-       legend([band ' power'],'activity','Location','NorthEast');
+       legend([band ' power'],'movement','Location','NorthEast');
     end
 end
 clear timeRelation
