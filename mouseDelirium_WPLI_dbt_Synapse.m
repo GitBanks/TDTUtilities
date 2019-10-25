@@ -1,4 +1,4 @@
-function [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animalName,runICA)
+function [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animalName,runICA,forceReRun)
 %
 % Computes the debiased weighted phase-lag index (Vinvk et al 2011) for 
 % mouse ephys data from delirium project (either EEG or LFP). Workflow is 
@@ -88,6 +88,10 @@ else
     eDates = tempFields(contains(tempFields,'date')); %Only use for >2016b
 end
 
+if ~forceReRun
+    eDates = eDates(end); %if false, only do most recent expt
+end
+
 if ~exist([outPath thisName],'file')
     error(['No ephys data for ' thisName]);
 end
@@ -154,7 +158,8 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
 
         for iBand = 1:length(mouseDeliriumFreqBands.Names)
             thisBand = mouseDeliriumFreqBands.Names{iBand};
-            gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).activity = meanMovementPerWindow;
+            gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
+%             gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).activity = meanMovementPerWindow;
             disp('Movement calculated & added to ephys structure');
         end
 

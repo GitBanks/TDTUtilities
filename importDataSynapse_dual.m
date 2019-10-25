@@ -1,4 +1,6 @@
-function importDataSynapse(exptDate,exptIndex)
+function importDataSynapse_dual(exptDate,exptIndex,blockLocation)
+% FOR DUAL RECORDING DUMMY!
+
 % Given: a date and index
 % Do: Save data and trial files in the expected formats for subsequent
 % exptDate = '18924';
@@ -34,32 +36,53 @@ postStim = 500;
 
 signalTypes = {'EEG','LFP','SU'};
 % TODO don't hardcode any of the following:
-dirStrRawData = ['W:\Data\PassiveEphys\' '20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %input
+dirStrRawData = ['W:\Data\PassiveEphys\' '20' exptDate(1:2) '\' blockLocation '\']; %input
 dirStrAnalysis = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %output
 
 
 % All stim info is now handled in here.  and saved, so there may be no
 % reason to pull trialList info out.
 display('Updating stim info.')
-trialList = updateStimInfoSynapse(exptDate,exptIndex);
+try
+    trialList = updateStimInfoSynapse(exptDate,exptIndex); %DEBUG
+catch
+    warning(['updateStimInfoSynapse failed to run on ' exptDate '-' exptIndex]);
+    if strcmp([exptDate '-' exptIndex],blockLocation)
+        error(['updateStimInfoSynapse appears to never have been run on ' exptDate ' ' exptIndex])
+    else
+        sourceFileLoc = ['\\Memorybanks\Data\PassiveEphys\20' exptDate(1:2) '\' blockLocation '\'];
+        trialFileName = [sourceFileLoc blockLocation '_' 'trial0.mat'];
+        dirCheck = dir(trialFileName); %check the block location dir before copying to the actual directory
+        if ~isempty(dirCheck)
+            load(trialFileName); %load existing trial list from block location
+%             destinationFile = [dirStrAnalysis exptDate '-' exptIndex '_' 'trial0.mat'];
+            % check if output directory exists
+            analysisDir = dir(dirStrAnalysis);
+            if isempty(analysisDir)
+                mkdir(dirStrAnalysis);
+            end
+            save([dirStrAnalysis exptDate '-' exptIndex '_trial0'],'trialList');
+        else
+            error('no trial file found!');
+        end
+    end
+end
 
 
 % loading ephys data
 display('Loading in raw data.  This sometimes takes a while.');
+
+% check block location by comparing the block location vs exptDate & exptIndex
+if strcmp([exptDate '-' exptIndex],blockLocation)
+    streamToUse = 'EEG1'; % if blockLocation == exptDate-exptIndex, use the FIRST stream (left cage, chans 1-4, Cam1, etc)
+else
+    streamToUse = 'EEG2'; % if  blockLocation ~= exptDate-exptIndex, use the SECOND stream (right cage, chans 5-8, Cam2, etc)
+end
+
+
 data = TDTbin2mat(dirStrRawData); % this step may take a while depending on how long the recording is.  We can limit the length if necessary,
-% data = TDTbin2mat(dirStrRawData,'TYPE',{'epocs'}); consider this format with
-% the limited 'TYPE' could be useful 
+% data = TDTbin2mat(dirStrRawData,'TYPE',{'epocs'}); consider this format with the limited 'TYPE' could be useful 
 display('Loading complete.');
-
-
-
-% [nGlobalPars,globalParNames,globalParVals] = getGlobalStimParams(exptDate,exptIndex);
-% %do we still need this?
-% dbConn = dbConnect();
-% masterResult = fetch(dbConn,['select animalID from masterexpt where exptDate=''' houseConvertDateTo_dbForm(exptDate) ''' and exptIndex=' num2str(str2num(exptIndex))]);
-% animalID = masterResult{1,1};
-% close(dbConn);
-
 
 % CONSIDERATION 3
 % I have excluded a few things from the Brainware version: much metadata is
@@ -72,68 +95,7 @@ display('Loading complete.');
 % otherwise - add check?)
 % [channelMap] = getElectrodeLocationFromDateIndex(exptDate,exptIndex);
 streamList = fields(data.streams);
-
-
-% look to see if 'data.scalars' is populated.  If not, it's just a
-% 'continuous' recording/stream, and array should be chan X samples
-% if scalars has values in it, it's 'evoked' data and should be saved as
-% chan X samples X trials
-%     
-% if ~isempty(data.scalars) %not empty, is evoked, so should save as chan X samples X trials
-%     stimName = fields(data.scalars); %there should not be any more than one stim... right?
-%     stimTimes = data.scalars.(stimName{1}).ts;
-%     % data.scalars.(stimName{1}).data %this contains stim info like n
-%     % pulses and inter pulse interval (or stim specific stuff).
-%     % here is a temporary solution to figure out which unique stims are
-%     % contained in data.scalars.(stimName{1}).data
-%     stimInfo = TDTbin2mat(dirStrRawData,'TYPE',{'scalars'});
-%     %stimInfo = data.scalars.(stimName{1});
-   
-% 
-%     % !!!TODO!!! do we need this for trial0 stuff
-%     
-%     %nTrials = max(size(data.scalars.(stimName{1}).data));
-%        
-% %     
-% %     % need to do something with these - when we add lps, e.g.
-% %     nGlobalPars = size(paramResult,1);
-% %     globalParNames = paramResult(:,1);
-% %     globalParVals = cell2mat(paramResult(:,2));   
-%     
-%     
-%     stimDur = (data.scalars.(stimName{1}).data(3,1)-1)*data.scalars.(stimName{1}).data(4,1);
-%     for iTrial = 1:length(stimTimes)
-%         trialList(iTrial).uniqueStimID = 0; % NOOOOOOOOOOOOOOO  find and sort!
-%         trialList(iTrial).dataFile = data.info.blockname;
-%         trialList(iTrial).origTrialNum = iTrial;
-%         trialList(iTrial).trialTime = stimTimes(iTrial);
-%         trialList(iTrial).gain(1:16) = 1; % Synapse standard unless modified
-%         trialList(iTrial).offset(1:16) = 0;
-%     end
-% else %handle spontaneous/non-evoked recorded data
-%     stimTimes = data.streams.(streamList{1}).startTime; %first sample
-%     
-%     % TODO!!!!
-%     trialList(1).uniqueStimID = 15619; % NOOOOOOOOOOOOOOO  find and sort!
-%     % this is complicated here by needing to know what 'no stim' param
-%     % resolves to, but then also adding a specific drug type and level 
-%     % globalParNames might add
-%     
-%     trialList(1).dataFile = data.info.blockname;
-%     trialList(1).origTrialNum = 1;
-%     trialList(1).trialTime = stimTimes;
-%     trialList(1).gain(1:16) = 1; % % Synapse standard unless modified
-%     trialList(1).offset(1:16) = 0;
-%     stimDur = -1;
-% end
-% trialFileName = [dirStrAnalysis exptDate '-' exptIndex '_' 'trial0'];
-% if ~exist(dirStrAnalysis,'dir')
-%     mkdir(dirStrAnalysis)
-% end
-% save(trialFileName,'trialList');
-% 
-% 
-
+streamList(~strcmp(streamList,streamToUse)) = []; % remove the irrelevant stream
 
 % Warning! this approach assumes we're recording strictly with this latest
 % paradigm: 8 channels of twisted electrodes, and 4 EEGs.  This greatly
@@ -188,8 +150,6 @@ for iSignal = 1:length(signalTypes)
                 else
                     ephysData(:,:,iStim) = data.streams.(streamList{iList}).data(:,stimRange(iStim,:));
                 end
-                
-                
             end
             
             dT = tempdT; %#ok<NASGU>

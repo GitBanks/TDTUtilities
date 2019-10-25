@@ -45,7 +45,7 @@ bands.alpha = [13,20];
 bands.humanAlpha = [8,13];
 bands.beta  = [21,30];
 bands.gamma = [31,80];
-bands.all = [1,80];
+bands.all = [2,80];
 bandNames = fieldnames(bands);
 
 eParams = gBatchParams.(animalName);
@@ -90,7 +90,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
         % loadedData is matrix of nChan x nSamples
         [loadedData,eParams] = loadMouseEphysData(eParams,thisDate,iExpt); 
         
-        %Load behav data, divide into segments w/ overlap, calculate mean of each segment
+        % Load behav data, divide into segments w/ overlap, calculate mean of each segment
         if noMovtToggle %WARNING: movement will not be added if this is = 1!!!
             meanMovementPerWindow = nan(10000,1);
         else
@@ -181,22 +181,21 @@ for iDate = 1:length(eDates)%1:length(eDates)
             SDCriterion = max(SDCriterion,minSDCriterion);
             nonRejectLogic_1 = tempSD<SDCriterion;
             nonRejects_byChan(iChan,:) = nonRejectLogic_1; %& nonRejectLogic_2;
-            display(['SDcrit = ' num2str(SDCriterion) '; Accepting ' num2str(sum(nonRejects_byChan(iChan,:))) '/' num2str(nWindows) ' trials for chan#' num2str(iChan) '.']);
+            disp(['SDcrit = ' num2str(SDCriterion) '; Accepting ' num2str(sum(nonRejects_byChan(iChan,:))) '/' num2str(nWindows) ' trials for chan#' num2str(iChan) '.']);
             nonRejects_all = nonRejects_all & nonRejects_byChan(iChan,:);
         end
         if rejectAcrossChannels
-            display('Rejecting across channels...');
+            disp('Rejecting across channels...');
             for iChan = 1:nChans
                 nonRejects_byChan(iChan,:) = nonRejects_all;
             end
-            display(['Cumulative accepted trials = ' num2str(sum(nonRejects_all))]);
+            disp(['Cumulative accepted trials = ' num2str(sum(nonRejects_all))]);
         end
         clear tempSD tempMax
         theseTrials = 1:length(nonRejects_all);
         theseTrials = theseTrials(nonRejects_all == 1);
 
-        %First compute keeping trials to get band power as time
-        %series
+        %First compute keeping trials to get band power as time series
         cfg           = [];
         cfg.trials    = theseTrials;
         cfg.method    = 'mtmfft';
@@ -204,7 +203,6 @@ for iDate = 1:length(eDates)%1:length(eDates)
         cfg.output    = 'pow';
         cfg.pad       = ceil(max(cellfun(@numel, data_MouseEphysDS.time)/data_MouseEphysDS.fsample));
         cfg.foi       = 1:80;
-%                         cfg.tapsmofrq = 2;
         cfg.keeptrials= 'yes';
         tempSpec      = ft_freqanalysis(cfg, data_MouseEphysDS);
 
@@ -214,7 +212,14 @@ for iDate = 1:length(eDates)%1:length(eDates)
             mouseEphys_out.(animalName).(thisDate).(thisExpt).bandPow.(thisBand) = ...
                 squeeze(mean(tempSpec.powspctrm(:,:,tempSpec.freq>=fLims(1) & tempSpec.freq<=fLims(2)),3));
         end
-
+        
+        %added 10/15/2019... debugging WIP. If number of ephys windows is
+        %somehow longer than number of movement windows
+        if find(theseTrials > length(meanMovementPerWindow))
+            warning('trial index exceeds number of movement windows...');
+            theseTrials  = theseTrials(theseTrials <= length(meanMovementPerWindow));
+        end
+        
         cfg           = [];
         cfg.trials    = theseTrials;
         cfg.method    = 'mtmfft';

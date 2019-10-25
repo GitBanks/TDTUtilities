@@ -78,7 +78,7 @@ else % if there is no 'scalar' field, it's a spontaneous recording.  set that up
     %stimsUnique(1).stimVals = 1;
     stimTimes = 0;
 end
-% Seperate function to fetch global stim parameters (drug dose, light intensity, etc.)
+% Separate function to fetch global stim parameters (drug dose, light intensity, etc.)
 [nGlobalPars,globalParNames,globalParVals] = getGlobalStimParams(exptDate,exptIndex);
 % following borrowed from previos import: a fine way to do it, and will
 % help keep at least some things consistant.

@@ -1,4 +1,11 @@
-function fileMaint(animal)
+function fileMaint_dual(animal,hasTankIndices)
+% FOR ANIMALS RECORDED USING DUAL SYSTEM DUMMY
+
+% animal is animal ID as a string
+% hasTankIndices is a boolean which is necessarily true if the animal was
+% on cam1/EEG1/cage 1 on synapse (and thus associated with the tank files)
+% or false if the animal was on cam2/EEG2/cage 2
+
 % A utility  to run that replicates the import data pathway in
 % synapseFrontEnd
 % 1. move files
@@ -12,7 +19,11 @@ function fileMaint(animal)
 % WARNING this is only operating upon EEGdata files for now!!!
 % WARNING a few locations are hardcoded!
 
-%animal = 'EEG55';
+
+if nargin < 2
+    disp('hasTankIndices not set. Assuming this animal is associated with the tank indices');
+    hasTankIndices = 1;
+end
 
 listOfAnimalExpts = getExperimentsByAnimal(animal);
 
@@ -53,22 +64,55 @@ end
 for iList = 1:length(listOfAnimalExpts)
     date = listOfAnimalExpts{iList}(1:5);
     index = listOfAnimalExpts{iList}(7:9);
+    
+    if hasTankIndices
+        blockLocation = [date '-' index];
+    else %if not, then assume the index immediately before is the tank index... TODO: find a better way to handle this
+        tempIndex = str2double(index)-1;
+        if length(num2str(tempIndex)) < 2
+            tempIndex = ['00' num2str(tempIndex)];
+        else
+            tempIndex = ['0' num2str(tempIndex)];
+        end
+        blockLocation = [date '-' tempIndex];
+    end
+
     dirStrAnalysis = ['\\MEMORYBANKS\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
     dirStrRecSource = ['\\144.92.237.183\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\']; 
     dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
     disp(['$$$ Processing ' date '-' index ' $$$']);
+    
     % %% STEP 1 MOVE 
     try
         moveDataRecToRaw(dirStrRecSource,dirStrRawData);
     catch
         disp('moveDataRecToRaw didn''t run.');
     end
+    
+        % IMPORT CAM2 APPROPRIATELY
+    if ~strcmp([date '-' index],blockLocation)
+        tankDir = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' blockLocation '\'];
+        dirCheck = dir(dirStrRawData);
+        if isempty(dirCheck) || dirCheck(1).bytes==0
+            mkdir(dirStrRawData);
+            tank_Cam2_name = [tankDir '2019_' blockLocation '_Cam2.avi'];
+            if isfile(tank_Cam2_name)
+               copy_Cam2_name = [dirStrRawData '2019_' date '-' index '_Cam2.avi'];
+               copyfile(tank_Cam2_name,copy_Cam2_name); %TODO - TURN THIS INTO A MOVEFILE COMMAND ONCE CONFIDENT IT'S WORKING PROPERLY
+               disp([tank_Cam2_name ' copied to ' copy_Cam2_name]);
+            end
+        else
+            warning([dirStrRawData ' exists, are you sure you wanted to copy Cam2 here?']);
+        end
+    end
+    
+    
     % %% STEP 2 IMPORT 
     dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
     if isempty(dirCheck) || forceReimport
         disp('Handing info to existing importData function.  This will take a few minutes.');
         try
-            importDataSynapse(date,index);
+            importDataSynapse_dual(date,index,blockLocation);
         catch
             disp([date '-' index ' not imported!!']);
         end
@@ -76,6 +120,7 @@ for iList = 1:length(listOfAnimalExpts)
         disp('Data already imported, but updating trialinfo');
         updateStimInfoSynapse(date,index);
     end
+    
     % %% STEP 3 (sadly) move to W (sadly because analyzed data are going to 'raw data' storage zone)
     if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\'],'dir')
         mkdir(['W:\Data\PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
@@ -102,9 +147,22 @@ for iList = 1:length(listOfAnimalExpts)
             %end
         end
     end
+    % insert some method to figure out which index is the control index
+    
+    
+    % %% MUA CHECK %% might want to fix up 'artifact rejection' option - some need it, some don't
+%     if ~isempty(strfind(descOfAnimalExpts{iList}{:},'Stim'))
+%         disp('Running MUA analysis')
+%         dirCheck = dir([dirStrAnalysis '*TrshldMUA_Stim*']);
+%         if isempty(dirCheck)
+%             analyzeMUAthresholdArtifactRejection('PassiveEphys',date,index,index,0,1,0,1,0,-.5,1.5,-.001,3,2,1,false);
+%         else
+%             disp([date '-' index ' analyze MUA already done.']);
+%         end
+%     end
 end
-
-runBatchROIAnalysis(animal) %ADDED 5/13/2019 as first step to implementing new analysis!
+rerunMovt = 0;
+runBatchROIAnalysis(animal,rerunMovt) %ADDED 5/13/2019 as first step to implementing new analysis!
 
 % Ephys analysis and plotting 
 %============================================================%
@@ -114,7 +172,7 @@ addpath('Z:\fieldtrip-20170405\');
 disp('starting spec analysis') ; tic
 runICA = 0; %
 forceReRun = 0; %will run all dates found for this animal
-[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis_Synapse(animal,runICA,forceReRun);
+[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis(animal,runICA,forceReRun); %mouseDelirium_specAnalysis_Synapse
 saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); toc
 
 % spectra
@@ -131,26 +189,15 @@ disp('starting wpli analysis');
 addpath('Z:\DataBanks\Kovach Toolbox Rev 751\trunk\DBT');
 addpath('C:\Users\Matt Banks\Documents\Code\mouse-delirium\wpli');
 tic
-[gBatchParams, gMouseEphys_conn] =  mouseDelirium_WPLI_dbt_Synapse(animal,runICA,forceReRun);
+[gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animal,runICA,forceReRun);
 saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn); 
 toc
+
 % update WPLI table
 
 end
 
-%     % %% MUA CHECK %% might want to fix up 'artifact rejection' option - some need it, some don't
-%     if ~isempty(strfind(descOfAnimalExpts{iList}{:},'Stim'))
-%         disp('Running MUA analysis')
-%         dirCheck = dir([dirStrAnalysis '*TrshldMUA_Stim*']);
-%         if isempty(dirCheck)
-%             analyzeMUAthresholdArtifactRejection('PassiveEphys',date,index,index,0,1,0,1,0,-.5,1.5,-.001,3,2,1,false);
-% %             analyzeMUAthresholdArtifactRejection(exptType,exptDate,exptIndex,threshIndex,rejectAcrossChannels,...
-% %     filterMUA,subtrCommRef,detection,interpolation,tPltStart,tPltStop,PSTHPlotMin,...
-% %     PSTHPlotMax,threshFac,batchBoolean,isArduino)
-%         else
-%             disp([date '-' index ' analyze MUA already done.']);
-%         end
-%     end
+
 
 
 

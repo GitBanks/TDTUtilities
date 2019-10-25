@@ -19,7 +19,7 @@ rawPath = vidFileName(1:delims(end));
 
 % 1. load existing LED pulse information
 try
-    load([rawPath vidFileName(delims(end)+1:end) '-movementInfo.mat'],'finalLEDTimes','timeGrid','nMissingTrials','frameGridLEDElement');
+    load([rawPath vidFileName(delims(end)+1:delims(end)+9) '-movementInfo.mat'],'finalLEDTimes','timeGrid','nMissingTrials','frameGridLEDElement');
 catch
     warning('movementInfo file not found in W');
 end
