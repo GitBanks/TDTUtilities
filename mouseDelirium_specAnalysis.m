@@ -204,9 +204,12 @@ for iDate = 1:length(eDates)%1:length(eDates)
             end
             
             % COMPLEXITY ANALYSIS
-            [C,Cnorm] = runLZC(data_MouseEphysDS.trial);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZC = C;
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCnorm = Cnorm;
+%             [C,Cnorm] = runLZC(data_MouseEphysDS.trial);
+            [C,Cnorm,Crand,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZC = C(theseTrials,:);
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCnorm = Cnorm(theseTrials,:);
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCrand = mean(Crand(theseTrials,:),3);
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCnormrand = mean(Cnormrand(theseTrials,:),3);
             
             % First compute keeping trials to get band power as time series
             cfg           = [];
@@ -218,7 +221,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
             cfg.foi       = 1:80;
             cfg.keeptrials= 'yes';
             tempSpec      = ft_freqanalysis(cfg, data_MouseEphysDS);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).cfg_bandpow = cfg; %store config
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).bandPow.cfg = cfg; %store config from band power
             
             for iBand = 1:length(bandNames)
                 thisBand = bandNames{iBand};
@@ -252,7 +255,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
         end %Loop over expts
         gBatchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     catch why
-        %             keyboard
+        keyboard
         failedTable.(thisDate).(thisExpt) = why;
     end
 end %Loop over recording dates for this animal

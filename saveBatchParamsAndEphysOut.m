@@ -22,8 +22,6 @@ gName = fieldnames(gBatchParams);
 gName = gName{1,1};
 dates = fieldnames(gMouseEphys_out.(gName));
 
-
-
 batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
 batchParams.(gName).bandInfo = gBatchParams.(gName).bandInfo;
 batchParams.(gName).windowLength = gBatchParams.(gName).windowLength;

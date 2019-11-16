@@ -9,11 +9,12 @@ function saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn)
 % Hardcoded :( please consider making a config file...
 outFileName = 'mouseEphys_conn_dbt_noParse_20sWin_0p5sTrial.mat';
 computerSpecPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
-if ~exist([computerSpecPath outFileName],'file')
-    error([outFileName ' does not exist! check path.'])
+% if ~exist([computerSpecPath outFileName],'file')
+try
+    load([computerSpecPath outFileName],'mouseEphys_conn','batchParams');
+catch
+    warning([outFileName ' does not exist! check path.'])
 end
-
-load([computerSpecPath outFileName],'mouseEphys_conn','batchParams');
 
 gName = fieldnames(gBatchParams);
 gName = gName{1,1};
@@ -24,11 +25,9 @@ batchDates = batchDates(contains(batchDates,'date'));
 ephysDates = fieldnames(gMouseEphys_conn.WPLI.(gName));
 eDates = intersect(batchDates,ephysDates);
 
-animals = fieldnames(batchParams);
+% animals = fieldnames(batchParams);
 
 batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
-
-
 
 for iDate = 1:length(eDates)
     thisDate = eDates{iDate};
