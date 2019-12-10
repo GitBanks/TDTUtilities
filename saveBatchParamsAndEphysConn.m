@@ -7,7 +7,7 @@ function saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn)
 % 3. save
 
 % Hardcoded :( please consider making a config file...
-outFileName = 'mouseEphys_conn_dbt_noParse_20sWin_0p5sTrial.mat';
+outFileName = 'mouseEphys_conn_dbt_noParse_20sWin_0p5sTrial_psychedelics.mat';
 computerSpecPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
 % if ~exist([computerSpecPath outFileName],'file')
 try
