@@ -12,7 +12,7 @@ function [gBatchParams, mouseEphys_out,failedTable] = mouseDelirium_specAnalysis
 %
 % Example parameters
 % animalName = 'EEG55';
-% runICA = 0; %will not
+% runICA = 0; %will not run ICA for heart rate removal
 % forceReRun = 1; %will re-run all available dates
 
 noMovtToggle =0; % WARNING: this is a placeholder until we can analyze the movement data
@@ -80,14 +80,13 @@ for iDate = 1:length(eDates)%1:length(eDates)
         %expts correspond to the TDT recording files, i.e. 000, 001, etc
         for iExpt = 1:nExpts
             
-            
             thisExpt = ['expt' eParams.(thisDate).exptIndex{iExpt}];
             
             % loadedData is matrix of nChan x nSamples
             [loadedData,eParams] = loadMouseEphysData(eParams,thisDate,iExpt);
             
             % Load behav data, divide into segments w/ overlap, calculate mean of each segment
-            if noMovtToggle %WARNING: movement will not be added if this is = 1!!!
+            if noMovtToggle %movement will not be added if this is = 1!!!
                 meanMovementPerWindow = nan(10000,1);
             else
                 fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
@@ -203,13 +202,14 @@ for iDate = 1:length(eDates)%1:length(eDates)
                 theseTrials(592:790) = [];
             end
             
-            % COMPLEXITY ANALYSIS
-%             [C,Cnorm] = runLZC(data_MouseEphysDS.trial);
-            [C,Cnorm,Crand,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZC = C(theseTrials,:);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCnorm = Cnorm(theseTrials,:);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCrand = mean(Crand(theseTrials,:),3);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCnormrand = mean(Cnormrand(theseTrials,:),3);
+            % LEMPEL-ZIV COMPLEXITY ANALYSIS
+            [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
+%             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZC = C(theseTrials,:);
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = Cnorm(theseTrials,:);
+%             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCrand = mean(Crand(theseTrials,:),3);
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc_rand = mean(Cnormrand(theseTrials,:,:),3);
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = Cnorm(theseTrials,:)...
+                ./mean(Cnormrand(theseTrials,:,:),3); %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
             
             % First compute keeping trials to get band power as time series
             cfg           = [];
