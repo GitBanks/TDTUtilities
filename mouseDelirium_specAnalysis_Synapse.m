@@ -146,7 +146,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
         % the following line avoids numeric round off issues in the time axes upon resampling
         %data_MouseEphys.time(1:end) = data_MouseEphys.time(1);
         
-        data_MouseEphysDS = ft_resampledata(cfg, data_MouseEphys);     %%%% Returning an error in 2018a - ZS
+        data_MouseEphysDS = ft_resampledata(cfg, data_MouseEphys); 
         data_MouseEphysDS.sampleinfo = [1, size(data_MouseEphysDS.trial{1,1},2)];
         clear data_MouseEphys
         
