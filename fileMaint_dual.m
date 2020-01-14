@@ -95,9 +95,9 @@ for iList = 1:length(listOfAnimalExpts)
         dirCheck = dir(dirStrRawData);
         if isempty(dirCheck) || dirCheck(1).bytes==0
             mkdir(dirStrRawData);
-            tank_Cam2_name = [tankDir '2019_' blockLocation '_Cam2.avi'];
+            tank_Cam2_name = [tankDir '20' date(1:2) '_' blockLocation '_Cam2.avi'];
             if isfile(tank_Cam2_name)
-               copy_Cam2_name = [dirStrRawData '2019_' date '-' index '_Cam2.avi'];
+               copy_Cam2_name = [dirStrRawData '20' date(1:2) '_' date '-' index '_Cam2.avi'];
                copyfile(tank_Cam2_name,copy_Cam2_name); %TODO - TURN THIS INTO A MOVEFILE COMMAND ONCE CONFIDENT IT'S WORKING PROPERLY
                disp([tank_Cam2_name ' copied to ' copy_Cam2_name]);
             end
@@ -176,10 +176,32 @@ forceReRun = 0; %will run all dates found for this animal
 saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); toc
 
 % spectra
-plotFieldTripSpectra({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
+specFName = plotFieldTripSpectra({animal},gMouseEphys_out,gBatchParams);
+try
+    specDesc = [animal ' spectra'];
+    sendSlackFig(specDesc,[specFName '.png']);
+catch
+    disp('spectra upload failed');
+end
 
 % grady plots
 plotTimeDActivityAndBP(animal,'delta',1);
+
+try
+    param = 'delta';
+    smooth = true; %smooth delta power
+    nmlz = true; %nmlz to total power
+    [gradFName] = plotWindowedPower(animal,param,smooth,nmlz); %requires animal name to be in M:\mouseEEG\mouseGroupInfo.xlsx
+catch
+    disp('plotWindowedPower failed');
+end
+
+try
+    gradDesc = [animal ' movement & power time series'];
+    sendSlackFig(gradDesc,[gradFName '.png']);
+catch
+    disp('4sec movement & power time series upload failed');
+end
 
 % TODO: generate master power and slope tables and add functionality to
 % just add entries
