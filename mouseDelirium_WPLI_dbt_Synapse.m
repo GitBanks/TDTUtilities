@@ -73,12 +73,12 @@ tempFields = fieldnames(eParams)';
  
 %Check the MATLAB version before using field names to generate list of recording dates
 %WARNING: This section still crashes in 2015. 
-ver = version;
-if str2double(ver(end-3:end-2)) < 16 
-    eDates = tempFields(strfind(tempFields,'date')); %for matlab versions <2016
-else
-    eDates = tempFields(contains(tempFields,'date')); %Only use for >2016b
-end
+% ver = version;
+% if str2double(ver(end-3:end-2)) < 16 
+%     eDates = tempFields(strfind(tempFields,'date')); %for matlab versions <2016
+% else
+eDates = tempFields(contains(tempFields,'date')); %Only use for >2016b
+% end
 
 if ~forceReRun
     eDates = eDates(end); %if false, only do most recent expt
@@ -148,13 +148,11 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
             end
 
         end
-
-        for iBand = 1:length(mouseDeliriumFreqBands.Names)
-            thisBand = mouseDeliriumFreqBands.Names{iBand};
-            gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
-%             gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).activity = meanMovementPerWindow;
-            disp('Movement calculated & added to ephys structure');
-        end
+        % the movement array used to be added to each individual band
+        % field, but now we're just placing the array higher in the
+        % structure...
+        gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
+        disp('Movement calculated & added to ephys structure');
 
         % Now convert to FieldTrip format:
         [data_MouseEphys] = convertMouseEphysToFTFormat(loadedData,eParams,thisDate,iExpt);
@@ -171,7 +169,7 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
         clear data_MouseEphys
 
         %Remove heart rate noise using ICA
-        if runICA
+        if runICA || strcmp(animalName,'EEG18')
             [data_MouseEphysDS,badcomp.thisExpt] = runICAtoRemoveECG(gBatchParams,data_MouseEphysDS,animalName,thisDate,thisExpt);
         end
 
