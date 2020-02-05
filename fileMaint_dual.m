@@ -1,45 +1,43 @@
 function fileMaint_dual(animal,hasTankIndices)
-% FOR ANIMALS RECORDED USING DUAL SYSTEM DUMMY
-
-% animal is animal ID as a string
-% hasTankIndices is a boolean which is necessarily true if the animal was
-% on cam1/EEG1/cage 1 on synapse (and thus associated with the tank files)
-% or false if the animal was on cam2/EEG2/cage 2
-
 % A utility  to run that replicates the import data pathway in
 % synapseFrontEnd
-% 1. move files
-% 2. import data
-% 3. move downsampled to W (renamed EEG channels) sorry, this is expected in an analysis.  I'll change once I get to that one...
-% 4. Turn movie into a grid file
-% 5. This is also set to run the video analysis program at end of day
-% (needs all finished video files)
-% notes
-% absolutely do not run on anything except synapse data!!!!
+% 1. add drug information to e-notebook
+% 2. add probe information to e-notebook
+% 3. move files from tank location on recording computer to W:\Data\PassiveEphys\Year
+% 4. process & import data from W:\Data\PassiveEphys\Year\ to M:\Data\PassiveEphys\Year
+% 5. move processed data from M:\Data\PassiveEphys\Year back to W:\Data\PassiveEphys\EEG animal data\animal (sorry)
+% 6. run roi-based movement analysis
+% 7. run spectral analysis & plot results
+% 8. run weighted phase lag index analysis & plot results
+
+% animal is animal ID as a string (e.g. 'EEG130');
+% hasTankIndices is a boolean (i.e. 1 or 0) which is necessarily true if the animal was
+% on cam1/EEG1/cage 1 on synapse (and thus associated with the tank files)
+% or false if the animal was on cam2/EEG2/cage 2 % TODO: Have fileMaint
+% automatically detect this
+
+% notes:
+% WARNING absolutely do not run on anything except synapse data!!!!
 % WARNING this is only operating upon EEGdata files for now!!!
 % WARNING a few locations are hardcoded!
-
 
 if nargin < 2
     disp('hasTankIndices not set. Assuming this animal is associated with the tank indices');
     hasTankIndices = 1;
 end
 
-listOfAnimalExpts = getExperimentsByAnimal(animal);
-
 forceReimport = 0;
-forceRegrid = 0;
 forceReimportTrials = 0;
 
-% before full automation, we can use this to set drug parameters in the DB
-% so that below we can run
+% 1. SET DRUG PARAMETERS
 manuallySetGlobalParamUI(animal); 
 
-descOfAnimalExpts = listOfAnimalExpts(:,2);
+% get list of experiments for use throughout this script
+listOfAnimalExpts = getExperimentsByAnimal(animal);
+% descOfAnimalExpts = listOfAnimalExpts(:,2);
 listOfAnimalExpts = listOfAnimalExpts(:,1);
 
-% check to see if probe has been entered, and if not prompt user for that
-% info
+% 2. CHECK PROBE INFORMATION 
 try
     [electrodeLocation] = getElectrodeLocationFromDateIndex(listOfAnimalExpts{1}(1:5),listOfAnimalExpts{1}(7:9));
 catch
@@ -61,6 +59,7 @@ if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\'],'dir')
     disp(['making dir: W:\Data\PassiveEphys\EEG animal data\' animal '\']);
 end
 
+% loop through list of experiments
 for iList = 1:length(listOfAnimalExpts)
     date = listOfAnimalExpts{iList}(1:5);
     index = listOfAnimalExpts{iList}(7:9);
@@ -82,14 +81,14 @@ for iList = 1:length(listOfAnimalExpts)
     dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
     disp(['$$$ Processing ' date '-' index ' $$$']);
     
-    % %% STEP 1 MOVE 
+    % 3a. MOVE TANK FILE FROM RECORDING COMPUTER TO W DRIVE 
     try
         moveDataRecToRaw(dirStrRecSource,dirStrRawData);
     catch
         disp('moveDataRecToRaw didn''t run.');
     end
     
-        % IMPORT CAM2 APPROPRIATELY
+    % 3b. COPY CAM2 FILE TO SEPARATE INDEX
     if ~strcmp([date '-' index],blockLocation)
         tankDir = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' blockLocation '\'];
         dirCheck = dir(dirStrRawData);
@@ -98,7 +97,7 @@ for iList = 1:length(listOfAnimalExpts)
             tank_Cam2_name = [tankDir '20' date(1:2) '_' blockLocation '_Cam2.avi'];
             if isfile(tank_Cam2_name)
                copy_Cam2_name = [dirStrRawData '20' date(1:2) '_' date '-' index '_Cam2.avi'];
-               copyfile(tank_Cam2_name,copy_Cam2_name); %TODO - TURN THIS INTO A MOVEFILE COMMAND ONCE CONFIDENT IT'S WORKING PROPERLY
+               copyfile(tank_Cam2_name,copy_Cam2_name); 
                disp([tank_Cam2_name ' copied to ' copy_Cam2_name]);
             end
         else
@@ -106,8 +105,7 @@ for iList = 1:length(listOfAnimalExpts)
         end
     end
     
-    
-    % %% STEP 2 IMPORT 
+    % 4. IMPORT DATA TO M: DRIVE aka MEMORYBANKS
     dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
     if isempty(dirCheck) || forceReimport
         disp('Handing info to existing importData function.  This will take a few minutes.');
@@ -121,7 +119,8 @@ for iList = 1:length(listOfAnimalExpts)
         updateStimInfoSynapse(date,index);
     end
     
-    % %% STEP 3 (sadly) move to W (sadly because analyzed data are going to 'raw data' storage zone)
+    % 5. MOVE PROCESSED DATA BACK TO W (sadly)
+    % (sadly because analyzed data are going to 'raw data' storage zone)
     if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\'],'dir')
         mkdir(['W:\Data\PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
         disp(['making dir: W:\Data\PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
@@ -148,8 +147,7 @@ for iList = 1:length(listOfAnimalExpts)
         end
     end
     % insert some method to figure out which index is the control index
-    
-    
+
     % %% MUA CHECK %% might want to fix up 'artifact rejection' option - some need it, some don't
 %     if ~isempty(strfind(descOfAnimalExpts{iList}{:},'Stim'))
 %         disp('Running MUA analysis')
@@ -161,22 +159,30 @@ for iList = 1:length(listOfAnimalExpts)
 %         end
 %     end
 end
-rerunMovt = 0;
-runBatchROIAnalysis(animal,rerunMovt) %ADDED 5/13/2019 as first step to implementing new analysis!
 
-% Ephys analysis and plotting 
-%============================================================%
-% To-do: add a check here to see if analysis/plotting is finished! 
+% 6. RUN ROI-BASED MOVEMENT ANALYSIS
+%=========================================================================%
+runBatchROIAnalysis(animal); % this script executes the movement analysis
 
+% 7. RUN SPECTRAL ANALYSIS AND PLOT
+%=========================================================================%
+% add fieldtrip path... they say you're not supposed to do it all at once like this but ¯\_(?)_/¯
 addpath('Z:\fieldtrip-20170405\');
-disp('starting spec analysis') ; tic
-runICA = 0; %
-forceReRun = 0; %will run all dates found for this animal
-[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis(animal,runICA,forceReRun); %mouseDelirium_specAnalysis_Synapse
-saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); toc
 
-% spectra
+runICA = 0; % should usually be set to 0, unless there is "heart rate noise" on the EEG
+forceReRun = 1; % will run all dates found for this animal
+
+disp('starting spec analysis') ;
+
+tic
+[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis(animal,runICA,forceReRun); 
+saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); 
+toc
+
+% plot spectra
 specFName = plotFieldTripSpectra({animal},gMouseEphys_out,gBatchParams);
+
+% send spectra .png file to delirium slack
 try
     specDesc = [animal ' spectra'];
     sendSlackFig(specDesc,[specFName '.png']);
@@ -184,38 +190,80 @@ catch
     disp('spectra upload failed');
 end
 
-% grady plots
-plotTimeDActivityAndBP(animal,'delta',1);
+% plot individual band power time series
+[timeSeriesName] = plotNewBandPowerTimeSeries(animal,gBatchParams,gMouseEphys_out);
 
+% send power time series to slack channel
 try
-    param = 'delta';
-    smooth = true; %smooth delta power
-    nmlz = true; %nmlz to total power
-    [gradFName] = plotWindowedPower(animal,param,smooth,nmlz); %requires animal name to be in M:\mouseEEG\mouseGroupInfo.xlsx
-catch
-    disp('plotWindowedPower failed');
-end
-
-try
-    gradDesc = [animal ' movement & power time series'];
-    sendSlackFig(gradDesc,[gradFName '.png']);
+    timeSeriesDesc = [animal ' power time series'];
+    sendSlackFig(timeSeriesDesc,[timeSeriesName '.png']);
 catch
     disp('4sec movement & power time series upload failed');
 end
 
-% TODO: generate master power and slope tables and add functionality to
-% just add entries
+% plot old grady plot
+try 
+    plotTimeDActivityAndBP(animal,'delta',1);
+catch
+    warning('plotTimeDActivityAndBP failed to run');
+end
+
+% plot new version of grady plot using plotWindowedPower
+try
+    param = 'delta'; 
+    smooth = true; % smooth data windows
+    nmlz = true; % nmlz to total power
+    [gradyplotName] = plotWindowedPower(animal,param,smooth,nmlz); %!! requires animal name to be in M:\mouseEEG\mouseGroupInfo.xlsx
+catch
+    disp('plotWindowedPower failed to plot');
+end
+
+% send grady plot
+try 
+    gradDesc = [animal ' gradyplot'];
+    sendSlackFig(gradDesc,[gradyplotName '.png']);
+catch
+    disp('new gradyplot did not send to slack');
+end
+
+% TODO: add functionality to update a master power table with these data
+
+
+
+% 8. RUN WEIGHTED PHASE LAG INDEX (CONNECTIVITY) ANALYSIS & PLOT
+%=========================================================================%
+% these paths are necessary!
+addpath('Z:\DataBanks\Kovach Toolbox Rev 751\trunk\DBT'); 
+addpath('C:\Users\Matt Banks\Documents\Code\mouse-delirium\wpli');
 
 % calculate phase lag for a single day (is this preferable?) and save
 disp('starting wpli analysis'); 
-addpath('Z:\DataBanks\Kovach Toolbox Rev 751\trunk\DBT');
-addpath('C:\Users\Matt Banks\Documents\Code\mouse-delirium\wpli');
+
 tic
 [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animal,runICA,forceReRun);
 saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn); 
 toc
 
-% update WPLI table
+% plot WPLI time series
+try
+    pliTimeSeries = plotNewWPLITimeSeries(animal,gBatchParams,gMouseEphys_conn);
+catch
+    disp('wpli failed to plot');
+end
+
+try 
+    pliDesc = [animal ' wpli time series'];
+    sendSlackFig(pliDesc,[pliTimeSeries '.png']);
+catch
+    disp('wpli plot did not send to slack');
+end
+
+% TODO: add functionality to update a master WPLI table with these data
+
+% TODO: add some summary to say what ran/didn't run
+
+% DONE!
+disp('By golly you''ve done it');
 
 end
 
