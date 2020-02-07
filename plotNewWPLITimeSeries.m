@@ -78,7 +78,7 @@ for idate = 1:length(dates)
         if iband==1
             timesOfInjs = getInjectionByHour(animalName,thisDate,timeReInj); 
         end
-        ylim([0 0.4]);
+        ylim([0 0.6]);
         % draw arrows to indicate when injections occurred
         for ii = 1:length(timesOfInjs)
             x = x_to_norm_v2(timesOfInjs(ii)-.5,timesOfInjs(ii)-.5);
