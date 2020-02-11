@@ -41,7 +41,7 @@ if ~exist('mouseEphys_out','var')
     disp('mouseEphys_out loaded')
 end
 
-chan = 2; % only set to do one chan for now!!!
+chan = 3; % only set to do one chan for now!!!
 
 ephysDates = fields(mouseEphys_out.(animalName));
 batchDates = fields(batchParams.(animalName));

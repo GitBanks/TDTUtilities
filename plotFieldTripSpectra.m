@@ -1,4 +1,4 @@
-function plotFieldTripSpectra(animalList,savePlots,mouseEphys_out,batchParams)
+function [fname] = plotFieldTripSpectra(animalList,mouseEphys_out,batchParams)
 %Plot spectra from fieldTrip output of mouseDelirium_specAnalysis.m for all treatments/experiments. 
 
 %AnimalList must be a cell array of animal names; savePlots is a toggle to save the figure automatically,
@@ -12,9 +12,9 @@ if ~exist('mouseEphys_out','var')
     load('W:\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse_nu.mat','mouseEphys_out','batchParams')
 end
 
-if ~exist('savePlots','var')
-    savePlots = 0;
-end
+% if ~exist('savePlots','var')
+%     savePlots = 0;
+% end
 
 if ~exist('animalList','var')
     error('Please enter animal name(s)')
@@ -116,13 +116,13 @@ for iAnimal = 1:length(animalList)
         linkaxes(subH(:),'xy');
         clear iCount
         
-        if savePlots
-%             if ~exist([outDataPath thisName '\'],'dir')
-%                 mkdir([outDataPath thisName '\']);
-%             end
-            savePlot(outPath,figureName); %updated 1/24/2019. savePlot is in M:\Ziyad
-            close all
-        else 
+        buttonName = questdlg_timer(10,['Would you like to save figure to ' outPath '?'],...
+            'Save Dialogue Box','Yes','No','Yes');
+        fname = '';
+        if strcmp(buttonName,'Yes')
+            savePlot(outPath,figureName);
+            fname = [outPath figureName]; %file name output for if uploading to slack
+        else
             disp([outPath figureName ' was not saved']);
         end
     end
