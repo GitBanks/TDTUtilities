@@ -5,7 +5,7 @@ function sendSlackFig(desc,fpath)
 % desc = ''; %description e.g. EEG120 caffeine + LPS delta power and movement
 % fpath = ''; 
 
-token = 'xoxp-137382725558-384646086694-892845663616-f124501856ea317ae805205adeeb4727'; %can be user or bot token (this is Ziyad's)
+token = '';
 api = SlackAPI(token); 
 channel = '#delirium';
 SendMsg(api,channel,desc);
