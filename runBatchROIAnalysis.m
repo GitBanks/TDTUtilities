@@ -25,7 +25,7 @@ end
 
 pathToCheck = 'M:\PassiveEphys\20'; % path stub 
 alreadyAnalyzed = zeros(length(listOfExpts),1); % preallocate logical
-for ii = 1:length(listOfExpts)
+for ii = 1:size(listOfExpts,1)
     % dirname is the directory where the movementBinary file is located
     dirname = [pathToCheck listOfExpts{ii}(1:2) '\' listOfExpts{ii} '\' ...
         listOfExpts{ii} '-movementBinary' '.mat'];

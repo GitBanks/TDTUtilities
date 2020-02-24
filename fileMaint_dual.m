@@ -1,4 +1,3 @@
-
 function fileMaint_dual(animal,hasTankIndices)
 % A utility  to run that replicates the import data pathway in
 % synapseFrontEnd
@@ -171,7 +170,7 @@ runBatchROIAnalysis(animal); % this script executes the movement analysis
 addpath('Z:\fieldtrip-20170405\');
 
 runICA = 0; % should usually be set to 0, unless there is "heart rate noise" on the EEG
-forceReRun = 1; % will run all dates found for this animal
+forceReRun = 0; % will run all dates found for this animal
 
 disp('starting spec analysis') ;
 
@@ -184,23 +183,23 @@ toc
 specFName = plotFieldTripSpectra({animal},gMouseEphys_out,gBatchParams);
 
 % send spectra .png file to delirium slack
-try
-    specDesc = [animal ' spectra'];
-    sendSlackFig(specDesc,[specFName '.png']);
-catch
-    disp('spectra upload failed');
-end
+% try
+%     specDesc = [animal ' spectra'];
+%     sendSlackFig(specDesc,[specFName '.png']);
+% catch
+%     disp('spectra upload failed');
+% end
 
 % plot individual band power time series
 [timeSeriesName] = plotNewBandPowerTimeSeries(animal,gBatchParams,gMouseEphys_out);
 
 % send power time series to slack channel
-try
-    timeSeriesDesc = [animal ' power time series'];
-    sendSlackFig(timeSeriesDesc,[timeSeriesName '.png']);
-catch
-    disp('4sec movement & power time series upload failed');
-end
+% try
+%     timeSeriesDesc = [animal ' power time series'];
+%     sendSlackFig(timeSeriesDesc,[timeSeriesName '.png']);
+% catch
+%     disp('4sec movement & power time series upload failed');
+% end
 
 % plot old grady plot
 try 
@@ -216,16 +215,16 @@ try
     nmlz = true; % nmlz to total power
     [gradyplotName] = plotWindowedPower(animal,param,smooth,nmlz); %!! requires animal name to be in M:\mouseEEG\mouseGroupInfo.xlsx
 catch
-    disp('plotWindowedPower failed to plot');
+    warning('plotWindowedPower failed to plot');
 end
 
 % send grady plot
-try 
-    gradDesc = [animal ' gradyplot'];
-    sendSlackFig(gradDesc,[gradyplotName '.png']);
-catch
-    disp('new gradyplot did not send to slack');
-end
+% try 
+%     gradDesc = [animal ' gradyplot'];
+%     sendSlackFig(gradDesc,[gradyplotName '.png']);
+% catch
+%     disp('new gradyplot did not send to slack');
+% end
 
 % TODO: add functionality to update a master power table with these data
 
@@ -249,15 +248,15 @@ toc
 try
     pliTimeSeries = plotNewWPLITimeSeries(animal,gBatchParams,gMouseEphys_conn);
 catch
-    disp('wpli failed to plot');
+    warning('wpli failed to plot');
 end
 
-try 
-    pliDesc = [animal ' wpli time series'];
-    sendSlackFig(pliDesc,[pliTimeSeries '.png']);
-catch
-    disp('wpli plot did not send to slack');
-end
+% try 
+%     pliDesc = [animal ' wpli time series'];
+%     sendSlackFig(pliDesc,[pliTimeSeries '.png']);
+% catch
+%     disp('wpli plot did not send to slack');
+% end
 
 % TODO: add functionality to update a master WPLI table with these data
 

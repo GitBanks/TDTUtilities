@@ -21,7 +21,11 @@ for idate = 1:length(dates)
 
     expts = fieldnames(gMouseEphys_out.(animalName).(thisDate));
     timeReInj = gBatchParams.(animalName).(thisDate).timeReInj;
-    treatment = gBatchParams.(animalName).(thisDate).treatment{:};
+    
+    treatment = gBatchParams.(animalName).(thisDate).treatment;
+    if iscell(treatment)
+        treatment = treatment{:};
+    end
     
     treatment = formatDrugTreatments(treatment);
     

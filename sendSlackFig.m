@@ -7,6 +7,6 @@ function sendSlackFig(desc,fpath)
 
 token = '';
 api = SlackAPI(token); 
-channel = '#delirium';
+channel = '#psychedelics';
 SendMsg(api,channel,desc);
 SendFile(api,channel,fpath);
