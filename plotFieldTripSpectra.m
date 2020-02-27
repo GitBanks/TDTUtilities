@@ -1,4 +1,4 @@
-function [fname] = plotFieldTripSpectra(animalList,mouseEphys_out,batchParams)
+function [fname] = plotFieldTripSpectra(animalList,ephysData,params)
 %Plot spectra from fieldTrip output of mouseDelirium_specAnalysis.m for all treatments/experiments. 
 
 %AnimalList must be a cell array of animal names; savePlots is a toggle to save the figure automatically,
@@ -8,8 +8,9 @@ function [fname] = plotFieldTripSpectra(animalList,mouseEphys_out,batchParams)
 % animalList = {'EEG57'}; 
 % savePlot = 0; (does not save)
 
-if ~exist('mouseEphys_out','var')
-    load('W:\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse_nu.mat','mouseEphys_out','batchParams')
+if ~exist('ephysData','var') || ~exist('params','var')
+    [ephysData,params] = loadEphysData('power');
+%     load('W:\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse_nu.mat','mouseEphys_out','batchParams')
 end
 
 % if ~exist('savePlots','var')
@@ -30,17 +31,17 @@ for iAnimal = 1:length(animalList)
     thisName = animalList{iAnimal};
     %updated 1/24/2019 to avoid error due to mismatch in batchParams and
     %ephysData for LFP9... 
-    ephysDates = fieldnames(mouseEphys_out.(thisName));
-    batchDates = fieldnames(batchParams.(thisName));
+    ephysDates = fieldnames(ephysData.(thisName));
+    batchDates = fieldnames(params.(thisName));
     batchDates = batchDates(contains(batchDates,'date'));
     theseDates = intersect(ephysDates,batchDates);
     
-    chanLabels = batchParams.(thisName).ephysInfo.chanLabels;
+    chanLabels = params.(thisName).ephysInfo.chanLabels;
     maxForPlot = 10^-3.5;
     minForPlot = 10^-7;
     for iDate = 1:length(theseDates)
         thisDate = theseDates{iDate};
-        thisTreat = batchParams.(thisName).(thisDate).treatment;
+        thisTreat = params.(thisName).(thisDate).treatment;
         thisTreat = strrep(thisTreat,'_conc','');
         thisTreat = strrep(thisTreat,'0p9_vol','');
         if size(thisTreat,2) > 1 
@@ -61,9 +62,9 @@ for iAnimal = 1:length(animalList)
         figH = figure('Name',figureName);
         
         set(gcf,'DefaultAxesColorOrder',colorOrder); %set color order for current figure. These are colors I like - ZS 19124 
-        expts = fieldnames(mouseEphys_out.(thisName).(thisDate));
+        expts = fieldnames(ephysData.(thisName).(thisDate));
         
-        timeReInj = batchParams.(thisName).(thisDate).timeReInj;
+        timeReInj = params.(thisName).(thisDate).timeReInj;
         for iTime = 1:length(timeReInj)
             timeStr{iTime} = ['hr ' num2str(timeReInj(iTime))];
         end
@@ -74,9 +75,9 @@ for iAnimal = 1:length(animalList)
             
             for iExpt = 1:size(expts,1)
                 thisExpt = expts{iExpt};
-                if ~isempty(mouseEphys_out.(thisName).(thisDate).(thisExpt).spec)
-                    f = mouseEphys_out.(thisName).(thisDate).(thisExpt).spec.freq;
-                    p = mouseEphys_out.(thisName).(thisDate).(thisExpt).spec.powspctrm(iChan,:);
+                if ~isempty(ephysData.(thisName).(thisDate).(thisExpt).spec)
+                    f = ephysData.(thisName).(thisDate).(thisExpt).spec.freq;
+                    p = ephysData.(thisName).(thisDate).(thisExpt).spec.powspctrm(iChan,:);
                     loglog(f,p,'LineWidth',1.5);
                 end
                 hold on
