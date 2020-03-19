@@ -9,7 +9,7 @@ function [fname] = plotFieldTripSpectra(animalList,mouseEphys_out,batchParams)
 % savePlot = 0; (does not save)
 
 if ~exist('mouseEphys_out','var')
-    load('W:\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse_nu.mat','mouseEphys_out','batchParams')
+    load('W:\Data\PassiveEphys\EEG animal data\mouseEphys_out_psychedelics.mat','mouseEphys_out','batchParams')
 end
 
 % if ~exist('savePlots','var')
@@ -95,7 +95,7 @@ for iAnimal = 1:length(animalList)
                 xlabel('Freq');
                 ylabel('Power (mV^2)');
                 hleg = legend(timeStr,'Location','Best');
-                title(hleg,'Time re: inj (LPS)');   
+                title(hleg,'Time re: inj');   
             end
             iCount = iCount+1;
         end        

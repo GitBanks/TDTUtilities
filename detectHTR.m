@@ -8,7 +8,7 @@
 
 % The scripts run on a variable named 'data' contained in a MATLAB file
 % named "data.mat"
-fileName = 'M:\PassiveEphys\2020\20213-004\20213-004_magnetData.mat';
+fileName = 'M:\PassiveEphys\2020\20228-002\20228-002_magnetData.mat';
 % load('data.mat') % Load the file, variable should appear in the workspace
 load(fileName);
 Fs = 1/magDT; % Sampling frequency of the recorded session, i.e. 1000 data points per second.
@@ -72,4 +72,10 @@ totalHTR = length(loch2); % "totalHTR" contains the total count of HTR events in
 
 % Fractioned count
 bins = round(length(data)/(frac*60*Fs));
-[countsxfrac,edgesxfrac] = histcounts(loch2,bins); countsxfrac = countsxfrac'; % "countsxfrac" contains the fractioned count of HTR in fractions of length defined by the value "frac"
+[countsxfrac,edgesxfrac] = histcounts(loch2,bins); countsxfrac = countsxfrac';
+% "countsxfrac" contains the fractioned count of HTR in fractions of length defined by the value "frac"
+%% plot shit - zs 3/5/2020
+figure;
+hold on
+plot(data_h);
+plot(loch2,zeros(size(loch2)),'o');

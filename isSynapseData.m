@@ -5,7 +5,7 @@ try
     delims = strfind(vidFileName,filesep);
     rawPath = vidFileName(1:delims(end));
     data = TDTbin2mat(rawPath,'TYPE',{'epocs'}); % only need epocs - this saves a ton of time.
-    frameTimeStamps = data.epocs.Cam2.onset; % this makes assumptions about the structure.  will need to change if we change 'Cam1' e.g.
+    frameTimeStamps = data.epocs.Cam1.onset; % this makes assumptions about the structure.  will need to change if we change 'Cam1' e.g.
     synapseData = true;
 catch
     if contains(vidFileName,'Cam2') %if cam2, then we know the datastream is the second stream and we will need to check the block location
