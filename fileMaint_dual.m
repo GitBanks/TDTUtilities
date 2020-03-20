@@ -1,4 +1,3 @@
-
 function fileMaint_dual(animal,hasTankIndices)
 % A utility  to run that replicates the import data pathway in
 % synapseFrontEnd
