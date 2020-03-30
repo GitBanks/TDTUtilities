@@ -97,7 +97,7 @@ if sum(contains(fieldnombres,'delta')) > 0 %assume wpli structure has band names
             excludeMovementTrials = isnan(gMouseEphys_out.(animalName).(thisDate).(thisExpt).delta.activity);
             if any(excludeMovementTrials==1) %if there are any trials to exclude
                 warning('found movement trials to exclude within old movement structure but not ephys...');
-                meanMovementPerWindow(excludeMovementTrials) = nan;
+%                 meanMovementPerWindow(excludeMovementTrials) = nan;
                 gMouseEphys_out.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
             else %if there are NO trials to exclude
                 gMouseEphys_out.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow;

@@ -109,19 +109,27 @@ runBatchROIAnalysis(animal) %ADDED 5/13/2019 as first step to implementing new a
 % Ephys analysis and plotting 
 %============================================================%
 % To-do: add a check here to see if analysis/plotting is finished! 
-
+try
 addpath('Z:\fieldtrip-20170405\');
 disp('starting spec analysis') ; tic
 runICA = 0; %
 forceReRun = 0; %will run all dates found for this animal
-[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis_Synapse(animal,runICA,forceReRun);
+[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis(animal,runICA,forceReRun);
 saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); toc
+catch
+end
 
 % spectra
+try
 plotFieldTripSpectra({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
+catch 
+end
 
 % grady plots
+try
 plotTimeDActivityAndBP(animal,'delta',1);
+catch 
+end
 
 % TODO: generate master power and slope tables and add functionality to
 % just add entries

@@ -1,4 +1,4 @@
-function [batchParams, mouseEphys_out,failedTable] = mouseDelirium_specAnalysis(animalName,runICA,forceReRun)
+function [gBatchParams, mouseEphys_out,failedTable] = mouseDelirium_specAnalysis_4secPSD(animalName,runICA,forceReRun)
 % Computes the power spectrum (and Lempel-Ziv complexity (WIP) for
 % mouse ephys data from delirium project (either EEG or LFP).
 % Workflow is
@@ -14,7 +14,7 @@ function [batchParams, mouseEphys_out,failedTable] = mouseDelirium_specAnalysis(
 % animalName = 'EEG55';
 % runICA = 0; %will not run ICA for heart rate removal
 % forceReRun = 1; %will re-run all available dates
-tic
+
 noMovtToggle =0; % WARNING: this is a placeholder until we can analyze the movement data
 
 switch nargin
@@ -28,23 +28,9 @@ switch nargin
 end
 
 % generate batchParams
-batchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
+gBatchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
 
-% list of frequency bands in Hz
-% bands.lowDelta = [1,4]; %
-% bands.deltaExtended = [1,6]; %extended delta range for exploratory analyses
-bands.delta = [2,4];
-bands.theta = [5,12];
-bands.alpha = [13,20];
-bands.humanAlpha = [8,13];
-bands.beta  = [21,30];
-bands.gamma = [31,80];
-bands.all = [1,80];
-bandNames = fieldnames(bands);
-
-eParams = batchParams.(animalName);
-eParams.bandInfo = bands;
-batchParams.(animalName).bandInfo = bands;
+eParams = gBatchParams.(animalName);
 
 tempFields = fieldnames(eParams)';
 
@@ -64,13 +50,17 @@ end
 %Downsampled Fs
 dsFs = 200; % Hz
 
+%For calculating spectra based on highest and lowest movement
+highMovtPercentile = 75;
+lowMovtPercentile = 25;
+
 %Trial rejection criteria
 maxSDCriterion = 0.5;
 minSDCriterion = 0.2;
 rejectAcrossChannels = 1;
 
 %main analysis section
-for iDate = 1:length(eDates)%1:length(eDates)
+for iDate = 1:length(eDates)
     thisDate = eDates{iDate};
     disp('------------------------');
     disp(['Animal ' animalName ' - Date: ' thisDate]);
@@ -102,8 +92,8 @@ for iDate = 1:length(eDates)%1:length(eDates)
                     end
                 end
                 
-                windowLength = batchParams.(animalName).windowLength;
-                windowOverlap = batchParams.(animalName).windowOverlap;
+                windowLength = gBatchParams.(animalName).windowLength;
+                windowOverlap = gBatchParams.(animalName).windowOverlap;
                 
                 indexLength = frameTimeStampsAdj(end);
                 for iWindow = 1:indexLength
@@ -148,7 +138,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
             
             % Remove heart rate noise using ICA
             if runICA || strcmp(animalName,'EEG18')
-                [data_MouseEphysDS] = runICAtoRemoveECG(batchParams,data_MouseEphysDS,animalName,thisDate,thisExpt);
+                [data_MouseEphysDS] = runICAtoRemoveECG(gBatchParams,data_MouseEphysDS,animalName,thisDate,thisExpt);
             end
             
             tempData = cell2mat(data_MouseEphysDS.trial);
@@ -162,7 +152,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
             eParams.(thisDate).trialInfo(iExpt).trialTimesRedef = ...
                 (data_MouseEphysDS.sampleinfo-1)/data_MouseEphysDS.fsample;
             
-            nChans = length(batchParams.(animalName).ephysInfo.chanNums);
+            nChans = length(gBatchParams.(animalName).ephysInfo.chanNums);
             nWindows = length(data_MouseEphysDS.trial);
             nonRejects_byChan = ones(nChans,nWindows);
             nonRejects_all = ones(1,nWindows);
@@ -201,35 +191,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
             elseif strcmp(animalName,'EEG34') && strcmp(thisDate,'date17601') && strcmp(thisExpt,'expt004')
                 theseTrials(592:790) = [];
             end
-            
-            % LEMPEL-ZIV COMPLEXITY ANALYSIS
-            [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
-            %             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZC = C(theseTrials,:);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = Cnorm(theseTrials,:);
-            %             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCrand = mean(Crand(theseTrials,:),3);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc_rand = mean(Cnormrand(theseTrials,:,:),3);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = Cnorm(theseTrials,:)...
-                ./mean(Cnormrand(theseTrials,:,:),3); %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
-            
-            % First compute keeping trials to get band power as time series
-            cfg           = [];
-            cfg.trials    = theseTrials;
-            cfg.method    = 'mtmfft';
-            cfg.taper     = 'hanning';
-            cfg.output    = 'pow';
-            cfg.pad       = ceil(max(cellfun(@numel, data_MouseEphysDS.time)/data_MouseEphysDS.fsample));
-            cfg.foi       = 1:80;
-            cfg.keeptrials= 'yes';
-            tempSpec      = ft_freqanalysis(cfg, data_MouseEphysDS);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).bandPow.cfg = cfg; %store config from band power
-            
-            for iBand = 1:length(bandNames)
-                thisBand = bandNames{iBand};
-                fLims = bands.(thisBand);
-                mouseEphys_out.(animalName).(thisDate).(thisExpt).bandPow.(thisBand) = ...
-                    squeeze(mean(tempSpec.powspctrm(:,:,tempSpec.freq>=fLims(1) & tempSpec.freq<=fLims(2)),3));
-            end
-            
+ 
             % Set params for the spectral calculation
             cfg           = [];
             cfg.trials    = theseTrials;
@@ -238,8 +200,9 @@ for iDate = 1:length(eDates)%1:length(eDates)
             cfg.pad       = ceil(max(cellfun(@numel, data_MouseEphysDS.time)/data_MouseEphysDS.fsample));
             cfg.foi       = 1:80;
             cfg.tapsmofrq = 2;
-            cfg.keeptrials= 'no';
+            cfg.keeptrials= 'yes';
             
+%             mouseEphys_out.(animalName).(thisDate).(thisExpt).spec = ...
             mouseEphys_out.(animalName).(thisDate).(thisExpt).spec = ...
                 ft_freqanalysis(cfg, data_MouseEphysDS);
             
@@ -253,7 +216,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
             clear windowTimeLims indexLength meanMovementPerWindow
             
         end %Loop over expts
-        batchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
+        gBatchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     catch why
         keyboard
         failedTable.(thisDate).(thisExpt) = why;
@@ -263,9 +226,3 @@ end %Loop over recording dates for this animal
 if ~exist('failedTable','var')
     failedTable = [];
 end
-
-% save!
-saveBatchParamsAndEphysOut(batchParams,mouseEphys_out);
-toc
-end
-

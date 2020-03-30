@@ -1,52 +1,48 @@
-function [batchParams, mouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animalName,runICA,forceReRun)
+function [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animalName,runICA,forceReRun)
 %
 % Computes the debiased weighted phase-lag index (Vinvk et al 2011) for 
 % mouse ephys data from delirium project (either EEG or LFP). Workflow is 
 %
-%   (a) get parameters for analysis using the function
-%   mouse_deliriumGetBatchParams
-%   (b) loads the recorded data, which must already be converted from TDT 
+%   (a) get parameters for analysis using the function mouseDelirium_getBatchParamsByAnimal
+%   (b) loads the imported data, which must already be converted from TDT 
 %   to Matlab format and down-sampled, using loadMouseEphysData
-%   (c) convert data to FieldTrip compatible format using 
-%   convertMouseEphysToFTFormat
+%   (c) convert data to FieldTrip compatible format using convertMouseEphysToFTFormat
 %   (d) break the continuous recording into segments using ft_redefinetrial
-%   (e) downsample the data further to save processing time using 
-%   ft_resampledata
-%   (f) perform a time-frequency analysis on the data using ft_freqanalysis
+%   (e) downsample the data further to save processing time using ft_resampledata
+%   (f) perform a time-frequency analysis on the data using the demodulated band transform (dbt)
 %   (g) using the spectral coefficients from (f), compute the debiased WPLI
 %   using ft_connectivityanalysis. The WPLI takes a value in [0, 1] that can be interpreted as evidence for a
-%   consistent phase relationship between the signals.
+%   consistent phase relationship between the signals
 %
 %   References:
-%     [1] Vinck M, Oostenveld R, van Wingerden M, Battaglia F, Pennartz CM. An
-%     improved index of phase-synchronization for electrophysiological data in
-%     the presence of volume-conduction, noise and sample-size bias.
-%     Neuroimage. 2011 Apr 15;55(4):1548-65.
+%   [1] Vinck, M., Oostenveld, R., Van Wingerden, M., Battaglia, F., & Pennartz, C. M. (2011). 
+%   An improved index of phase-synchronization for electrophysiological data in the presence of volume-conduction, 
+%   noise and sample-size bias. Neuroimage, 55(4), 1548-1565.
+%   [2] Kovach, C. K., & Gander, P. E. (2016). The demodulated band transform. 
+%   Journal of neuroscience methods, 261, 135-154.
 
 % General parameters
 % Analysis type 0: mean activity in each trial
 % animalName = 'EEG52';
 
-
-tic 
 if ~exist('animalName','var')
     error('At least select an animal');
 end
 if ~exist('runICA','var')
-     runICA = 0;
+    % use runICA option only for removing heart-rate noise
+    runICA = 0; 
 end
 
-% outFileName = 'mouseEphys_conn_dbt_noParse_20sWin_0p5sTrial.mat';     
-outPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
+fPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
 
-% disp(['Data will be saved to `' outPath '`']);
-batchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
-eParams = batchParams.(animalName);
+% a) get parameters for analysis (accesses the eNotebook)
+gBatchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
+eParams = gBatchParams.(animalName);
 
 trial_l = 0.5; %length of trial that windows are divided into: sec
 
-windowLength = 20;
-windowOverlap = 0.25;
+windowLength = 20; %sec
+windowOverlap = 0.25; %amount of overlap (0.25 = 25%)
 
 %Downsampled Fs
 dsFs = 200; % Hz
@@ -71,34 +67,31 @@ for iChan = 1:nChans-1
 end
 nChanCmbs = size(chanCmb,1);
 
-thisName = animalName;
-
 eParams.windowLength = windowLength;
 eParams.windowOverlap = windowOverlap;
 tempFields = fieldnames(eParams)';
  
-%Check the version before using field names to generate list of recording dates
-
+%Check the MATLAB version before using field names to generate list of recording dates
 %WARNING: This section still crashes in 2015. 
-ver = version;
-if str2double(ver(end-3:end-2)) < 16 
-    eDates = tempFields(strfind(tempFields,'date')); %for matlab versions <2016
-else
-    eDates = tempFields(contains(tempFields,'date')); %Only use for >2016b
-end
+% ver = version;
+% if str2double(ver(end-3:end-2)) < 16 
+%     eDates = tempFields(strfind(tempFields,'date')); %for matlab versions <2016
+% else
+eDates = tempFields(contains(tempFields,'date')); %Only use for >2016b
+% end
 
 if ~forceReRun
     eDates = eDates(end); %if false, only do most recent expt
 end
 
-if ~exist([outPath thisName],'file')
-    error(['No ephys data for ' thisName]);
+if ~exist([fPath animalName],'file')
+    error(['No ephys data for ' animalName]);
 end
 
 for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
     thisDate = eDates{iDate};       %eDates{end};      
     disp('------------------------');
-    disp(['Animal ' thisName ' - Date: ' thisDate]);
+    disp(['Animal ' animalName ' - Date: ' thisDate]);
     disp('------------------------');
     nExpts = length(eParams.(thisDate).exptIndex); %NOTE: If using for earlier data, eParams needs to be "curated"
 
@@ -107,6 +100,7 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
         tic
         thisExpt = ['expt' eParams.(thisDate).exptIndex{iExpt}];
 
+        % b) load imported data
         % loadedData is matrix of nChan x nSamples
         [loadedData,eParams] = loadMouseEphysData(eParams,thisDate,iExpt);
 
@@ -154,13 +148,11 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
             end
 
         end
-
-        for iBand = 1:length(mouseDeliriumFreqBands.Names)
-            thisBand = mouseDeliriumFreqBands.Names{iBand};
-            mouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
-%             gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).activity = meanMovementPerWindow;
-            disp('Movement calculated & added to ephys structure');
-        end
+        % the movement array used to be added to each individual band
+        % field, but now we're just placing the array higher in the
+        % structure...
+        gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
+        disp('Movement calculated & added to ephys structure');
 
         % Now convert to FieldTrip format:
         [data_MouseEphys] = convertMouseEphysToFTFormat(loadedData,eParams,thisDate,iExpt);
@@ -177,8 +169,8 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
         clear data_MouseEphys
 
         %Remove heart rate noise using ICA
-        if runICA
-            [data_MouseEphysDS,badcomp.thisExpt] = runICAtoRemoveECG(batchParams,data_MouseEphysDS,thisName,thisDate,thisExpt);
+        if runICA || strcmp(animalName,'EEG18')
+            [data_MouseEphysDS,badcomp.thisExpt] = runICAtoRemoveECG(gBatchParams,data_MouseEphysDS,animalName,thisDate,thisExpt);
         end
 
         tempData = cell2mat(data_MouseEphysDS.trial);
@@ -194,7 +186,6 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
         eParams.(thisDate).trialInfo(iExpt).trialTimesRedef = ...
             (data_MouseEphysDS.sampleinfo-1)/data_MouseEphysDS.fsample;
 
-    %     nChans = length(batchParams.(thisName).ephysInfo.chanNums);
         nWindows = length(data_MouseEphysDS.trial);
         nonRejects_byChan = ones(nChans,nWindows);
         nonRejects_all = ones(1,nWindows);
@@ -225,21 +216,18 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
 
         %End of video is cut off or one extra ephys trial than video b/c of resolution, so manually cutting off
         %ephys trials with no associated video
-        if strcmp(thisName,'EEG10') && strcmp(thisDate,'date16506') && strcmp(thisExpt,'expt005') || ...
-            strcmp(thisName,'EEG39') && strcmp(thisDate,'date17622') && strcmp(thisExpt,'expt002') || ...
-            strcmp(thisName,'EEG47') && strcmp(thisDate,'date18309') && strcmp(thisExpt,'expt004') || ...
-            strcmp(thisName,'EEG49') && strcmp(thisDate,'date18328') && strcmp(thisExpt,'expt002')
+        if strcmp(animalName,'EEG10') && strcmp(thisDate,'date16506') && strcmp(thisExpt,'expt005') || ...
+            strcmp(animalName,'EEG39') && strcmp(thisDate,'date17622') && strcmp(thisExpt,'expt002') || ...
+            strcmp(animalName,'EEG47') && strcmp(thisDate,'date18309') && strcmp(thisExpt,'expt004') || ...
+            strcmp(animalName,'EEG49') && strcmp(thisDate,'date18328') && strcmp(thisExpt,'expt002')
             windowsToUse = windowsToUse(windowsToUse <= length(meanMovementPerWindow));
 
-        %Headstage became unplugged during index so
-        %manually removing these trials based on sudden
-        %spike in power
-
-        elseif strcmp(thisName,'EEG33') && strcmp(thisDate,'date17530') && strcmp(thisExpt,'expt004')
+        %Headstage became unplugged during index so manually removing these trials based on sudden spike in power
+        elseif strcmp(animalName,'EEG33') && strcmp(thisDate,'date17530') && strcmp(thisExpt,'expt004')
             windowsToUse(ismember(windowsToUse,find(eParams.(thisDate).trialInfo(4).trialTimesRedef(:,1)>390 & ...
                 eParams.(thisDate).trialInfo(4).trialTimesRedef(:,2)<727))) = [];
     %                         windowsToUse(131:242) = [];
-        elseif strcmp(thisName,'EEG34') && strcmp(thisDate,'date17601') && strcmp(thisExpt,'expt004')
+        elseif strcmp(animalName,'EEG34') && strcmp(thisDate,'date17601') && strcmp(thisExpt,'expt004')
             windowsToUse(ismember(windowsToUse,find(eParams.(thisDate).trialInfo(4).trialTimesRedef(:,1)>1773 & ...
                 eParams.(thisDate).trialInfo(4).trialTimesRedef(:,2)<2371))) = [];
     %                         windowsToUse(592:790) = [];
@@ -269,8 +257,8 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
                 for iBand = 1:length(mouseDeliriumFreqBands.Names)
                     thisBand = mouseDeliriumFreqBands.Names{iBand};
                     if firstWindow
-                        mouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).connVal = NaN(nWindows,nChans*(nChans-1)/2);
-                        mouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).connSEM = NaN(nWindows,nChans*(nChans-1)/2);
+                        gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).(thisBand).connVal = NaN(nWindows,nChans*(nChans-1)/2);
+                        gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).(thisBand).connSEM = NaN(nWindows,nChans*(nChans-1)/2);
                     end
                     bw = mouseDeliriumFreqBands.Widths.(thisBand);
                     freqRange = mouseDeliriumFreqBands.Limits.(thisBand);
@@ -290,8 +278,8 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
                     %nChanXnChan, and take average across frequency
                     tempWPLI = mean(wpli,2)';
                     tempSEM = mean(sem,2)';
-                    mouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).connVal(iWindow,:) = tempWPLI;
-                    mouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).connSEM(iWindow,:) = tempSEM;
+                    gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).(thisBand).connVal(iWindow,:) = tempWPLI;
+                    gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).(thisBand).connSEM(iWindow,:) = tempSEM;
                 end %bands
                 firstWindow = 0;
             end   
@@ -299,14 +287,8 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
     end %Loop over expts
 
     % Add in new params info to output batchParams structure
-    batchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
+    gBatchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     toc
 end %loop over dates
 
-% save!
-saveBatchParamsAndEphysConn(batchParams,mouseEphys_conn); 
-% batchParams.(thisName) = eParams;
-% save([outPath outFileName],'mouseEphys_conn','batchParams');
-% disp('mouseEphys_conn & batchParams saved!');
-toc
 end

@@ -37,11 +37,11 @@ end
 
 if ~exist('mouseEphys_out','var')
     disp('loading mouseEphys_out structure')
-    load('\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse_nu.mat');
+    load('\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse_psychedelics.mat');
     disp('mouseEphys_out loaded')
 end
 
-chan = 2; % only set to do one chan for now!!!
+chan = 3; % only set to do one chan for now!!!
 
 ephysDates = fields(mouseEphys_out.(animalName));
 batchDates = fields(batchParams.(animalName));
