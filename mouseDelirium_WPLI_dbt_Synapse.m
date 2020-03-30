@@ -1,4 +1,4 @@
-function [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animalName,runICA,forceReRun)
+function [batchParams, mouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animalName,runICA,forceReRun)
 %
 % Computes the debiased weighted phase-lag index (Vinvk et al 2011) for 
 % mouse ephys data from delirium project (either EEG or LFP). Workflow is 
@@ -27,9 +27,8 @@ function [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(anima
 % Analysis type 0: mean activity in each trial
 % animalName = 'EEG52';
 
-%add in relevant paths... 
-% synapsePathing;
 
+tic 
 if ~exist('animalName','var')
     error('At least select an animal');
 end
@@ -41,8 +40,8 @@ end
 outPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
 
 % disp(['Data will be saved to `' outPath '`']);
-gBatchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
-eParams = gBatchParams.(animalName);
+batchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
+eParams = batchParams.(animalName);
 
 trial_l = 0.5; %length of trial that windows are divided into: sec
 
@@ -158,7 +157,7 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
 
         for iBand = 1:length(mouseDeliriumFreqBands.Names)
             thisBand = mouseDeliriumFreqBands.Names{iBand};
-            gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
+            mouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
 %             gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).activity = meanMovementPerWindow;
             disp('Movement calculated & added to ephys structure');
         end
@@ -179,7 +178,7 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
 
         %Remove heart rate noise using ICA
         if runICA
-            [data_MouseEphysDS,badcomp.thisExpt] = runICAtoRemoveECG(gBatchParams,data_MouseEphysDS,thisName,thisDate,thisExpt);
+            [data_MouseEphysDS,badcomp.thisExpt] = runICAtoRemoveECG(batchParams,data_MouseEphysDS,thisName,thisDate,thisExpt);
         end
 
         tempData = cell2mat(data_MouseEphysDS.trial);
@@ -270,8 +269,8 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
                 for iBand = 1:length(mouseDeliriumFreqBands.Names)
                     thisBand = mouseDeliriumFreqBands.Names{iBand};
                     if firstWindow
-                        gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).connVal = NaN(nWindows,nChans*(nChans-1)/2);
-                        gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).connSEM = NaN(nWindows,nChans*(nChans-1)/2);
+                        mouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).connVal = NaN(nWindows,nChans*(nChans-1)/2);
+                        mouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).connSEM = NaN(nWindows,nChans*(nChans-1)/2);
                     end
                     bw = mouseDeliriumFreqBands.Widths.(thisBand);
                     freqRange = mouseDeliriumFreqBands.Limits.(thisBand);
@@ -291,8 +290,8 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
                     %nChanXnChan, and take average across frequency
                     tempWPLI = mean(wpli,2)';
                     tempSEM = mean(sem,2)';
-                    gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).connVal(iWindow,:) = tempWPLI;
-                    gMouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).connSEM(iWindow,:) = tempSEM;
+                    mouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).connVal(iWindow,:) = tempWPLI;
+                    mouseEphys_conn.WPLI.(thisName).(thisDate).(thisExpt).(thisBand).connSEM(iWindow,:) = tempSEM;
                 end %bands
                 firstWindow = 0;
             end   
@@ -300,12 +299,14 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
     end %Loop over expts
 
     % Add in new params info to output batchParams structure
-    gBatchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
+    batchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     toc
 end %loop over dates
 
+% save!
+saveBatchParamsAndEphysConn(batchParams,mouseEphys_conn); 
 % batchParams.(thisName) = eParams;
 % save([outPath outFileName],'mouseEphys_conn','batchParams');
 % disp('mouseEphys_conn & batchParams saved!');
-
+toc
 end

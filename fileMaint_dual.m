@@ -168,33 +168,36 @@ runBatchROIAnalysis(animal,rerunMovt) %ADDED 5/13/2019 as first step to implemen
 %============================================================%
 % To-do: add a check here to see if analysis/plotting is finished! 
 
-addpath('Z:\fieldtrip-20170405\');
-disp('starting spec analysis') ; tic
-runICA = 0; %
-forceReRun = 0; %will run all dates found for this animal
-[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis(animal,runICA,forceReRun); %mouseDelirium_specAnalysis_Synapse
-saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); toc
 
-% spectra
-plotFieldTripSpectra({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
+disp('starting spec analysis') ; 
+addpath('Z:\fieldtrip-20170405\');
+runICA = false; %
+forceReRun = false; %if true, will run all dates found for this animal
+[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis(animal,runICA,forceReRun); %mouseDelirium_specAnalysis_Synapse
+
+% plot spectra
+try
+    plotFieldTripSpectra({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
+catch
+    warning('spectra failed to plot');
+end
 
 % grady plots
-plotTimeDActivityAndBP(animal,'delta',1);
+try
+    plotTimeDActivityAndBP(animal,'delta',1);
+catch
+    warning('gradyplot failed to plot');
+end
 
-% TODO: generate master power and slope tables and add functionality to
-% just add entries
+% TODO: update a master WPLI table programmatically 
 
 % calculate phase lag for a single day (is this preferable?) and save
 disp('starting wpli analysis'); 
 addpath('Z:\DataBanks\Kovach Toolbox Rev 751\trunk\DBT');
 addpath('C:\Users\Matt Banks\Documents\Code\mouse-delirium\wpli');
-tic
 [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animal,runICA,forceReRun);
-saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn); 
-toc
 
-% update WPLI table
-
+% TODO: update a master WPLI table programmatically 
 end
 
 

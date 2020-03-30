@@ -1,4 +1,4 @@
-function [gBatchParams, mouseEphys_out,failedTable] = mouseDelirium_specAnalysis(animalName,runICA,forceReRun)
+function [batchParams, mouseEphys_out,failedTable] = mouseDelirium_specAnalysis(animalName,runICA,forceReRun)
 % Computes the power spectrum (and Lempel-Ziv complexity (WIP) for
 % mouse ephys data from delirium project (either EEG or LFP).
 % Workflow is
@@ -14,7 +14,7 @@ function [gBatchParams, mouseEphys_out,failedTable] = mouseDelirium_specAnalysis
 % animalName = 'EEG55';
 % runICA = 0; %will not run ICA for heart rate removal
 % forceReRun = 1; %will re-run all available dates
-
+tic
 noMovtToggle =0; % WARNING: this is a placeholder until we can analyze the movement data
 
 switch nargin
@@ -28,7 +28,7 @@ switch nargin
 end
 
 % generate batchParams
-gBatchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
+batchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
 
 % list of frequency bands in Hz
 % bands.lowDelta = [1,4]; %
@@ -42,9 +42,9 @@ bands.gamma = [31,80];
 bands.all = [1,80];
 bandNames = fieldnames(bands);
 
-eParams = gBatchParams.(animalName);
+eParams = batchParams.(animalName);
 eParams.bandInfo = bands;
-gBatchParams.(animalName).bandInfo = bands;
+batchParams.(animalName).bandInfo = bands;
 
 tempFields = fieldnames(eParams)';
 
@@ -102,8 +102,8 @@ for iDate = 1:length(eDates)%1:length(eDates)
                     end
                 end
                 
-                windowLength = gBatchParams.(animalName).windowLength;
-                windowOverlap = gBatchParams.(animalName).windowOverlap;
+                windowLength = batchParams.(animalName).windowLength;
+                windowOverlap = batchParams.(animalName).windowOverlap;
                 
                 indexLength = frameTimeStampsAdj(end);
                 for iWindow = 1:indexLength
@@ -148,7 +148,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
             
             % Remove heart rate noise using ICA
             if runICA || strcmp(animalName,'EEG18')
-                [data_MouseEphysDS] = runICAtoRemoveECG(gBatchParams,data_MouseEphysDS,animalName,thisDate,thisExpt);
+                [data_MouseEphysDS] = runICAtoRemoveECG(batchParams,data_MouseEphysDS,animalName,thisDate,thisExpt);
             end
             
             tempData = cell2mat(data_MouseEphysDS.trial);
@@ -162,7 +162,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
             eParams.(thisDate).trialInfo(iExpt).trialTimesRedef = ...
                 (data_MouseEphysDS.sampleinfo-1)/data_MouseEphysDS.fsample;
             
-            nChans = length(gBatchParams.(animalName).ephysInfo.chanNums);
+            nChans = length(batchParams.(animalName).ephysInfo.chanNums);
             nWindows = length(data_MouseEphysDS.trial);
             nonRejects_byChan = ones(nChans,nWindows);
             nonRejects_all = ones(1,nWindows);
@@ -253,7 +253,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
             clear windowTimeLims indexLength meanMovementPerWindow
             
         end %Loop over expts
-        gBatchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
+        batchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     catch why
         keyboard
         failedTable.(thisDate).(thisExpt) = why;
@@ -262,5 +262,10 @@ end %Loop over recording dates for this animal
 
 if ~exist('failedTable','var')
     failedTable = [];
+end
+
+% save!
+saveBatchParamsAndEphysOut(batchParams,mouseEphys_out);
+toc
 end
 
