@@ -39,9 +39,9 @@ fPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
 gBatchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
 eParams = gBatchParams.(animalName);
 
-trial_l = 0.5; %length of trial that windows are divided into: sec
+trial_l = 0.2;%0.5; %length of trial that windows are divided into: sec
 
-windowLength = 20; %sec
+windowLength = 8;%20; %sec
 windowOverlap = 0.25; %amount of overlap (0.25 = 25%)
 
 %Downsampled Fs
@@ -54,6 +54,10 @@ minSDCriterion = 0.2;
 rejectAcrossChannels = 1;
 
 nChans = length(eParams.ephysInfo.chanNums); % !TODO! % do we want to get nChans from the number of channels entered in DB instead?
+
+if strcmp(animalName,'LFP2')
+   nChans = 4; %harcoding!!! beware 6/8/2020 
+end
 
 % Main analysis loop: divide into trials, no behavior parsing
 chanCmb = zeros(nChans*(nChans-1)/2,2);
@@ -89,6 +93,7 @@ if ~exist([fPath animalName],'file')
 end
 
 for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
+    try
     thisDate = eDates{iDate};       %eDates{end};      
     disp('------------------------');
     disp(['Animal ' animalName ' - Date: ' thisDate]);
@@ -153,28 +158,39 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
         % structure...
         gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
         disp('Movement calculated & added to ephys structure');
-
-        % Now convert to FieldTrip format:
-        [data_MouseEphys] = convertMouseEphysToFTFormat(loadedData,eParams,thisDate,iExpt);
-
-        cfg = [];
-        cfg.resamplefs = dsFs;
-        cfg.detrend    = 'yes';
-        cfg.feedback   = 'no';
-        cfg.verbose    = 'no';
-        % the following line avoids numeric round off issues in the time axes upon resampling
-        %data_MouseEphys.time(1:end) = data_MouseEphys.time(1);
-        data_MouseEphysDS = ft_resampledata(cfg, data_MouseEphys);
-        data_MouseEphysDS.sampleinfo = [1, size(data_MouseEphysDS.trial{1,1},2)];
-        clear data_MouseEphys
-
-        %Remove heart rate noise using ICA
-        if runICA || strcmp(animalName,'EEG18')
-            [data_MouseEphysDS,badcomp.thisExpt] = runICAtoRemoveECG(gBatchParams,data_MouseEphysDS,animalName,thisDate,thisExpt);
+        
+        if ~strcmp(animalName,'EEG18') && ~strcmp(thisDate,'16o27') %only use this date for EEG18
+            
+            % Now convert to FieldTrip format:
+            [data_MouseEphys] = convertMouseEphysToFTFormat(loadedData,eParams,thisDate,iExpt);
+            
+            % downsample data
+            cfg = [];
+            cfg.resamplefs = dsFs;
+            cfg.detrend    = 'yes';
+            cfg.feedback   = 'no';
+            cfg.verbose    = 'no';
+            % the following line avoids numeric round off issues in the time axes upon resampling
+            %data_MouseEphys.time(1:end) = data_MouseEphys.time(1);
+            data_MouseEphysDS = ft_resampledata(cfg, data_MouseEphys);
+            data_MouseEphysDS.sampleinfo = [1, size(data_MouseEphysDS.trial{1,1},2)];
+            clear data_MouseEphys
+            
+            tempData = cell2mat(data_MouseEphysDS.trial);
+            data_MouseEphysDS.trial{1,1} = ft_preproc_bandstopfilter(tempData, dsFs, [59 61]);
+        else
+            clear data_MouseEphys
+            fname = ['M:\PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end) '\' 'denoisedEEGdataDS'];
+            load(fname);
         end
 
-        tempData = cell2mat(data_MouseEphysDS.trial);
-        data_MouseEphysDS.trial{1,1} = ft_preproc_bandstopfilter(tempData, dsFs, [59 61]);
+        %Remove heart rate noise using ICA
+        if runICA %|| strcmp(animalName,'EEG18')
+            [data_MouseEphysDS,ica_cfg] = runICAtoRemoveECG(gBatchParams,data_MouseEphysDS,animalName,thisDate,thisExpt);             
+            % save output file!
+            fname = ['M:\PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end) '\' 'denoisedEEGdataDS'];
+            save(fname,'data_MouseEphysDS','ica_cfg');
+        end
 
         % segment data into trials of length trialLength with overlap
         cfg         = [];
@@ -254,7 +270,7 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
                 seg_dat   = ft_redefinetrial(cfg, seg_dat);
                 nTrials = length(seg_dat.trial);
 
-                for iBand = 1:length(mouseDeliriumFreqBands.Names)
+                for iBand = 3%1:length(mouseDeliriumFreqBands.Names) %WARNING: hardcoded for running on 5/24. change back!!!!
                     thisBand = mouseDeliriumFreqBands.Names{iBand};
                     if firstWindow
                         gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).(thisBand).connVal = NaN(nWindows,nChans*(nChans-1)/2);
@@ -289,6 +305,10 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
     % Add in new params info to output batchParams structure
     gBatchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     toc
+    catch why
+        keyboard
+        warning([animalName ' ' thisDate ' failed']);
+    end
 end %loop over dates
 
 end

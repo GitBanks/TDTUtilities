@@ -146,13 +146,17 @@ for iDate = 1:length(eDates)%1:length(eDates)
             data_MouseEphysDS.sampleinfo = [1, size(data_MouseEphysDS.trial{1,1},2)];
             clear data_MouseEphys
             
-            % Remove heart rate noise using ICA
-            if runICA || strcmp(animalName,'EEG18')
-                [data_MouseEphysDS] = runICAtoRemoveECG(gBatchParams,data_MouseEphysDS,animalName,thisDate,thisExpt);
-            end
-            
             tempData = cell2mat(data_MouseEphysDS.trial);
             data_MouseEphysDS.trial{1,1} = ft_preproc_bandstopfilter(tempData, dsFs, [59 61]);
+            
+            % Remove heart rate noise using ICAf
+            if runICA || strcmp(animalName,'EEG18')
+                [data_MouseEphysDS,ica_cfg] = runICAtoRemoveECG(gBatchParams,data_MouseEphysDS,animalName,thisDate,thisExpt);
+                
+                % save output file!
+                fname = ['M:\PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end) '\' 'denoisedEEGdataDS'];
+                save(fname,'data_MouseEphysDS','ica_cfg');
+            end
             
             % Segment data into trials of length trialLength with overlap
             cfg         = [];
@@ -202,15 +206,15 @@ for iDate = 1:length(eDates)%1:length(eDates)
                 theseTrials(592:790) = [];
             end
             
-            % LEMPEL-ZIV COMPLEXITY ANALYSIS
-            [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
-            %             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZC = C(theseTrials,:);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = Cnorm(theseTrials,:);
-            %             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCrand = mean(Crand(theseTrials,:),3);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc_rand = mean(Cnormrand(theseTrials,:,:),3);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = Cnorm(theseTrials,:)...
-                ./mean(Cnormrand(theseTrials,:,:),3); %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
-            
+%             % LEMPEL-ZIV COMPLEXITY ANALYSIS
+%             [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
+%             %             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZC = C(theseTrials,:);
+%             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = Cnorm(theseTrials,:);
+%             %             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCrand = mean(Crand(theseTrials,:),3);
+%             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc_rand = mean(Cnormrand(theseTrials,:,:),3);
+%             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = Cnorm(theseTrials,:)...
+%                 ./mean(Cnormrand(theseTrials,:,:),3); %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
+%             
             % First compute keeping trials to get band power as time series
             cfg           = [];
             cfg.trials    = theseTrials;
