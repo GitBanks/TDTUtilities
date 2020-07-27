@@ -74,7 +74,7 @@ uicontrol('style','text',...
 
 updateDynamicDisplayBox('Starting Synapse');
 S = synapseConnectionProcess(S); % Start Synapse, connect to recording computer            
-S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline','a5 Inverse Agonist','Piroxicam','SeCl4','Caffeine','Caffeine Citrate','Psilocybin','Psilocybin + LPS','Ketanserin','Psilocybin + Ketanserin'}; 
+S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline','a5 Inverse Agonist','Piroxicam','SeCl4','Caffeine','Caffeine Citrate','Psilocybin','Psilocybin + LPS','Ketanserin','Psilocybin + Ketanserin','Ketanserin + Saline'}; 
 
 % LEFT
 S.pp(1) = uicontrol('style','pop',...

@@ -170,7 +170,7 @@ runBatchROIAnalysis(animal); % this script executes the movement analysis
 addpath('Z:\fieldtrip-20170405\');
 
 runICA = 0; % should usually be set to 0, unless there is "heart rate noise" on the EEG
-forceReRun = 0; % if true, will run all dates found for this animal
+forceReRun = 1; % if true, will run all dates found for this animal
 
 disp('starting spec analysis') ;
 
