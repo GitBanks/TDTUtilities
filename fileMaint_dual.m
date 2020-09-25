@@ -160,9 +160,15 @@ for iList = 1:length(listOfAnimalExpts)
 %     end
 end
 
+% plot raw EEG data! (to do)
+fname = plotRawEEG_AllChans(animal); % NOTE: figures will be created and sent within slack
+
 % 6. RUN ROI-BASED MOVEMENT ANALYSIS
 %=========================================================================%
 runBatchROIAnalysis(animal); % this script executes the movement analysis
+
+% plot raw movement data! (to do)
+% plotRawMovement(animalName)
 
 % 7. RUN SPECTRAL ANALYSIS AND PLOT
 %=========================================================================%
@@ -170,7 +176,7 @@ runBatchROIAnalysis(animal); % this script executes the movement analysis
 addpath('Z:\fieldtrip-20170405\');
 
 runICA = 0; % should usually be set to 0, unless there is "heart rate noise" on the EEG
-forceReRun = 1; % if true, will run all dates found for this animal
+forceReRun = 0; % if true, will run all dates found for this animal
 
 disp('starting spec analysis') ;
 
@@ -183,23 +189,27 @@ toc
 specFName = plotFieldTripSpectra({animal},gMouseEphys_out,gBatchParams);
 
 % send spectra .png file to delirium slack
-% try
-%     specDesc = [animal ' spectra'];
-%     sendSlackFig(specDesc,[specFName '.png']);
-% catch
-%     disp('spectra upload failed');
-% end
+try
+    specDesc = [animal ' spectra'];
+    sendSlackFig(specDesc,[specFName '.png']);
+catch
+    disp('spectra upload failed');
+end
 
 % plot individual band power time series
-[timeSeriesName] = plotNewBandPowerTimeSeries(animal,gBatchParams,gMouseEphys_out);
+try
+    [timeSeriesName] = plotNewBandPowerTimeSeries(animal,gBatchParams,gMouseEphys_out);
+catch
+    disp('failed to plot time series');
+end
 
 % send power time series to slack channel
-% try
-%     timeSeriesDesc = [animal ' power time series'];
-%     sendSlackFig(timeSeriesDesc,[timeSeriesName '.png']);
-% catch
-%     disp('4sec movement & power time series upload failed');
-% end
+try
+    timeSeriesDesc = [animal ' power time series'];
+    sendSlackFig(timeSeriesDesc,[timeSeriesName '.png']);
+catch
+    disp('4sec movement & power time series upload failed');
+end
 
 % plot old grady plot
 try 
@@ -219,12 +229,12 @@ catch
 end
 
 % send grady plot
-% try 
-%     gradDesc = [animal ' gradyplot'];
-%     sendSlackFig(gradDesc,[gradyplotName '.png']);
-% catch
-%     disp('new gradyplot did not send to slack');
-% end
+try 
+    gradDesc = [animal ' gradyplot'];
+    sendSlackFig(gradDesc,[gradyplotName '.png']);
+catch
+    disp('new gradyplot did not send to slack');
+end
 
 % TODO: add functionality to update a master power table with these data
 
@@ -251,12 +261,12 @@ catch
     warning('wpli failed to plot');
 end
 
-% try 
-%     pliDesc = [animal ' wpli time series'];
-%     sendSlackFig(pliDesc,[pliTimeSeries '.png']);
-% catch
-%     disp('wpli plot did not send to slack');
-% end
+try 
+    pliDesc = [animal ' wpli time series'];
+    sendSlackFig(pliDesc,[pliTimeSeries '.png']);
+catch
+    disp('wpli plot did not send to slack');
+end
 
 % TODO: add functionality to update a master WPLI table with these data
 

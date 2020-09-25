@@ -15,7 +15,7 @@ function [batchParams, mouseEphys_out,failedTable] = mouseDelirium_specAnalysis(
 % runICA = 0; %will not run ICA for heart rate removal
 % forceReRun = 1; %will re-run all available dates
 tic
-noMovtToggle =0; % WARNING: this is a placeholder until we can analyze the movement data
+noMovtToggle = 0; % WARNING: this is a placeholder until we can analyze the movement data
 
 switch nargin
     case 0
@@ -31,20 +31,23 @@ end
 batchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
 
 % list of frequency bands in Hz
-% bands.lowDelta = [1,4]; %
-% bands.deltaExtended = [1,6]; %extended delta range for exploratory analyses
-bands.delta = [2,4];
-bands.theta = [5,12];
-bands.alpha = [13,20];
-bands.humanAlpha = [8,13];
-bands.beta  = [21,30];
-bands.gamma = [31,80];
-bands.all = [1,80];
-bandNames = fieldnames(bands);
+% % bands.lowDelta = [1,4]; %
+% % bands.deltaExtended = [1,6]; %extended delta range for exploratory analyses
+% % bands.delta = [2,4];
+% bands.delta = [0.4 4]; % changed on 7/27/20
+% bands.theta = [5,12];
+% bands.alpha = [13,20];
+% bands.humanAlpha = [8,13];
+% bands.beta  = [21,30];
+% bands.gamma = [31,80];
+% % bands.all = [1,80];
+% bands.all = [.4 80]; 
+% bandNames = fieldnames(bands);
+bandNames = mouseEEGFreqBands.Names;
 
 eParams = batchParams.(animalName);
-eParams.bandInfo = bands;
-batchParams.(animalName).bandInfo = bands;
+eParams.bandInfo = mouseEEGFreqBands;
+batchParams.(animalName).bandInfo = mouseEEGFreqBands;
 
 tempFields = fieldnames(eParams)';
 
@@ -204,13 +207,13 @@ for iDate = 1:length(eDates)%1:length(eDates)
             
             % LEMPEL-ZIV COMPLEXITY ANALYSIS
             [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
-            %             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZC = C(theseTrials,:);
+%             %             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZC = C(theseTrials,:);
             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = Cnorm(theseTrials,:);
-            %             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCrand = mean(Crand(theseTrials,:),3);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc_rand = mean(Cnormrand(theseTrials,:,:),3);
+%             %             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCrand = mean(Crand(theseTrials,:),3);
+%             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc_rand = mean(Cnormrand(theseTrials,:,:),3);
             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = Cnorm(theseTrials,:)...
                 ./mean(Cnormrand(theseTrials,:,:),3); %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
-            
+%             
             % First compute keeping trials to get band power as time series
             cfg           = [];
             cfg.trials    = theseTrials;
@@ -218,14 +221,14 @@ for iDate = 1:length(eDates)%1:length(eDates)
             cfg.taper     = 'hanning';
             cfg.output    = 'pow';
             cfg.pad       = ceil(max(cellfun(@numel, data_MouseEphysDS.time)/data_MouseEphysDS.fsample));
-            cfg.foi       = 1:80;
+            cfg.foi       = [0.5 1:80]; % is this correct?
             cfg.keeptrials= 'yes';
             tempSpec      = ft_freqanalysis(cfg, data_MouseEphysDS);
             mouseEphys_out.(animalName).(thisDate).(thisExpt).bandPow.cfg = cfg; %store config from band power
             
             for iBand = 1:length(bandNames)
                 thisBand = bandNames{iBand};
-                fLims = bands.(thisBand);
+                fLims = mouseEEGFreqBands.Limits.(thisBand);
                 mouseEphys_out.(animalName).(thisDate).(thisExpt).bandPow.(thisBand) = ...
                     squeeze(mean(tempSpec.powspctrm(:,:,tempSpec.freq>=fLims(1) & tempSpec.freq<=fLims(2)),3));
             end
@@ -236,7 +239,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
             cfg.method    = 'mtmfft';
             cfg.output    = 'pow';
             cfg.pad       = ceil(max(cellfun(@numel, data_MouseEphysDS.time)/data_MouseEphysDS.fsample));
-            cfg.foi       = 1:80;
+            cfg.foi       = [0.5 1:80]; % is this correct?
             cfg.tapsmofrq = 2;
             cfg.keeptrials= 'no';
             
@@ -255,7 +258,6 @@ for iDate = 1:length(eDates)%1:length(eDates)
         end %Loop over expts
         batchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     catch why
-        keyboard
         failedTable.(thisDate).(thisExpt) = why;
     end
 end %Loop over recording dates for this animal

@@ -54,7 +54,7 @@ for idate = 1:length(dates)
     end
     
     for iband = 1:length(bands)
-        subtightplot(2,length(bands),iband,[.05 .025],[.05 .1],[]); 
+        subtightplot(1,length(bands),iband,[.05 .025],[.05 .1],[]); 
         errorbar(repmat(timeReInj',size(chansNums)),squeeze(pows(:,:,iband)),squeeze(err(:,:,iband)));
 %         vline(0,'k--')
 %         xlim([min(timeReInj)-.25,max(timeReInj)+0.25]);
@@ -95,48 +95,48 @@ for idate = 1:length(dates)
     end
     
     %plot nmlz power
-    for iband = 1:length(bands)
-        h(iband) = subtightplot(2,length(bands),length(bands)+iband,[.05 .025],[.05 .1],[]); %
-        errorbar(repmat(timeReInj',size(chansNums)),squeeze(nmlzpows(:,:,iband)),squeeze(nmlzerr(:,:,iband)));
-        
-        xticks([timeReInj timeReInj(end)+1]-.5);
-        
-        xmin = min(timeReInj)-0.5;
-        xmax = max(timeReInj)+0.5;
-        xlim([xmin xmax]);
-        
-%         xlim([min(timeReInj)-.25 max(timeReInj)+0.25]);
-%         xticks(timeReInj);
-        if iband==1
-%             xticklabels(timeReInj-0.5)
-            xticklabels([timeReInj timeReInj(end)+1]);
-            xlabel('Time re: inj (h)');
-            ylabel('Nmlz power');
-        else
-            xticklabels('');
-        end
-        
-        if iband==length(bands)
-             sz = get(gca,'position');
-             legend(chanLabels,'location','eastoutside');
-             set(gca,'position',sz);
-        end
-%         vline(0,'k--')
-        box off
-        axis square
-        
-        % draw vertical lines when injections occurred
-        if iband==1
-            timesOfInjs = getInjectionByHour(animalName,thisDate,timeReInj); 
-        end
-        
-        for ii = 1:length(timesOfInjs)
-            x = x_to_norm_v2(timesOfInjs(ii)-.5,timesOfInjs(ii)-.5);
-            y = y_to_norm_v2(.97*max(ylim),.94*max(ylim));
-            annotation('arrow',x,y,'Color','k');
-        end
-        
-    end
+%     for iband = 1:length(bands)
+%         h(iband) = subtightplot(2,length(bands),length(bands)+iband,[.05 .025],[.05 .1],[]); %
+%         errorbar(repmat(timeReInj',size(chansNums)),squeeze(nmlzpows(:,:,iband)),squeeze(nmlzerr(:,:,iband)));
+%         
+%         xticks([timeReInj timeReInj(end)+1]-.5);
+%         
+%         xmin = min(timeReInj)-0.5;
+%         xmax = max(timeReInj)+0.5;
+%         xlim([xmin xmax]);
+%         
+% %         xlim([min(timeReInj)-.25 max(timeReInj)+0.25]);
+% %         xticks(timeReInj);
+%         if iband==1
+% %             xticklabels(timeReInj-0.5)
+%             xticklabels([timeReInj timeReInj(end)+1]);
+%             xlabel('Time re: inj (h)');
+%             ylabel('Nmlz power');
+%         else
+%             xticklabels('');
+%         end
+%         
+%         if iband==length(bands)
+%              sz = get(gca,'position');
+%              legend(chanLabels,'location','eastoutside');
+%              set(gca,'position',sz);
+%         end
+% %         vline(0,'k--')
+%         box off
+%         axis square
+%         
+%         % draw vertical lines when injections occurred
+%         if iband==1
+%             timesOfInjs = getInjectionByHour(animalName,thisDate,timeReInj); 
+%         end
+%         
+%         for ii = 1:length(timesOfInjs)
+%             x = x_to_norm_v2(timesOfInjs(ii)-.5,timesOfInjs(ii)-.5);
+%             y = y_to_norm_v2(.97*max(ylim),.94*max(ylim));
+%             annotation('arrow',x,y,'Color','k');
+%         end
+%         
+%     end
 
     sgtitle([animalName ' - ' thisDate ' - ' treatment],'FontWeight','Bold');
     buttonName = questdlg_timer(10,['Would you like to save figure to ' outPath '?'],...

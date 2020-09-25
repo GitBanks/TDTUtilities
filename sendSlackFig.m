@@ -5,8 +5,10 @@ function sendSlackFig(desc,fpath)
 % desc = ''; %description e.g. EEG120 caffeine + LPS delta power and movement
 % fpath = ''; 
 
-token = '';
-api = SlackAPI(token); 
-channel = '#psychedelics';
-SendMsg(api,channel,desc);
-SendFile(api,channel,fpath);
+% this is the Bot User OAuth Access Token. Will need to update if you make
+% changes to the bot.
+token = 'xoxb-137382725558-880133487650-xxArWvpn5hk2Q0bxV2pbo1rp';
+api = SlackAPI(token); % ?
+channel = '#datachecks'; % specify what channel you would like to upload to
+SendMsg(api,channel,desc); % this sends the message 
+SendFile(api,channel,fpath); % this sends the file
