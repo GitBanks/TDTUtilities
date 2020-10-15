@@ -174,15 +174,11 @@ runBatchROIAnalysis(animal); % this script executes the movement analysis
 %=========================================================================%
 % add fieldtrip path... they say you're not supposed to do it all at once like this but ¯\_(?)_/¯
 addpath('Z:\fieldtrip-20170405\');
-
-runICA = 0; % should usually be set to 0, unless there is "heart rate noise" on the EEG
 forceReRun = 0; % if true, will run all dates found for this animal
 
 disp('starting spec analysis') ;
-
 tic
-[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis(animal,runICA,forceReRun); 
-saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); 
+[gBatchParams, gMouseEphys_out] = mouseEphys_specAnalysis(animal,forceReRun); 
 toc
 
 % plot spectra
@@ -239,7 +235,6 @@ end
 % TODO: add functionality to update a master power table with these data
 
 
-
 % 8. RUN WEIGHTED PHASE LAG INDEX (CONNECTIVITY) ANALYSIS & PLOT
 %=========================================================================%
 % these paths are necessary!
@@ -250,8 +245,7 @@ addpath('C:\Users\Matt Banks\Documents\Code\mouse-delirium\wpli');
 disp('starting wpli analysis'); 
 
 tic
-[gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animal,runICA,forceReRun);
-saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn); 
+[gBatchParams, gMouseEphys_conn] = mouseEphys_wPLIAnalysis(animal,forceReRun);
 toc
 
 % plot WPLI time series

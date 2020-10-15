@@ -114,7 +114,7 @@ addpath('Z:\fieldtrip-20170405\');
 disp('starting spec analysis') ; tic
 runICA = 0; %
 forceReRun = 0; %will run all dates found for this animal
-[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis(animal,runICA,forceReRun);
+[gBatchParams, gMouseEphys_out] = mouseEphys_specAnalysis(animal,forceReRun);
 saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); toc
 catch
 end
@@ -139,7 +139,7 @@ disp('starting wpli analysis');
 addpath('Z:\DataBanks\Kovach Toolbox Rev 751\trunk\DBT');
 addpath('C:\Users\Matt Banks\Documents\Code\mouse-delirium\wpli');
 tic
-[gBatchParams, gMouseEphys_conn] =  mouseDelirium_WPLI_dbt_Synapse(animal,runICA,forceReRun);
+[gBatchParams, gMouseEphys_conn] =  mouseEphys_wPLIAnalysis(animal,forceReRun);
 saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn); 
 toc
 % update WPLI table

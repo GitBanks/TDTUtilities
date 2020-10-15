@@ -29,8 +29,12 @@ for iDate = 1:length(dates)
     year = thisDate(1:2);
     expts = outputList(contains(outputList(:,1),thisDate),1);
     
+    treatment = outputList{contains(outputList(:,1),thisDate),2};
+    treatment = treatment{:};
+    treatment(strfind(treatment,'Pre-Inj')-1:end) = [];
+    
     % loop through expts, plot representative signals for each hour
-    figName = ['EEG traces = ' animalName '-' thisDate];
+    figName = ['EEG traces = ' animalName ' - ' thisDate ' - ' treatment];
     figure('Units','Normalized','Position',[0 0 1 1]);
     
     % preallocate
@@ -94,7 +98,7 @@ for iDate = 1:length(dates)
     set(H(:,:),'YLim',[min(lower,[],'all') max(upper,[],'all')]);
     
     % add a title above all subplots
-    sgtitle([animalName ' date' thisDate],'FontWeight','Bold');
+    sgtitle([animalName ' date' thisDate ' ' treatment],'FontWeight','Bold');
     
     outPath = 'M:\mouseEEG\Power\Raw Traces\';
     % ask user if they would like to save
@@ -110,7 +114,7 @@ for iDate = 1:length(dates)
         b2name = questdlg_timer(10,['Would you like to upload figure to slack?'],...
             'Save Dialogue Box','Yes','No','No');
         if strcmp(b2name,'Yes') || iDate==length(dates)
-            sendSlackFig([animalName ' date' thisDate ' Raw EEG'],[fileName '.png']);
+            sendSlackFig([animalName ' date' thisDate ' ' treatment ' Raw EEG'],[fileName '.png']);
             disp('sent');
         end
     else

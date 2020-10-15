@@ -1,4 +1,4 @@
-function [batchParams] = mouseDelirium_getBatchParamsByAnimal(animalName)
+function [batchParams] = getBatchParamsByAnimal(animalName)
 % STUB/WIP: mouseDelirium_getBatchParamsByAnimal
 % original method is a cumbersome nightmare.  All this info *should* be in
 % database! Using this script, we can call 'batchParams' as desired.
@@ -9,12 +9,8 @@ function [batchParams] = mouseDelirium_getBatchParamsByAnimal(animalName)
 % master table of experiments in the database.
 
 batchParams = struct;
-% outPath = '\\MEMORYBANKS\Data\mouseEEG\videoScoring\';
 % disp(['Data will be saved to `' outPath '`']);
 defaultPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\'; %W: drive, where downsampled data lives
-
-pars.windowLength = 4; %sec
-pars.windowOverlap = 0.25; %fractional overlap
 
 % the following prevents evoked stuff from being read in.
 
@@ -54,15 +50,7 @@ ephysInfo.EMGchan = []; %set to ignore EMG chans for now...
 descForAnimal = recForAnimal(:,2);
 recForAnimal = recForAnimal(:,1);
 dateList = unique(cellfun(@(recForAnimal){recForAnimal(1:5)},recForAnimal),'stable')';
-% 2. step through each and verify drug info (global param)
-% for i = 1:length(recForAnimal)
-%     [nVals(i),parNames(i),parVals(i)] = getGlobalStimParams(recForAnimal{i}(1:5),recForAnimal{i}(7:9));
-% end
-% !WARNING! % if more than one drug was used, nVals will be 2 (or more)
-% if sum(nVals(:))==0
-%     error('No drug information has been entered for this animal!')
-% end
-% uniqueDrugs = unique(parNames,'stable');
+
 
 for iDate=1:length(dateList)
     thisDate = dateList{iDate};
@@ -109,6 +97,12 @@ for iDate=1:length(dateList)
             tempIndex = tempIndex+1;
         end
     end
+    
+    % TODO: implement these somehow
+%     indexPostInj = getInjectionIndex(animalName,exptDate);
+%     [duration,timeOfDay] = getTimeAndDurationFromIndex(exptDate,index)
+    
+    
     clear nVals parNames parVals uniqueDrugs
 end
 

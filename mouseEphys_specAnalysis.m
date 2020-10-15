@@ -1,4 +1,4 @@
-function [batchParams, mouseEphys_out,failedTable] = mouseDelirium_specAnalysis(animalName,runICA,forceReRun)
+function [batchParams, mouseEphys_out,failedTable] = mouseEphys_specAnalysis(animalName,forceReRun)
 % Computes the power spectrum (and Lempel-Ziv complexity (WIP) for
 % mouse ephys data from delirium project (either EEG or LFP).
 % Workflow is
@@ -12,56 +12,31 @@ function [batchParams, mouseEphys_out,failedTable] = mouseDelirium_specAnalysis(
 %
 % Example parameters
 % animalName = 'EEG55';
-% runICA = 0; %will not run ICA for heart rate removal
 % forceReRun = 1; %will re-run all available dates
 tic
-noMovtToggle = 0; % WARNING: this is a placeholder until we can analyze the movement data
+noMovtToggle = 0; % can use this to ignore movement analysis if problematic
+runICA = 0; % very rarely have to set this to true, determines if the heart rate analysis is run
 
 switch nargin
     case 0
         error('at least select an animal!');
     case 1
-        runICA = 0;     %default not to run ICA
-        forceReRun = 0; %default to not re-analyze previous dates, just most recent
-    case 2
-        forceReRun = 0;
+        forceReRun = 0; % default not to rerun experiments
 end
 
 % generate batchParams
-batchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
+batchParams = getBatchParamsByAnimal(animalName);
 
-% list of frequency bands in Hz
-% % bands.lowDelta = [1,4]; %
-% % bands.deltaExtended = [1,6]; %extended delta range for exploratory analyses
-% % bands.delta = [2,4];
-% bands.delta = [0.4 4]; % changed on 7/27/20
-% bands.theta = [5,12];
-% bands.alpha = [13,20];
-% bands.humanAlpha = [8,13];
-% bands.beta  = [21,30];
-% bands.gamma = [31,80];
-% % bands.all = [1,80];
-% bands.all = [.4 80]; 
-% bandNames = fieldnames(bands);
+% list of frequency bands
 bandNames = mouseEEGFreqBands.Names;
-
-eParams = batchParams.(animalName);
-eParams.bandInfo = mouseEEGFreqBands;
 batchParams.(animalName).bandInfo = mouseEEGFreqBands;
 
-tempFields = fieldnames(eParams)';
+exptList = getExperimentsByAnimal(animalName);
+dates = unique(cellfun(@(x) x(1:5), exptList(:,1), 'UniformOutput',false),'stable');
 
-iDate = 1;
-for i = 1:length(tempFields)
-    if ~isempty(strfind(tempFields{i},'date'))
-        eDates{iDate} = tempFields{i};
-        iDate = iDate+1;
-    end
-end
-
-%If forceReRun is false, then just use the most recent date in batchParams
+%If forceReRun is false, then just use the most recent date in database
 if ~forceReRun
-    eDates = eDates(end);
+    dates = dates(end);
 end
 
 %Downsampled Fs
@@ -72,9 +47,17 @@ maxSDCriterion = 0.5;
 minSDCriterion = 0.2;
 rejectAcrossChannels = 1;
 
+eParams = batchParams.(animalName); % why are eParams and batchParams separate?
+
+%window length and overlap
+windowLength = 4;
+windowOverlap = 0.25;
+eParams.windowLength = windowLength; % epoch duration (sec)
+eParams.windowOverlap = windowOverlap; % epoch fractional overlap
+
 %main analysis section
-for iDate = 1:length(eDates)%1:length(eDates)
-    thisDate = eDates{iDate};
+for iDate = 1:length(dates)%1:length(eDates)
+    thisDate = ['date' dates{iDate}];
     disp('------------------------');
     disp(['Animal ' animalName ' - Date: ' thisDate]);
     disp('------------------------');
@@ -104,10 +87,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
                         meanMovementPerWindow = nan(1220,1);
                     end
                 end
-                
-                windowLength = batchParams.(animalName).windowLength;
-                windowOverlap = batchParams.(animalName).windowOverlap;
-                
+                                
                 indexLength = frameTimeStampsAdj(end);
                 for iWindow = 1:indexLength
                     if ((iWindow-1)*windowLength)*(1-windowOverlap) + windowLength < indexLength
@@ -206,14 +186,11 @@ for iDate = 1:length(eDates)%1:length(eDates)
             end
             
             % LEMPEL-ZIV COMPLEXITY ANALYSIS
-            [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
-%             %             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZC = C(theseTrials,:);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = Cnorm(theseTrials,:);
-%             %             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZCrand = mean(Crand(theseTrials,:),3);
-%             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc_rand = mean(Cnormrand(theseTrials,:,:),3);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = Cnorm(theseTrials,:)...
-                ./mean(Cnormrand(theseTrials,:,:),3); %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
-%             
+%             [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
+%             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = Cnorm(theseTrials,:);
+%             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = Cnorm(theseTrials,:)...
+%                 ./mean(Cnormrand(theseTrials,:,:),3); %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
+% %             
             % First compute keeping trials to get band power as time series
             cfg           = [];
             cfg.trials    = theseTrials;
