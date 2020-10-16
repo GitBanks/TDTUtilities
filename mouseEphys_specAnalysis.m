@@ -67,7 +67,7 @@ for iDate = 1:length(dates)%1:length(eDates)
         for iExpt = 1:nExpts
             
             thisExpt = ['expt' eParams.(thisDate).exptIndex{iExpt}];
-            
+                        
             % loadedData is matrix of nChan x nSamples
             [loadedData,eParams] = loadMouseEphysData(eParams,thisDate,iExpt);
             

@@ -215,22 +215,22 @@ catch
 end
 
 % plot new version of grady plot using plotWindowedPower
-try
-    param = 'delta'; 
-    smooth = true; % smooth data windows
-    nmlz = true; % nmlz to total power
-    [gradyplotName] = plotWindowedPower(animal,param,smooth,nmlz); %!! requires animal name to be in M:\mouseEEG\mouseGroupInfo.xlsx
-catch
-    warning('plotWindowedPower failed to plot');
-end
+% try
+%     param = 'delta'; 
+%     smooth = true; % smooth data windows
+%     nmlz = true; % nmlz to total power
+%     [gradyplotName] = plotWindowedPower(animal,param,smooth,nmlz); %!! requires animal name to be in M:\mouseEEG\mouseGroupInfo.xlsx
+% catch
+%     warning('plotWindowedPower failed to plot');
+% end
 
-% send grady plot
-try 
-    gradDesc = [animal ' gradyplot'];
-    sendSlackFig(gradDesc,[gradyplotName '.png']);
-catch
-    disp('new gradyplot did not send to slack');
-end
+% % send grady plot
+% try 
+%     gradDesc = [animal ' gradyplot'];
+%     sendSlackFig(gradDesc,[gradyplotName '.png']);
+% catch
+%     disp('new gradyplot did not send to slack');
+% end
 
 % TODO: add functionality to update a master power table with these data
 
