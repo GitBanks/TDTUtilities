@@ -51,13 +51,12 @@ descForAnimal = recForAnimal(:,2);
 recForAnimal = recForAnimal(:,1);
 dateList = unique(cellfun(@(recForAnimal){recForAnimal(1:5)},recForAnimal),'stable')';
 
-
 for iDate=1:length(dateList)
     thisDate = dateList{iDate};
     tempIndex = 1;
-    pars.expt(iDate).exptDate = ['date' dateList{iDate}];
-    pars.expt(iDate).dataPath = [defaultPath animalName filesep dateList{iDate} filesep];
-    exptList = getExperimentsByAnimalAndDate(animalName,dateList{iDate});
+    pars.expt(iDate).exptDate = ['date' thisDate];
+    pars.expt(iDate).dataPath = [defaultPath animalName filesep thisDate filesep];
+    exptList = getExperimentsByAnimalAndDate(animalName,thisDate);
     %need to add fix for multiple drugs... 
     try
         for j = 1:size(exptList,1)
@@ -90,20 +89,22 @@ for iDate=1:length(dateList)
     nPreInj = sum(cellfun(@(c)contains(c,'Pre'),descsThisDate)); %count number of pre-injection periods
     timeReInj = (1:size(exptList,1))-(nPreInj+1);
     pars.expt(iDate).timeReInj = timeReInj;
+       
+    pars.expt(iDate).exptIndex = unique(cellfun(@(x) x(7:9), recForAnimal(:), 'UniformOutput',false),'stable');
     
-    for j = 1:length(recForAnimal)
-        if strfind(recForAnimal{j}(1:5),dateList{iDate})
-            pars.expt(iDate).exptIndex{tempIndex} = recForAnimal{j}(7:9);
-            tempIndex = tempIndex+1;
-        end
+    pars.expt(iDate).indexPostInj = getInjectionIndex(animalName,thisDate);
+    
+    % loop thru each index, get duration and time of day
+    indexDur = cell(length(exptList),1); timeOfDay = cell(length(exptList),1);
+    for iIndex = 1:length(pars.expt(iDate).exptIndex)
+        thisIndex = pars.expt(iDate).exptIndex{iIndex};
+        [indexDur{iIndex},timeOfDay{iIndex}] = getTimeAndDurationFromIndex(thisDate,thisIndex);
     end
-    
-    % TODO: implement these somehow
-%     indexPostInj = getInjectionIndex(animalName,exptDate);
-%     [duration,timeOfDay] = getTimeAndDurationFromIndex(exptDate,index)
-    
-    
-    clear nVals parNames parVals uniqueDrugs
+    pars.expt(iDate).indexDur = indexDur;
+    pars.expt(iDate).timeOfDay = timeOfDay;
+
+    clear nVals parNames parVals uniqueDrugs indexDur timeOfDay
 end
 
 batchParams.(animalName) = fillBatchParams(pars,ephysInfo);
+end

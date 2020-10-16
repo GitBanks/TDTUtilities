@@ -23,9 +23,6 @@ gName = gName{1,1};
 dates = fieldnames(gMouseEphys_out.(gName));
 
 batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
-% batchParams.(gName).bandInfo = gBatchParams.(gName).bandInfo;
-batchParams.(gName).windowLength = gBatchParams.(gName).windowLength;
-batchParams.(gName).windowOverlap = gBatchParams.(gName).windowOverlap;
 
 for iDate = 1:length(dates)
     thisDate = dates{iDate};

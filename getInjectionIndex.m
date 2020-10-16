@@ -5,19 +5,17 @@ function indexPostInj = getInjectionIndex(animalName,exptDate)
 
 exptDate = strrep(exptDate,'date','');
 [outputList] = getExperimentsByAnimalAndDate(animalName,exptDate,'Spon');
-
-% get date string from operationList
-date = unique(cellfun(@(x) x(1:5), outputList(:,1), 'UniformOutput',false),'stable');
-
-indices = unique(cellfun(@(x) x(7:9), outputList(:,1), 'UniformOutput',false),'stable');
 if isempty(outputList)
     [outputList] = getExperimentsByAnimalAndDate(animalName,exptDate);
 end
 
-% 2. step through each and verify drug info (global param) -> TODO: you can simplify this
+% get list of indices
+indices = unique(cellfun(@(x) x(7:9), outputList(:,1), 'UniformOutput',false),'stable');
+
+% 2. step through each and verify drug info (global param)
 for ii = 1:length(indices)
     index = indices{ii};
-    [~,parNames,parVals] = getGlobalStimParams(date,index);
+    [~,parNames,parVals] = getGlobalStimParams(exptDate,index);
     drugData(ii,1) = {parNames};
     drugData(ii,2) = {parVals};
 end
@@ -25,7 +23,6 @@ pars = [drugData{:,1}];
 vals = [drugData{:,2}];
 
 % find column elements that differ from previous column
-iCount = 1;
 isDiff = false(size(vals)); % logical array for whether next element differs from subsequent element
 for jj = 1:size(vals,1) % loop though number of treatments (first dimension)
     for ii = 2:size(vals,2) % loop through number of indices (second dimension)
