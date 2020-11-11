@@ -59,8 +59,8 @@ for iDate=1:length(dateList)
     exptList = getExperimentsByAnimalAndDate(animalName,thisDate);
     %need to add fix for multiple drugs... 
     try
-        for j = 1:size(exptList,1)
-            [nVals(j,:),parNames(j,:),parVals(j,:)] = getGlobalStimParams(exptList{j}(1:5),exptList{j}(7:9));
+        for jj = 1:size(exptList,1)
+            [nVals(jj,:),parNames(jj,:),parVals(jj,:)] = getGlobalStimParams(exptList{jj}(1:5),exptList{jj}(7:9));
         end
     catch
         %!WARNING! % if more than one drug was used, nVals will be 2 (or more)
@@ -71,18 +71,18 @@ for iDate=1:length(dateList)
             parVals = nan;
         end
     end
-
-    uniqueDrugs = unique(parNames,'stable');
-    %a first attempt at handling multiple drug experiments. 3/13/2019 ZS
-    if size(uniqueDrugs,1) >= 2
-        for i = 1:length(uniqueDrugs)
-            pars.expt(iDate).treatment{i} = uniqueDrugs{i};
-            pars.expt(iDate).dose{i} = max(parVals(strcmp(parNames,uniqueDrugs{i})));
+    
+    if size(parNames) > 1
+        for ii = 1:size(parNames,2)
+            pars.expt(iDate).treatment(ii) = unique(parNames(:,ii));
+            pars.expt(iDate).dose{ii} = max(parVals(:,ii));
         end
     else
-       pars.expt(iDate).treatment = uniqueDrugs;
-       pars.expt(iDate).dose = max(parVals(strcmp(parNames,uniqueDrugs))); 
+        % fill with dummies if no treatment info entered
+        pars.expt(iDate).treatment = '';
+        pars.expt(iDate).dose = nan;
     end
+    
     
     %set timeReInj based on number of experiments! WIP
     descsThisDate = [exptList{:,2}];
