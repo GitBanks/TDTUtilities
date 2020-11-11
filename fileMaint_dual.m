@@ -181,11 +181,11 @@ tic
 [gBatchParams, gMouseEphys_out] = mouseEphys_specAnalysis(animal,forceReRun); 
 toc
 
-% plot spectra
-specFName = plotFieldTripSpectra({animal},gMouseEphys_out,gBatchParams);
-
 % send spectra .png file to delirium slack
 try
+    % plot spectra
+    specFName = plotFieldTripSpectra({animal},gMouseEphys_out,gBatchParams);
+
     specDesc = [animal ' spectra'];
     sendSlackFig(specDesc,[specFName '.png']);
 catch
@@ -195,16 +195,10 @@ end
 % plot individual band power time series
 try
     [timeSeriesName] = plotNewBandPowerTimeSeries(animal,gBatchParams,gMouseEphys_out);
-catch
-    disp('failed to plot time series');
-end
-
-% send power time series to slack channel
-try
     timeSeriesDesc = [animal ' power time series'];
     sendSlackFig(timeSeriesDesc,[timeSeriesName '.png']);
 catch
-    disp('4sec movement & power time series upload failed');
+    disp('failed to plot time series');
 end
 
 % plot old grady plot
@@ -214,22 +208,17 @@ catch
     warning('plotTimeDActivityAndBP failed to run');
 end
 
-% plot new version of grady plot using plotWindowedPower
+% plot new version of grady plot using plotWindowedPower % TODO: for some
+% reason all the dates plot on one subplot. Need to debug this. 
 % try
 %     param = 'delta'; 
 %     smooth = true; % smooth data windows
 %     nmlz = true; % nmlz to total power
 %     [gradyplotName] = plotWindowedPower(animal,param,smooth,nmlz); %!! requires animal name to be in M:\mouseEEG\mouseGroupInfo.xlsx
-% catch
-%     warning('plotWindowedPower failed to plot');
-% end
-
-% % send grady plot
-% try 
 %     gradDesc = [animal ' gradyplot'];
 %     sendSlackFig(gradDesc,[gradyplotName '.png']);
 % catch
-%     disp('new gradyplot did not send to slack');
+%     warning('plotWindowedPower failed to plot');
 % end
 
 % TODO: add functionality to update a master power table with these data
@@ -251,15 +240,10 @@ toc
 % plot WPLI time series
 try
     pliTimeSeries = plotNewWPLITimeSeries(animal,gBatchParams,gMouseEphys_conn);
-catch
-    warning('wpli failed to plot');
-end
-
-try 
     pliDesc = [animal ' wpli time series'];
     sendSlackFig(pliDesc,[pliTimeSeries '.png']);
 catch
-    disp('wpli plot did not send to slack');
+    warning('wpli failed to plot');
 end
 
 % TODO: add functionality to update a master WPLI table with these data

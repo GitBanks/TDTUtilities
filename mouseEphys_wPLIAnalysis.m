@@ -85,6 +85,7 @@ for iDate = 1:length(dates)
     disp('------------------------');
     disp(['Animal ' animalName ' - Date: ' thisDate]);
     disp('------------------------');
+    try
     nExpts = length(eParams.(thisDate).exptIndex); %NOTE: If using for earlier data, eParams needs to be "curated"
 
     %expts correspond to the TDT recording files, i.e. 000, 001, etc
@@ -281,6 +282,10 @@ for iDate = 1:length(dates)
     % Add in new params info to output batchParams structure
     gBatchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     toc
+    catch why
+        keyboard
+        warning(why.message);
+    end
 end %loop over dates
 
 % save data

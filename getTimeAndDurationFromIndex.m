@@ -4,7 +4,7 @@ function [indexDur,timeOfDay] = getTimeAndDurationFromIndex(thisDate,thisIndex)
 % date='20o08'
 % index='001'
 thisDate = strrep(thisDate,'date','');
-
+try
 fileN = ['W:\Data\PassiveEphys\20' thisDate(1:2) '\' thisDate '-' thisIndex];
 dataX = TDTbin2mat(fileN,'TYPE',{'scalars'});
 if isempty(dataX)
@@ -22,6 +22,11 @@ end
 indexDur = dataX.info.duration;
 timeOfDay = datetime(dataX.info.utcStartTime,'Format','HH:mm:ss','TimeZone','UTC'); % convert from UTC to local time, adjusting for daylight savings time
 timeOfDay.TimeZone = 'America/Chicago';
+catch why
+    warning(why.message);
+    indexDur = [];
+    timeOfDay = [];
+end
 %dataX.info.utcStopTime
 end
 

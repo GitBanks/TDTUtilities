@@ -44,9 +44,9 @@ for k = 1:length(electrodeInfo)
         tempIndexer = tempIndexer+1;
     end
 end
-ephysInfo.EMGchan = []; %set to ignore EMG chans for now...
+ephysInfo.EMGchan = []; % set to ignore EMG chans for now
 
-% 1. find unique dates.
+% find unique dates.
 descForAnimal = recForAnimal(:,2);
 recForAnimal = recForAnimal(:,1);
 dateList = unique(cellfun(@(recForAnimal){recForAnimal(1:5)},recForAnimal),'stable')';
@@ -90,18 +90,23 @@ for iDate=1:length(dateList)
     timeReInj = (1:size(exptList,1))-(nPreInj+1);
     pars.expt(iDate).timeReInj = timeReInj;
        
-    pars.expt(iDate).exptIndex = unique(cellfun(@(x) x(7:9), recForAnimal(:), 'UniformOutput',false),'stable');
+    pars.expt(iDate).exptIndex = unique(cellfun(@(x) x(7:9), exptList(:,1), 'UniformOutput',false),'stable');
     
-    pars.expt(iDate).indexPostInj = getInjectionIndex(animalName,thisDate);
-    
-    % loop thru each index, get duration and time of day
-    indexDur = cell(length(exptList),1); timeOfDay = cell(length(exptList),1);
-    for iIndex = 1:length(pars.expt(iDate).exptIndex)
-        thisIndex = pars.expt(iDate).exptIndex{iIndex};
-        [indexDur{iIndex},timeOfDay{iIndex}] = getTimeAndDurationFromIndex(thisDate,thisIndex);
+    try
+        pars.expt(iDate).indexPostInj = getInjectionIndex(animalName,thisDate);
+        
+        % loop thru each index, get duration and time of day
+        indexDur = cell(length(exptList),1); timeOfDay = cell(length(exptList),1);
+        for iIndex = 1:length(pars.expt(iDate).exptIndex)
+            thisIndex = pars.expt(iDate).exptIndex{iIndex};
+            [indexDur{iIndex},timeOfDay{iIndex}] = getTimeAndDurationFromIndex(thisDate,thisIndex);
+        end
+        pars.expt(iDate).indexDur = indexDur;
+        pars.expt(iDate).timeOfDay = timeOfDay;
+    catch why
+        warning(why.message);
+        warning('i.e. injection and/or time of day info not entered into batchparams for this date');
     end
-    pars.expt(iDate).indexDur = indexDur;
-    pars.expt(iDate).timeOfDay = timeOfDay;
 
     clear nVals parNames parVals uniqueDrugs indexDur timeOfDay
 end

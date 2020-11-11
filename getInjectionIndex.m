@@ -1,5 +1,5 @@
 function indexPostInj = getInjectionIndex(animalName,exptDate)
-
+% find index just after new injection (?)
 % animalName = 'EEG128';
 % exptDate = 'date20129';
 
