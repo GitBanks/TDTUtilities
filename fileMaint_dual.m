@@ -178,13 +178,15 @@ forceReRun = 0; % if true, will run all dates found for this animal
 
 disp('starting spec analysis') ;
 tic
-[gBatchParams, gMouseEphys_out] = mouseEphys_specAnalysis(animal,forceReRun); 
+% [ephysData,params] = loadEphysData('power'); % load existing spec
+% analysis structure
+[batchParams, ephysData] = mouseEphys_specAnalysis(animal,forceReRun); 
 toc
 
 % send spectra .png file to delirium slack
 try
     % plot spectra
-    specFName = plotFieldTripSpectra({animal},gMouseEphys_out,gBatchParams);
+    specFName = plotFieldTripSpectra({animal},ephysData,batchParams);
 
     specDesc = [animal ' spectra'];
     sendSlackFig(specDesc,[specFName '.png']);
@@ -194,7 +196,7 @@ end
 
 % plot individual band power time series
 try
-    [timeSeriesName] = plotNewBandPowerTimeSeries(animal,gBatchParams,gMouseEphys_out);
+    [timeSeriesName] = plotNewBandPowerTimeSeries(animal,batchParams,ephysData);
     timeSeriesDesc = [animal ' power time series'];
     sendSlackFig(timeSeriesDesc,[timeSeriesName '.png']);
 catch
@@ -234,12 +236,12 @@ addpath('C:\Users\Matt Banks\Documents\Code\mouse-delirium\wpli');
 disp('starting wpli analysis'); 
 
 tic
-[gBatchParams, gMouseEphys_conn] = mouseEphys_wPLIAnalysis(animal,forceReRun);
+[batchParams_conn, ephys_conn] = mouseEphys_wPLIAnalysis(animal,forceReRun);
 toc
 
 % plot WPLI time series
 try
-    pliTimeSeries = plotNewWPLITimeSeries(animal,gBatchParams,gMouseEphys_conn);
+    pliTimeSeries = plotNewWPLITimeSeries(animal,batchParams_conn,ephys_conn);
     pliDesc = [animal ' wpli time series'];
     sendSlackFig(pliDesc,[pliTimeSeries '.png']);
 catch
@@ -249,6 +251,12 @@ end
 % TODO: add functionality to update a master WPLI table with these data
 
 % TODO: add some summary to say what ran/didn't run
+
+RUN LZC (NOTE: THIS TAKES A LONG TIME ~30mins for each full day of data)
+try
+    mouseDelirium_LZC(animal,runICA,forceReRun,ephysData,params);
+catch
+end
 
 % DONE!
 disp('By golly you''ve done it');

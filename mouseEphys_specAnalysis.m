@@ -24,6 +24,11 @@ switch nargin
         forceReRun = 0; % default not to rerun experiments
 end
 
+%Load existing data structure... 
+% if ~exist('ephysData','var')
+%     [ephysData,params] = loadEphysData('power');
+% end
+
 % generate batchParams
 batchParams = getBatchParamsByAnimal(animalName);
 
@@ -35,8 +40,30 @@ exptList = getExperimentsByAnimal(animalName);
 dates = unique(cellfun(@(x) x(1:5), exptList(:,1), 'UniformOutput',false),'stable');
 
 %If forceReRun is false, then just use the most recent date in database
+%If forceReRun is false, then just run the uncalculated dates
+iCount = 1;
+
 if ~forceReRun
-    dates = dates(end);
+    eDates = dates(end);
+    % INCOMPLETE: trying to avoid having to load the entire data file,
+    % which is combersome. Just want to check whether the variable already
+    % has fields populated for this date, and if so, skip this date.
+
+%     variableInfo = whos('-file', '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\mouseEphys_out_psychedelics.mat');
+%     ismember('pop', variableInfo) % returns true
+%     ismember('doesNotExist', variableInfo) % returns false
+%     for ii = 1:length(dates)
+%         thisDate = ['date' dates{ii}];
+%         try
+%             expts = fieldnames(mouseEphys_out.(animalName).(thisDate)); % this line requires 
+%             if ~isfield(mouseEphys_out.(animalName).(thisDate).(expts{1}),'bandPow')
+%                 eDates{iCount} = thisDate; % if not a field, populate this
+%                 iCount = iCount+1;
+%             end
+%         catch
+%             eDates{ii} = thisDate;
+%         end
+%     end
 end
 
 %Downsampled Fs
