@@ -161,8 +161,21 @@ for iList = 1:length(listOfAnimalExpts)
 end
 
 % plot raw EEG data! (to do)
-fname = plotRawEEG_AllChans(animal); % NOTE: figures will be created and sent within slack
+try
+    fname = plotRawEEG_AllChans(animal); % NOTE: figures will be created and sent within slack
+catch
+    warning('example raw traces failed to plot');
+end
 
+try 
+    dates = unique(cellfun(@(x) x(1:5), listOfAnimalExpts, 'UniformOutput',false),'stable');
+    thisDate = dates{end}; %TODO: set the date somehow (maybe just assume the most recent date?)
+    rawDataFPath = plotRawDataWholeDay(animal,thisDate);
+    rawDataDesc = [animal ' - ' thisDate ' raw data whole day'];
+    sendSlackFig(rawDataDesc,[rawDataFPath '.png']);
+catch
+    warning('whole day raw traces failed to plot');
+end
 % 6. RUN ROI-BASED MOVEMENT ANALYSIS
 %=========================================================================%
 runBatchROIAnalysis(animal); % this script executes the movement analysis
@@ -187,7 +200,6 @@ toc
 try
     % plot spectra
     specFName = plotFieldTripSpectra({animal},ephysData,batchParams);
-
     specDesc = [animal ' spectra'];
     sendSlackFig(specDesc,[specFName '.png']);
 catch
@@ -252,7 +264,7 @@ end
 
 % TODO: add some summary to say what ran/didn't run
 
-RUN LZC (NOTE: THIS TAKES A LONG TIME ~30mins for each full day of data)
+% RUN LZC (NOTE: THIS TAKES A LONG TIME ~30mins for each full day of data)
 try
     mouseDelirium_LZC(animal,runICA,forceReRun,ephysData,params);
 catch
