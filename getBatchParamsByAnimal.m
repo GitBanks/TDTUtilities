@@ -1,4 +1,4 @@
-function [batchParams] = mouseDelirium_getBatchParamsByAnimal(animalName)
+function [batchParams] = getBatchParamsByAnimal(animalName)
 % STUB/WIP: mouseDelirium_getBatchParamsByAnimal
 % original method is a cumbersome nightmare.  All this info *should* be in
 % database! Using this script, we can call 'batchParams' as desired.
@@ -9,12 +9,8 @@ function [batchParams] = mouseDelirium_getBatchParamsByAnimal(animalName)
 % master table of experiments in the database.
 
 batchParams = struct;
-% outPath = '\\MEMORYBANKS\Data\mouseEEG\videoScoring\';
 % disp(['Data will be saved to `' outPath '`']);
 defaultPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\'; %W: drive, where downsampled data lives
-
-pars.windowLength = 4; %sec
-pars.windowOverlap = 0.25; %fractional overlap
 
 % the following prevents evoked stuff from being read in.
 
@@ -48,32 +44,23 @@ for k = 1:length(electrodeInfo)
         tempIndexer = tempIndexer+1;
     end
 end
-ephysInfo.EMGchan = []; %set to ignore EMG chans for now...
+ephysInfo.EMGchan = []; % set to ignore EMG chans for now
 
-% 1. find unique dates.
+% find unique dates.
 descForAnimal = recForAnimal(:,2);
 recForAnimal = recForAnimal(:,1);
 dateList = unique(cellfun(@(recForAnimal){recForAnimal(1:5)},recForAnimal),'stable')';
-% 2. step through each and verify drug info (global param)
-% for i = 1:length(recForAnimal)
-%     [nVals(i),parNames(i),parVals(i)] = getGlobalStimParams(recForAnimal{i}(1:5),recForAnimal{i}(7:9));
-% end
-% !WARNING! % if more than one drug was used, nVals will be 2 (or more)
-% if sum(nVals(:))==0
-%     error('No drug information has been entered for this animal!')
-% end
-% uniqueDrugs = unique(parNames,'stable');
 
 for iDate=1:length(dateList)
     thisDate = dateList{iDate};
     tempIndex = 1;
-    pars.expt(iDate).exptDate = ['date' dateList{iDate}];
-    pars.expt(iDate).dataPath = [defaultPath animalName filesep dateList{iDate} filesep];
-    exptList = getExperimentsByAnimalAndDate(animalName,dateList{iDate});
+    pars.expt(iDate).exptDate = ['date' thisDate];
+    pars.expt(iDate).dataPath = [defaultPath animalName filesep thisDate filesep];
+    exptList = getExperimentsByAnimalAndDate(animalName,thisDate);
     %need to add fix for multiple drugs... 
     try
-        for j = 1:size(exptList,1)
-            [nVals(j,:),parNames(j,:),parVals(j,:)] = getGlobalStimParams(exptList{j}(1:5),exptList{j}(7:9));
+        for jj = 1:size(exptList,1)
+            [nVals(jj,:),parNames(jj,:),parVals(jj,:)] = getGlobalStimParams(exptList{jj}(1:5),exptList{jj}(7:9));
         end
     catch
         %!WARNING! % if more than one drug was used, nVals will be 2 (or more)
@@ -84,32 +71,45 @@ for iDate=1:length(dateList)
             parVals = nan;
         end
     end
-
-    uniqueDrugs = unique(parNames,'stable');
-    %a first attempt at handling multiple drug experiments. 3/13/2019 ZS
-    if size(uniqueDrugs,1) >= 2
-        for i = 1:length(uniqueDrugs)
-            pars.expt(iDate).treatment{i} = uniqueDrugs{i};
-            pars.expt(iDate).dose{i} = max(parVals(strcmp(parNames,uniqueDrugs{i})));
+    
+    if size(parNames) > 1
+        for ii = 1:size(parNames,2)
+            pars.expt(iDate).treatment(ii) = unique(parNames(:,ii));
+            pars.expt(iDate).dose{ii} = max(parVals(:,ii));
         end
     else
-       pars.expt(iDate).treatment = uniqueDrugs;
-       pars.expt(iDate).dose = max(parVals(strcmp(parNames,uniqueDrugs))); 
+        % fill with dummies if no treatment info entered
+        pars.expt(iDate).treatment = '';
+        pars.expt(iDate).dose = nan;
     end
+    
     
     %set timeReInj based on number of experiments! WIP
     descsThisDate = [exptList{:,2}];
     nPreInj = sum(cellfun(@(c)contains(c,'Pre'),descsThisDate)); %count number of pre-injection periods
     timeReInj = (1:size(exptList,1))-(nPreInj+1);
     pars.expt(iDate).timeReInj = timeReInj;
+       
+    pars.expt(iDate).exptIndex = unique(cellfun(@(x) x(7:9), exptList(:,1), 'UniformOutput',false),'stable');
     
-    for j = 1:length(recForAnimal)
-        if strfind(recForAnimal{j}(1:5),dateList{iDate})
-            pars.expt(iDate).exptIndex{tempIndex} = recForAnimal{j}(7:9);
-            tempIndex = tempIndex+1;
+    try
+        pars.expt(iDate).indexPostInj = getInjectionIndex(animalName,thisDate);
+        
+        % loop thru each index, get duration and time of day
+        indexDur = cell(length(exptList),1); timeOfDay = cell(length(exptList),1);
+        for iIndex = 1:length(pars.expt(iDate).exptIndex)
+            thisIndex = pars.expt(iDate).exptIndex{iIndex};
+            [indexDur{iIndex},timeOfDay{iIndex}] = getTimeAndDurationFromIndex(thisDate,thisIndex);
         end
+        pars.expt(iDate).indexDur = indexDur;
+        pars.expt(iDate).timeOfDay = timeOfDay;
+    catch why
+        warning(why.message);
+        warning('i.e. injection and/or time of day info not entered into batchparams for this date');
     end
-    clear nVals parNames parVals uniqueDrugs
+
+    clear nVals parNames parVals uniqueDrugs indexDur timeOfDay
 end
 
 batchParams.(animalName) = fillBatchParams(pars,ephysInfo);
+end

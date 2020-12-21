@@ -1,4 +1,4 @@
-function [fname] = plotFieldTripSpectra(animalList,mouseEphys_out,batchParams)
+function [fileName] = plotFieldTripSpectra(animalList,mouseEphys_out,batchParams)
 %Plot spectra from fieldTrip output of mouseDelirium_specAnalysis.m for all treatments/experiments. 
 
 %AnimalList must be a cell array of animal names; savePlots is a toggle to save the figure automatically,
@@ -6,125 +6,131 @@ function [fname] = plotFieldTripSpectra(animalList,mouseEphys_out,batchParams)
 
 % % test case % %
 % animalList = {'EEG57'}; 
-% savePlot = 0; (does not save)
 
+% if not entered, load the saved data file
 if ~exist('mouseEphys_out','var')
     load('W:\Data\PassiveEphys\EEG animal data\mouseEphys_out_psychedelics.mat','mouseEphys_out','batchParams')
 end
 
-% if ~exist('savePlots','var')
-%     savePlots = 0;
-% end
-
 if ~exist('animalList','var')
     error('Please enter animal name(s)')
-elseif ~iscell(animalList) %ZS 1/22/2019 want to try using a try catch loop
+elseif ~iscell(animalList) 
     animalList = {animalList};
-%     warning('this function expects animal name(s) inside a cell');
 end
 
 outPath = 'M:\mouseEEG\Power\Spectra\';
-addpath('M:\Ziyad\')
+addpath('M:\Ziyad\');
 colorOrder = colorZ; %updated 1/24/2019
 for iAnimal = 1:length(animalList)
     thisName = animalList{iAnimal};
-    %updated 1/24/2019 to avoid error due to mismatch in batchParams and
-    %ephysData for LFP9... 
-    ephysDates = fieldnames(mouseEphys_out.(thisName));
-    batchDates = fieldnames(batchParams.(thisName));
-    batchDates = batchDates(contains(batchDates,'date'));
-    theseDates = intersect(ephysDates,batchDates);
     
+    % get chan info
     chanLabels = batchParams.(thisName).ephysInfo.chanLabels;
-    maxForPlot = 10^-3.5;
-    minForPlot = 10^-7;
+    
+    % note: these need to be sorted chronologically
+    ephysDates = fieldnames(mouseEphys_out.(thisName));
+    theseDates = checkDateChronology(ephysDates);  
+     
+    % loop through each date and save a new figure for each
     for iDate = 1:length(theseDates)
-        thisDate = theseDates{iDate};
-        thisTreat = batchParams.(thisName).(thisDate).treatment;
-        thisTreat = strrep(thisTreat,'_conc','');
-        thisTreat = strrep(thisTreat,'0p9_vol','');
-        if size(thisTreat,2) > 1 
-%             thisTreat = thisTreat{1};
-            if iscell(thisTreat)
-                treatStr = sprintf('%s + %s', thisTreat{:});
-            else
-                treatStr = sprintf('%s + %s', thisTreat);
-            end
-        else
-            if iscell(thisTreat)
-                treatStr = thisTreat{:};
-            else
-                treatStr = thisTreat;
-            end
-        end
-        figureName = ([thisName ' - ' thisDate ' - ' treatStr ' - no parse']);
-        figH = figure('Name',figureName);
-        
-        set(gcf,'DefaultAxesColorOrder',colorOrder); %set color order for current figure. These are colors I like - ZS 19124 
-        expts = fieldnames(mouseEphys_out.(thisName).(thisDate));
-        
-        timeReInj = batchParams.(thisName).(thisDate).timeReInj;
-        for iTime = 1:length(timeReInj)
-            timeStr{iTime} = ['hr ' num2str(timeReInj(iTime))];
-        end
-        
-        iCount = 1;
-        for iChan = [4 1 3 2] %Plots AL AR PL PR in 2x2 subplots (in that order) - 18n13 ZS 
-            subH(iChan) = subtightplot(2,2,iCount,[.04 .04],[.1 .04],[.1 .04]);
-            
-            for iExpt = 1:size(expts,1)
-                thisExpt = expts{iExpt};
-                if ~isempty(mouseEphys_out.(thisName).(thisDate).(thisExpt).spec)
-                    f = mouseEphys_out.(thisName).(thisDate).(thisExpt).spec.freq;
-                    p = mouseEphys_out.(thisName).(thisDate).(thisExpt).spec.powspctrm(iChan,:);
-                    loglog(f,p,'LineWidth',1.5);
+        try
+            thisDate = theseDates{iDate};
+            % format treatment... there's probably a shorter way to do this, no??
+            thisTreat = batchParams.(thisName).(thisDate).treatment;
+            thisTreat = strrep(thisTreat,'_conc','');
+            thisTreat = strrep(thisTreat,'0p9_vol','');
+            if size(thisTreat,2) > 1
+                %             thisTreat = thisTreat{1};
+                if iscell(thisTreat)
+                    treatStr = sprintf('%s + %s', thisTreat{:});
+                else
+                    treatStr = sprintf('%s + %s', thisTreat);
                 end
-                hold on
-                maxForPlot = max([maxForPlot,max(p)]); %                maxForPlot = 10^-3.5;
-                minForPlot = min([minForPlot,min(p)]); %                minForPlot = 10^-6.5;
+            else
+                if iscell(thisTreat)
+                    treatStr = thisTreat{:};
+                else
+                    treatStr = thisTreat;
+                end
             end
-            title(chanLabels{iChan});
-            xlim([1 100]);
-            %ylim([minForPlot maxForPlot]);
-            s = gca;
-            s.XTick = [1 10 100];
-            s.XTickLabel = {1 10 100};
-%             axis square
-            box off
-            if iChan == 3
-                xlabel('Freq');
-                ylabel('Power (mV^2)');
-                hleg = legend(timeStr,'Location','Best');
-                title(hleg,'Time re: inj');   
+            figureName = ([thisName ' - ' thisDate ' - ' treatStr ' - no parse']);
+            figH = figure('Name',figureName,'Position',[680 280 809 698]); % warning: figure size is hardcoded
+            
+            % set color order for current figure. These are colors I like - ZS 19124
+            set(gcf,'DefaultAxesColorOrder',colorOrder);
+            expts = fieldnames(mouseEphys_out.(thisName).(thisDate));
+            
+            % times relative to injection (used to label each trace in the legend)
+            timeReInj = batchParams.(thisName).(thisDate).timeReInj;
+            for iTime = 1:length(timeReInj)
+                timeStr{iTime} = ['hr ' num2str(timeReInj(iTime))];
             end
-            iCount = iCount+1;
-        end        
-        
-        %rescale plots here
-        iCount = 1;
-        for iChan = [4 1 3 2] 
-            subH(iChan) = subtightplot(2,2,iCount,[.04 .04],[.1 .04],[.1 .04]);
-            axis tight
-            if iChan ==4 || iChan==1
-               xticklabels('');
+            
+            iCount = 1;
+            for iChan = [4 1 3 2] %Plots AL AR PL PR in 2x2 subplots (in that order) - 18n13 ZS
+                subH(iChan) = subtightplot(2,2,iCount,[.04 .04],[.1 .12],[.1 .04]);
+                
+                for iExpt = 1:size(expts,1)
+                    thisExpt = expts{iExpt};
+                    if ~isempty(mouseEphys_out.(thisName).(thisDate).(thisExpt).spec)
+                        f = mouseEphys_out.(thisName).(thisDate).(thisExpt).spec.freq;
+                        p = mouseEphys_out.(thisName).(thisDate).(thisExpt).spec.powspctrm(iChan,:);
+                        loglog(f,p,'LineWidth',1.5);
+                    end
+                    hold on
+                end
+                title([chanLabels{iChan} ' (' num2str(iChan) ')']);
+                
+                % set axis limits (do this for all subplots)
+                xlim([0 100]);
+                ylim([10^-7 10^-3]);
+                xticks([1 10 100]);
+                xticklabels([1 10 100]);
+                yticks([10^-7 10^-6 10^-5 10^-4 10^-3]);
+                
+                box off
+                % add labels and legend to channel 3
+                if iChan == 3
+                    xlabel('Freq');
+                    ylabel('Power (mV^2)');
+                    hleg = legend(timeStr);
+                    hleg.Position = [0.1104 0.1396 0.0939 0.1519]; % warning: legend position is hardcoded!
+                    title(hleg,'Time re: inj');
+                end
+                
+                % remove redundant axis labels
+                if iChan ==4 || iChan==1
+                    xticklabels('');
+                end
+                if iChan==1 || iChan==2
+                    yticklabels('');
+                end
+                
+                if iChan==1
+                    % add title superimposed on the subplots (will be sensitive
+                    % to changes in the figure size or subplot size!)
+                    sgtitle([thisName ' - ' thisDate ' - ' treatStr],'FontWeight','Bold')
+                end
+                
+                iCount = iCount+1;
             end
-            if iChan==1 || iChan==2
-               yticklabels(''); 
+            
+            clear iCount
+            
+            % ask user if they would like to save
+            buttonName = questdlg_timer(10,['Would you like to save figure to ' outPath '?'],...
+                'Save Dialogue Box','Yes','No','Yes');
+            fileName = [outPath figureName]; %file name output for if uploading to slack
+            if strcmp(buttonName,'Yes')
+                savefig(gcf,fileName); % save figure as .fig
+                print('-painters',fileName,'-r300','-dpng'); % save as .png at 300dpi
+            else
+                disp([fileName ' was not saved']);
             end
-            iCount = iCount+1;
-        end        
-        linkaxes(subH(:),'xy');
-        clear iCount
-        
-        buttonName = questdlg_timer(10,['Would you like to save figure to ' outPath '?'],...
-            'Save Dialogue Box','Yes','No','Yes');
-        fname = '';
-        if strcmp(buttonName,'Yes')
-            savePlot(outPath,figureName);
-            fname = [outPath figureName]; %file name output for if uploading to slack
-        else
-            disp([outPath figureName ' was not saved']);
+        catch 
+            warning([thisDate ' spectra failed to plot']);
         end
+        close
     end
    
 end

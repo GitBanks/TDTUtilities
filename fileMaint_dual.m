@@ -160,46 +160,60 @@ for iList = 1:length(listOfAnimalExpts)
 %     end
 end
 
+% plot raw EEG data! (to do)
+try
+    fname = plotRawEEG_AllChans(animal); % NOTE: figures will be created and sent within slack
+catch
+    warning('example raw traces failed to plot');
+end
+
+try 
+    dates = unique(cellfun(@(x) x(1:5), listOfAnimalExpts, 'UniformOutput',false),'stable');
+    thisDate = dates{end}; %TODO: set the date somehow (maybe just assume the most recent date?)
+    rawDataFPath = plotRawDataWholeDay(animal,thisDate);
+    rawDataDesc = [animal ' - ' thisDate ' raw data whole day'];
+    sendSlackFig(rawDataDesc,[rawDataFPath '.png']);
+catch
+    warning('whole day raw traces failed to plot');
+end
 % 6. RUN ROI-BASED MOVEMENT ANALYSIS
 %=========================================================================%
 runBatchROIAnalysis(animal); % this script executes the movement analysis
+
+% plot raw movement data! (to do)
+% plotRawMovement(animalName)
 
 % 7. RUN SPECTRAL ANALYSIS AND PLOT
 %=========================================================================%
 % add fieldtrip path... they say you're not supposed to do it all at once like this but ¯\_(?)_/¯
 addpath('Z:\fieldtrip-20170405\');
-
-runICA = 0; % should usually be set to 0, unless there is "heart rate noise" on the EEG
-forceReRun = 1; % if true, will run all dates found for this animal
+forceReRun = 0; % if true, will run all dates found for this animal
 
 disp('starting spec analysis') ;
-
 tic
-[gBatchParams, gMouseEphys_out] = mouseDelirium_specAnalysis(animal,runICA,forceReRun); 
-saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); 
+% [ephysData,params] = loadEphysData('power'); % load existing spec
+% analysis structure
+[batchParams, ephysData] = mouseEphys_specAnalysis(animal,forceReRun); 
 toc
 
-% plot spectra
-specFName = plotFieldTripSpectra({animal},gMouseEphys_out,gBatchParams);
-
 % send spectra .png file to delirium slack
-% try
-%     specDesc = [animal ' spectra'];
-%     sendSlackFig(specDesc,[specFName '.png']);
-% catch
-%     disp('spectra upload failed');
-% end
+try
+    % plot spectra
+    specFName = plotFieldTripSpectra({animal},ephysData,batchParams);
+    specDesc = [animal ' spectra'];
+    sendSlackFig(specDesc,[specFName '.png']);
+catch
+    disp('spectra upload failed');
+end
 
 % plot individual band power time series
-[timeSeriesName] = plotNewBandPowerTimeSeries(animal,gBatchParams,gMouseEphys_out);
-
-% send power time series to slack channel
-% try
-%     timeSeriesDesc = [animal ' power time series'];
-%     sendSlackFig(timeSeriesDesc,[timeSeriesName '.png']);
-% catch
-%     disp('4sec movement & power time series upload failed');
-% end
+try
+    [timeSeriesName] = plotNewBandPowerTimeSeries(animal,batchParams,ephysData);
+    timeSeriesDesc = [animal ' power time series'];
+    sendSlackFig(timeSeriesDesc,[timeSeriesName '.png']);
+catch
+    disp('failed to plot time series');
+end
 
 % plot old grady plot
 try 
@@ -208,26 +222,20 @@ catch
     warning('plotTimeDActivityAndBP failed to run');
 end
 
-% plot new version of grady plot using plotWindowedPower
-try
-    param = 'delta'; 
-    smooth = true; % smooth data windows
-    nmlz = true; % nmlz to total power
-    [gradyplotName] = plotWindowedPower(animal,param,smooth,nmlz); %!! requires animal name to be in M:\mouseEEG\mouseGroupInfo.xlsx
-catch
-    warning('plotWindowedPower failed to plot');
-end
-
-% send grady plot
-% try 
+% plot new version of grady plot using plotWindowedPower % TODO: for some
+% reason all the dates plot on one subplot. Need to debug this. 
+% try
+%     param = 'delta'; 
+%     smooth = true; % smooth data windows
+%     nmlz = true; % nmlz to total power
+%     [gradyplotName] = plotWindowedPower(animal,param,smooth,nmlz); %!! requires animal name to be in M:\mouseEEG\mouseGroupInfo.xlsx
 %     gradDesc = [animal ' gradyplot'];
 %     sendSlackFig(gradDesc,[gradyplotName '.png']);
 % catch
-%     disp('new gradyplot did not send to slack');
+%     warning('plotWindowedPower failed to plot');
 % end
 
 % TODO: add functionality to update a master power table with these data
-
 
 
 % 8. RUN WEIGHTED PHASE LAG INDEX (CONNECTIVITY) ANALYSIS & PLOT
@@ -240,27 +248,27 @@ addpath('C:\Users\Matt Banks\Documents\Code\mouse-delirium\wpli');
 disp('starting wpli analysis'); 
 
 tic
-[gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animal,runICA,forceReRun);
-saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn); 
+[batchParams_conn, ephys_conn] = mouseEphys_wPLIAnalysis(animal,forceReRun);
 toc
 
 % plot WPLI time series
 try
-    pliTimeSeries = plotNewWPLITimeSeries(animal,gBatchParams,gMouseEphys_conn);
+    pliTimeSeries = plotNewWPLITimeSeries(animal,batchParams_conn,ephys_conn);
+    pliDesc = [animal ' wpli time series'];
+    sendSlackFig(pliDesc,[pliTimeSeries '.png']);
 catch
     warning('wpli failed to plot');
 end
 
-% try 
-%     pliDesc = [animal ' wpli time series'];
-%     sendSlackFig(pliDesc,[pliTimeSeries '.png']);
-% catch
-%     disp('wpli plot did not send to slack');
-% end
-
 % TODO: add functionality to update a master WPLI table with these data
 
 % TODO: add some summary to say what ran/didn't run
+
+% RUN LZC (NOTE: THIS TAKES A LONG TIME ~30mins for each full day of data)
+try
+    mouseDelirium_LZC(animal,runICA,forceReRun,ephysData,params);
+catch
+end
 
 % DONE!
 disp('By golly you''ve done it');

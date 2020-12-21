@@ -1,4 +1,4 @@
-function [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animalName,runICA,forceReRun)
+function [gBatchParams, gMouseEphys_conn] = mouseEphys_wPLIAnalysis(animalName,forceReRun)
 %
 % Computes the debiased weighted phase-lag index (Vinvk et al 2011) for 
 % mouse ephys data from delirium project (either EEG or LFP). Workflow is 
@@ -25,22 +25,44 @@ function [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(anima
 % Analysis type 0: mean activity in each trial
 % animalName = 'EEG52';
 
-if ~exist('animalName','var')
-    error('At least select an animal');
-end
-if ~exist('runICA','var')
-    % use runICA option only for removing heart-rate noise
-    runICA = 0; 
+runICA = 0; % very rarely have to set this to true, determines if the heart rate analysis is run
+switch nargin
+    case 0
+        error('at least select an animal!');
+    case 1
+        forceReRun = 0; % default not to rerun experiments
 end
 
 fPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
+if ~exist([fPath animalName],'file')
+    error(['No ephys data found on W drive for ' animalName]);
+end
 
 % a) get parameters for analysis (accesses the eNotebook)
-gBatchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
+gBatchParams = getBatchParamsByAnimal(animalName);
 eParams = gBatchParams.(animalName);
 
-trial_l = 0.5; %length of trial that windows are divided into: sec
+nChans = length(eParams.ephysInfo.chanNums); % !TODO! % do we want to get nChans from the number of channels entered in DB instead?
+chanCmb = zeros(nChans*(nChans-1)/2,2);
+iCount = 0;
+for iChan = 1:nChans-1
+    for jChan = iChan+1:nChans
+        iCount = iCount+1;
+        chanCmb(iCount,1) = iChan;
+        chanCmb(iCount,2) = jChan;
+    end
+end
+nChanCmbs = size(chanCmb,1);
 
+% get list of experiments from database & get cell array of dates from list
+exptList = getExperimentsByAnimal(animalName);
+dates = unique(cellfun(@(x) x(1:5), exptList(:,1), 'UniformOutput',false),'stable');
+if ~forceReRun
+    %If false, then just use the most recent date in database
+    dates = dates(end);
+end
+
+trial_l = 0.5; %length of trial that windows are divided into: sec
 windowLength = 20; %sec
 windowOverlap = 0.25; %amount of overlap (0.25 = 25%)
 
@@ -53,46 +75,17 @@ maxSDCriterion = 0.5;
 minSDCriterion = 0.2;
 rejectAcrossChannels = 1;
 
-nChans = length(eParams.ephysInfo.chanNums); % !TODO! % do we want to get nChans from the number of channels entered in DB instead?
-
-% Main analysis loop: divide into trials, no behavior parsing
-chanCmb = zeros(nChans*(nChans-1)/2,2);
-iCount = 0;
-for iChan = 1:nChans-1
-    for jChan = iChan+1:nChans
-        iCount = iCount+1;
-        chanCmb(iCount,1) = iChan;
-        chanCmb(iCount,2) = jChan;
-    end
-end
-nChanCmbs = size(chanCmb,1);
-
+%Set window length and overlap
 eParams.windowLength = windowLength;
 eParams.windowOverlap = windowOverlap;
-tempFields = fieldnames(eParams)';
- 
-%Check the MATLAB version before using field names to generate list of recording dates
-%WARNING: This section still crashes in 2015. 
-% ver = version;
-% if str2double(ver(end-3:end-2)) < 16 
-%     eDates = tempFields(strfind(tempFields,'date')); %for matlab versions <2016
-% else
-eDates = tempFields(contains(tempFields,'date')); %Only use for >2016b
-% end
 
-if ~forceReRun
-    eDates = eDates(end); %if false, only do most recent expt
-end
-
-if ~exist([fPath animalName],'file')
-    error(['No ephys data for ' animalName]);
-end
-
-for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
-    thisDate = eDates{iDate};       %eDates{end};      
+% Main analysis loop: divide into trials, no behavior parsing
+for iDate = 1:length(dates)
+    thisDate = ['date' dates{iDate}]; %concatenate date          
     disp('------------------------');
     disp(['Animal ' animalName ' - Date: ' thisDate]);
     disp('------------------------');
+    try
     nExpts = length(eParams.(thisDate).exptIndex); %NOTE: If using for earlier data, eParams needs to be "curated"
 
     %expts correspond to the TDT recording files, i.e. 000, 001, etc
@@ -289,6 +282,13 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
     % Add in new params info to output batchParams structure
     gBatchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     toc
+    catch why
+        keyboard
+        warning(why.message);
+    end
 end %loop over dates
+
+% save data
+saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn); 
 
 end
