@@ -28,7 +28,13 @@ switch nargin
 end
 
 % generate batchParams
-gBatchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
+gBatchParams = getBatchParamsByAnimal(animalName);
+
+windowLength = 4; % sec
+windowOverlap = 0.25; % percent overlap
+
+gBatchParams.(animalName).windowLength = windowLength;
+gBatchParams.(animalName).windowOverlap = windowOverlap;
 
 eParams = gBatchParams.(animalName);
 
@@ -49,6 +55,8 @@ end
 
 %Downsampled Fs
 dsFs = 200; % Hz
+
+
 
 %For calculating spectra based on highest and lowest movement
 highMovtPercentile = 75;
@@ -91,10 +99,7 @@ for iDate = 1:length(eDates)
                         meanMovementPerWindow = nan(1220,1);
                     end
                 end
-                
-                windowLength = gBatchParams.(animalName).windowLength;
-                windowOverlap = gBatchParams.(animalName).windowOverlap;
-                
+                             
                 indexLength = frameTimeStampsAdj(end);
                 for iWindow = 1:indexLength
                     if ((iWindow-1)*windowLength)*(1-windowOverlap) + windowLength < indexLength
@@ -198,7 +203,7 @@ for iDate = 1:length(eDates)
             cfg.method    = 'mtmfft';
             cfg.output    = 'pow';
             cfg.pad       = ceil(max(cellfun(@numel, data_MouseEphysDS.time)/data_MouseEphysDS.fsample));
-            cfg.foi       = 1:80;
+            cfg.foi       = [0.5 1:80];
             cfg.tapsmofrq = 2;
             cfg.keeptrials= 'yes';
             
