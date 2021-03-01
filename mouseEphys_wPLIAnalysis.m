@@ -1,7 +1,7 @@
 function [gBatchParams, gMouseEphys_conn] = mouseEphys_wPLIAnalysis(animalName,forceReRun)
 %
 % Computes the debiased weighted phase-lag index (Vinvk et al 2011) for 
-% mouse ephys data from delirium project (either EEG or LFP). Workflow is 
+% Banks Lab mouse EEG data. Workflow is 
 %
 %   (a) get parameters for analysis using the function mouseDelirium_getBatchParamsByAnimal
 %   (b) loads the imported data, which must already be converted from TDT 
@@ -42,24 +42,36 @@ end
 gBatchParams = getBatchParamsByAnimal(animalName);
 eParams = gBatchParams.(animalName);
 
-nChans = length(eParams.ephysInfo.chanNums); % !TODO! % do we want to get nChans from the number of channels entered in DB instead?
-chanCmb = zeros(nChans*(nChans-1)/2,2);
-iCount = 0;
-for iChan = 1:nChans-1
-    for jChan = iChan+1:nChans
-        iCount = iCount+1;
-        chanCmb(iCount,1) = iChan;
-        chanCmb(iCount,2) = jChan;
-    end
-end
+% get number of channels and generate combinations of channels
+% note: 
+nChans = length(eParams.ephysInfo.chanNums);
+chanCmb = getWPLIChanCmbs(nChans);
 nChanCmbs = size(chanCmb,1);
 
-% get list of experiments from database & get cell array of dates from list
 exptList = getExperimentsByAnimal(animalName);
 dates = unique(cellfun(@(x) x(1:5), exptList(:,1), 'UniformOutput',false),'stable');
+
+tempParams = load(EEGUtils.pliFile,'batchParams');
+
+iCount = 1;
+% If forceReRun is false, then just run analysis on dates which don't
+% appear in the data structure i.e. haven't been analyzed
 if ~forceReRun
-    %If false, then just use the most recent date in database
-    dates = dates(end);
+    for ii = 1:length(dates)
+        thisDate = ['date' dates{ii}];
+        try
+            if ~isfield(tempParams.batchParams.(animalName),thisDate)
+                eDates{iCount} = thisDate; % if not a field, populate this
+                iCount = iCount+1;
+            end
+        catch
+            eDates{ii} = thisDate;
+        end
+    end
+else
+    for ii = 1:length(dates)
+        eDates{ii} = ['date' dates{ii}];
+    end
 end
 
 trial_l = 0.5; %length of trial that windows are divided into: sec
@@ -97,53 +109,13 @@ for iDate = 1:length(dates)
         % loadedData is matrix of nChan x nSamples
         [loadedData,eParams] = loadMouseEphysData(eParams,thisDate,iExpt);
 
-        %Load behav data, divide into segments w/ overlap,
-        %calculate mean of each segment
-        fileFound = 0;
+        % This section segments in the movement data into windows the
+        % same length as the wPLI data. 
         fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
-                    '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat']; %changed 5/17
-        try
-            load(['W:\Data\' fileNameStub],'finalLEDTimes','finalMovementArray','frameTimeStampsAdj');
-            fileFound = 1;
-        catch
-            try
-                load(['M:\' fileNameStub],'finalLEDTimes','finalMovementArray','frameTimeStampsAdj');
-                fileFound = 1;
-            catch
-                warning('No movement data found. Continuing without.');
-            end
-        end
-
-        if ~fileFound
-            meanMovementPerWindow = zeros(10000,1);
-            meanMovementPerWindow(:,:) = NaN;
-        else
-            indexLength = frameTimeStampsAdj(end); 
-
-            for iWindow = 1:indexLength
-                if ((iWindow-1)*windowLength)*(1-windowOverlap) + windowLength < indexLength
-                    windowTimeLims(iWindow,1) = ((iWindow-1)*windowLength)*(1-windowOverlap);
-                    windowTimeLims(iWindow,2) = ((iWindow-1)*windowLength)*(1-windowOverlap) + windowLength;
-                end
-            end
-            for iWindow = 1:size(windowTimeLims,1)
-                timeStampsInWindow = frameTimeStampsAdj(frameTimeStampsAdj <= windowTimeLims(iWindow,2));
-                timeStampsInWindow = timeStampsInWindow(timeStampsInWindow >= windowTimeLims(iWindow,1));
-                if ~isempty(timeStampsInWindow)
-                    for iFrame = 1:length(timeStampsInWindow)
-                        framesToUse(iFrame) = find(frameTimeStampsAdj == timeStampsInWindow(iFrame));
-                    end
-                    meanMovementPerWindow(iWindow,1) = mean(finalMovementArray(framesToUse));
-                else
-                    meanMovementPerWindow(iWindow,1) = NaN;
-                end
-                clear timeStampsInWindow framesToUse
-            end
-
-        end
-        % the movement array used to be added to each individual band
-        % field, but now we're just placing the array higher in the
-        % structure...
+                    '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat']; 
+        meanMovementPerWindow = segmentMovementDataForAnalysis(fileNameStub,windowLength,windowOverlap);
+        
+        % addd windowed movement data to structure
         gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
         disp('Movement calculated & added to ephys structure');
 
@@ -248,7 +220,7 @@ for iDate = 1:length(dates)
                 nTrials = length(seg_dat.trial);
 
                 for iBand = 1:length(mouseDeliriumFreqBands.Names)
-                    thisBand = mouseDeliriumFreqBands.Names{iBand};
+                    thisBand = mouseEEGFreqBands.Names{iBand};
                     if firstWindow
                         gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).(thisBand).connVal = NaN(nWindows,nChans*(nChans-1)/2);
                         gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).(thisBand).connSEM = NaN(nWindows,nChans*(nChans-1)/2);

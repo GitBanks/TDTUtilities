@@ -6,14 +6,13 @@ function saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn)
 % 2. add updated animal
 % 3. save
 
-% Hardcoded :( please consider making a config file...
-outFileName = 'mouseEphys_conn_dbt_noParse_20sWin_0p5sTrial_psychedelics.mat';
-computerSpecPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
-% if ~exist([computerSpecPath outFileName],'file')
+pliFile = EEGUtils.pliFile; % load from EEGUtils class
+
 try
-    load([computerSpecPath outFileName],'mouseEphys_conn','batchParams');
+    load(pliFile,'mouseEphys_conn','batchParams');
 catch
-    warning([outFileName ' does not exist! check path.'])
+    warning([pliFile ' does not exist! check path.']);
+    keyboard
 end
 
 gName = fieldnames(gBatchParams);
@@ -32,9 +31,10 @@ batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
 for iDate = 1:length(eDates)
     thisDate = eDates{iDate};
     batchParams.(gName).(thisDate) = gBatchParams.(gName).(thisDate);
-    mouseEphys_conn.WPLI.(gName).(thisDate) = gMouseEphys_conn.WPLI.(gName).(thisDate);
+    mouseEphys_conn.(gName).(thisDate) = gMouseEphys_conn.WPLI.(gName).(thisDate);
 end
-save([computerSpecPath outFileName],'mouseEphys_conn','batchParams');
+
+save(pliFile,'mouseEphys_conn','batchParams');
 disp('mouseEphys_conn and batchParams saved!');
 
 %WIP 18d07 ZS

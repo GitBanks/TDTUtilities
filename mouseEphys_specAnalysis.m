@@ -14,7 +14,7 @@ function [batchParams, mouseEphys_out,failedTable] = mouseEphys_specAnalysis(ani
 % animalName = 'EEG55';
 % forceReRun = 1; %will re-run all available dates
 tic
-noMovtToggle = 0; % can use this to ignore movement analysis if problematic
+noMovtToggle = 0; % set equal to 1 to ignore movement analysis
 runICA = 0; % very rarely have to set this to true, determines if the heart rate analysis is run
 
 switch nargin
@@ -23,11 +23,6 @@ switch nargin
     case 1
         forceReRun = 0; % default not to rerun experiments
 end
-
-%Load existing data structure... 
-% if ~exist('ephysData','var')
-%     [ephysData,params] = loadEphysData('power');
-% end
 
 % generate batchParams
 batchParams = getBatchParamsByAnimal(animalName);
@@ -39,17 +34,17 @@ batchParams.(animalName).bandInfo = mouseEEGFreqBands;
 exptList = getExperimentsByAnimal(animalName);
 dates = unique(cellfun(@(x) x(1:5), exptList(:,1), 'UniformOutput',false),'stable');
 
-%If forceReRun is false, then just use the most recent date in database
-%If forceReRun is false, then just run the uncalculated dates
 iCount = 1;
 
-[ephysData,~] = loadEphysData('power');
-% If forceReRun is false, then just narrow the list of dates to those for which LZc hasn't been calculated
+tempParams = load(EEGUtils.specFile,'batchParams');
+% If forceReRun is false, then just narrow the list of dates that aren't
+% already saved in specFile
+
 if ~forceReRun
     for ii = 1:length(dates)
         thisDate = ['date' dates{ii}];
         try
-            if ~isfield(ephysData.(animalName),thisDate)
+            if ~isfield(tempParams.batchParams.(animalName),thisDate)
                 eDates{iCount} = thisDate; % if not a field, populate this
                 iCount = iCount+1;
             end
@@ -62,10 +57,12 @@ else
         eDates{ii} = ['date' dates{ii}];
     end
 end
+clear tempParams;
 
 if ~exist('eDates','var')
-    error('apparently, there are no new dates to run');
+    error('apparently there are no new dates to run');
 end
+
 %Downsampled Fs
 dsFs = 200; % Hz
 
@@ -97,50 +94,16 @@ for iDate = 1:length(eDates)%1:length(eDates)
                         
             % loadedData is matrix of nChan x nSamples
             [loadedData,eParams] = loadMouseEphysData(eParams,thisDate,iExpt);
+
+    
             
             % Load behav data, divide into segments w/ overlap, calculate mean of each segment
             if noMovtToggle %movement will not be added if this is = 1!!!
                 meanMovementPerWindow = nan(10000,1);
             else
                 fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
-                    '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat']; %WARNING: EDITED ON 5/6/2019
-                try
-                    load(['W:\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj');
-                catch
-                    try
-                        load(['\\MEMORYBANKS\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj'); %WARNING: EDITED ON 5/2/2019
-                    catch
-                        warning(['Can not find ' fileNameStub '. Skipping movement analysis for now']);
-                        meanMovementPerWindow = nan(1220,1);
-                    end
-                end
-                                
-                indexLength = frameTimeStampsAdj(end);
-                for iWindow = 1:indexLength
-                    if ((iWindow-1)*windowLength)*(1-windowOverlap) + windowLength < indexLength
-                        windowTimeLims(iWindow,1) = ((iWindow-1)*windowLength)*(1-windowOverlap);
-                        windowTimeLims(iWindow,2) = ((iWindow-1)*windowLength)*(1-windowOverlap) + windowLength;
-                    end
-                end
-                
-                for iWindow = 1:size(windowTimeLims,1)
-                    timeStampsInWindow = frameTimeStampsAdj(frameTimeStampsAdj <= windowTimeLims(iWindow,2));
-                    timeStampsInWindow = timeStampsInWindow(timeStampsInWindow >= windowTimeLims(iWindow,1));
-                    if ~isempty(timeStampsInWindow)
-                        for iFrame = 1:length(timeStampsInWindow)
-                            framesToUse(iFrame) = find(frameTimeStampsAdj == timeStampsInWindow(iFrame));
-                        end
-                        try %added 4/8/2019 ZS in case video ran too long and framesToUse has frames outside finalMovementArray...
-                            meanMovementPerWindow(iWindow,1) = mean(finalMovementArray(framesToUse));
-                        catch
-                            framesToUse = framesToUse(framesToUse <= finalMovementArray);
-                            meanMovementPerWindow(iWindow,1) = mean(finalMovementArray(framesToUse));
-                        end
-                    else
-                        meanMovementPerWindow(iWindow,1) = NaN;
-                    end
-                    clear timeStampsInWindow framesToUse
-                end
+                    '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat'];
+                meanMovementPerWindow = segmentMovementDataForAnalysis(fileNameStub,windowLength,windowOverlap);
             end
             
             % Now convert to FieldTrip format:

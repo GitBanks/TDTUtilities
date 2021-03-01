@@ -5,17 +5,16 @@ function saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out)
 % 2. add updated animal
 % 3. save
 
-% Hardcoded :( please consider making a config file...
-outFileName = 'mouseEphys_out_psychedelics.mat';
-computerSpecPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
+specFile = EEGUtils.specFile;
 
-% if ~exist([computerSpecPath outFileName],'file')
-%     error([outFileName ' does not exist! check path.'])
-% end
+if ~exist(specFile,'file')
+    error([specFile ' does not exist! check path.'])
+end
+
 try
-    load([computerSpecPath outFileName],'mouseEphys_out','batchParams');
+    load(specFile,'mouseEphys_out','batchParams');
 catch
-    warning([computerSpecPath outFileName ' not found. Creating new save file']);
+    warning([specFile ' not found. Creating new save file']);
 end
 
 gName = fieldnames(gBatchParams);
@@ -30,7 +29,7 @@ for iDate = 1:length(dates)
     mouseEphys_out.(gName).(thisDate) = gMouseEphys_out.(gName).(thisDate);
 end
 
-save([computerSpecPath outFileName],'mouseEphys_out','batchParams');
+save(specFile,'mouseEphys_out','batchParams');
 disp('mouseEphys_out and batchParams saved!');
 
 

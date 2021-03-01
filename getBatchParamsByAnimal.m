@@ -1,22 +1,16 @@
 function [batchParams] = getBatchParamsByAnimal(animalName)
 % STUB/WIP: mouseDelirium_getBatchParamsByAnimal
 % original method is a cumbersome nightmare.  All this info *should* be in
-% database! Using this script, we can call 'batchParams' as desired.
+% database! Using this script, we can generate 'batchParams' programmatically.
 % test info: animalName = 'EEG55'
 
-% !!WARNING!! % the only question remaining is 'timeReInj', which may
-% change if an index is skipped.  We can fix this later by creating a
-% master table of experiments in the database.
+% TODO! Streamline how getInjectionIndex and getTimeAndDurationFromIndex
+% operate. Accessing the eNotebook repeatedly and loading the tank files
+% slows things down. 
 
 batchParams = struct;
-% disp(['Data will be saved to `' outPath '`']);
 defaultPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\'; %W: drive, where downsampled data lives
 
-% the following prevents evoked stuff from being read in.
-
-%if contains(animalName,'LFP') || contains(animalName,'DREADD')
-% if ~isempty(strfind(animalName,'LFP')) ||
-% ~isempty(strfind(animalName,'DREADD')) ZS 19107
 recForAnimal = getExperimentsByAnimal(animalName,'Spon'); %grab only spon indices
 
 if isempty(recForAnimal{1})
@@ -44,10 +38,9 @@ for k = 1:length(electrodeInfo)
         tempIndexer = tempIndexer+1;
     end
 end
-ephysInfo.EMGchan = []; % set to ignore EMG chans for now
+ephysInfo.EMGchan = []; % ignore EMG chans for now
 
 % find unique dates.
-descForAnimal = recForAnimal(:,2);
 recForAnimal = recForAnimal(:,1);
 dateList = unique(cellfun(@(recForAnimal){recForAnimal(1:5)},recForAnimal),'stable')';
 
@@ -57,7 +50,8 @@ for iDate=1:length(dateList)
     pars.expt(iDate).exptDate = ['date' thisDate];
     pars.expt(iDate).dataPath = [defaultPath animalName filesep thisDate filesep];
     exptList = getExperimentsByAnimalAndDate(animalName,thisDate);
-    %need to add fix for multiple drugs... 
+    
+    % Search globalstimparams for this date and index. In most cases this will be the drug treatment name and dose 
     try
         for jj = 1:size(exptList,1)
             [nVals(jj,:),parNames(jj,:),parVals(jj,:)] = getGlobalStimParams(exptList{jj}(1:5),exptList{jj}(7:9));
@@ -65,13 +59,14 @@ for iDate=1:length(dateList)
     catch
         %!WARNING! % if more than one drug was used, nVals will be 2 (or more)
         if sum(nVals(:)) < size(exptList,1)
-            warning('Incomplete drug information has been entered for this animal!')
+            warning(['Incomplete drug information has been entered for ' animalName ' ' thisDate])
             nVals = nan;
             parNames = '';
             parVals = nan;
         end
     end
     
+    % set drug treatment and dose information
     if size(parNames) > 1
         for ii = 1:size(parNames,2)
             pars.expt(iDate).treatment(ii) = unique(parNames(:,ii));
@@ -82,17 +77,20 @@ for iDate=1:length(dateList)
         pars.expt(iDate).treatment = '';
         pars.expt(iDate).dose = nan;
     end
+        
+    % set timeReInj based on number of pre-injection periods
     
-    
-    %set timeReInj based on number of experiments! WIP
+    % NOTE: we are increasingly moving away from this method of calculating
+    % timeReInj, as this assumes each index represents an hour of data
     descsThisDate = [exptList{:,2}];
     nPreInj = sum(cellfun(@(c)contains(c,'Pre'),descsThisDate)); %count number of pre-injection periods
+    
     timeReInj = (1:size(exptList,1))-(nPreInj+1);
-    pars.expt(iDate).timeReInj = timeReInj;
-       
+    pars.expt(iDate).timeReInj = timeReInj; 
     pars.expt(iDate).exptIndex = unique(cellfun(@(x) x(7:9), exptList(:,1), 'UniformOutput',false),'stable');
     
     try
+        % determine which indices occurred directly after injection period
         pars.expt(iDate).indexPostInj = getInjectionIndex(animalName,thisDate);
         
         % loop thru each index, get duration and time of day
@@ -101,11 +99,11 @@ for iDate=1:length(dateList)
             thisIndex = pars.expt(iDate).exptIndex{iIndex};
             [indexDur{iIndex},timeOfDay{iIndex}] = getTimeAndDurationFromIndex(thisDate,thisIndex);
         end
-        pars.expt(iDate).indexDur = indexDur;
-        pars.expt(iDate).timeOfDay = timeOfDay;
-    catch why
-        warning(why.message);
-        warning('i.e. injection and/or time of day info not entered into batchparams for this date');
+        pars.expt(iDate).indexDur = indexDur; % duration of index
+        pars.expt(iDate).timeOfDay = timeOfDay; % time of day index began
+        
+    catch 
+        warning(['injection and/or time of day info not entered for date' thisDate]);
     end
 
     clear nVals parNames parVals uniqueDrugs indexDur timeOfDay
