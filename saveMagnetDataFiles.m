@@ -1,16 +1,23 @@
 % animals = {'EEG142','EEG143'};
-
+function saveMagnetDataFiles(exptDate,Animal1,Animal2)
 % animals = {'EEG150','EEG151'};%first one must be tank file animal
 % animals = {'EEG152','EEG153'};
 % animals = {'EEG154','EEG155'};
-animals = {'EEG156','EEG157'}; 
-exptTypeToRun = 'Ketamine';
+
+if ~exist('Animal2','var')
+    animals = {Animal1};
+else
+    animals = {Animal1,Animal2}; 
+end
+%exptDate = '20o28';
+%exptTypeToRun = 'Ketamine';
+exptTypeToRun = '';
 
 mags = {'mag1','mag2'};
 % mags = {'mag1','mag2'}; %mag1 is 118, mag2 is 119 (check this)
 % istank = [1,0];
 istank = [1,0];
-tankpath = 'W:\Data\PassiveEphys\2020\'; %tank file location
+tankpath = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\']; %tank file location
 
  
 % loop through animals
@@ -18,7 +25,8 @@ for ianimal = 1:length(animals)
     name = animals{ianimal};
     tnk = istank(ianimal);
     % grab dates/expts
-    expts = getExperimentsByAnimal(name,exptTypeToRun);
+    expts = getExperimentsByAnimalAndDate(name,exptDate);
+%    expts = getExperimentsByAnimal(name,exptTypeToRun);
 %     expts(~contains(expts(:,1),'19n08'),:) = [];
     
     if ianimal==1
@@ -28,6 +36,7 @@ for ianimal = 1:length(animals)
     % loop through expts
     for iexpt = 1:size(expts,1)
         date = expts{iexpt,1}(1:5);
+        display(['running ' date ' ' name]);
         
 %         if strcmp(date,'20221')
 %            keyboard; 
@@ -50,7 +59,8 @@ for ianimal = 1:length(animals)
         
         % save magnet signal
         filename = [date '-' idx '_magnetData'];
-        path = ['M:\PassiveEphys\2020\' date '-' idx '\'];
+        path = ['M:\PassiveEphys\20' exptDate(1:2) '\' date '-' idx '\'];
+        
 %         path = ['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\'];
         save([path filename],'magData','magDT');
         clear tank magData magDT

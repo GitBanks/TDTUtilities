@@ -16,16 +16,12 @@ if length(ms) > 1 && sum(contains(ms,{'d','n','o'}))>1
         m = ms{ii};
         ds{ii,1} = flip(sort(datos(contains(datos,m))));
     end
-else
     
+    % liberate each row from the individual cells, merge together (??)
+    ds = vertcat(ds{:});
+    ds = flip(ds);
+    sortedDates = strcat('date',ds); % add 'date' to the string, yielding dateYYmDD
+
+else
+    sortedDates = strcat('date',datos); % add 'date' to the string, yielding dateYYmDD
 end
-
-% liberate each row from the individual cells, merge together (??) FUCK
-ds = vertcat(ds{:});
-ds = flip(ds);
-sortedDates = strcat('date',ds); % remove 'date' from the string, yielding YYmDD
-
-% cellfun(@(x) x(3), datos, 'UniformOutput',false)
-% cellfun(@(x) x(4:5), datos, 'UniformOutput',false)
-% sort(ms,'ascend');
-% ds = unique(cellfun(@(x) x(4:5), datos, 'UniformOutput',false),'stable');

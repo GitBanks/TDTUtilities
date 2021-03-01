@@ -24,7 +24,7 @@ if nargin < 5
     forceStimPresentation = 0;
 end
 
-if isempty(strfind(animalName,'LFP')) && isempty(strfind(animalName,'DREADD')) && isempty(strfind(animalName,'EEG')) && isempty(strfind(animalName,'BX'))
+if isempty(strfind(animalName,'LFP')) && isempty(strfind(animalName,'DREADD')) && isempty(strfind(animalName,'EEG')) && isempty(strfind(animalName,'BX')) && isempty(strfind(animalName,'Mag'))
     error('We''re only set to handle LFP, EEG, and DREADD animals so far');
 end
 useStims = false;
@@ -56,7 +56,7 @@ if ~usesIso || (useStims && ~usesIso)
     exptStepsPerHour = 2;  
 end
 
-if (~isempty(strfind(animalName,'EEG')) || ~isempty(strfind(animalName,'BX'))) && ~useStims
+if (~isempty(strfind(animalName,'EEG')) || ~isempty(strfind(animalName,'BX')) || ~isempty(strfind(animalName,'Mag'))) && ~useStims
     indexDescriptionRECtype = {'Spon'};
     indexTrialPerStimSequence = 1;
     indexStimCountSequence = -1;

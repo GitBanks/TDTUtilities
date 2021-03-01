@@ -43,29 +43,29 @@ dates = unique(cellfun(@(x) x(1:5), exptList(:,1), 'UniformOutput',false),'stabl
 %If forceReRun is false, then just run the uncalculated dates
 iCount = 1;
 
+[ephysData,~] = loadEphysData('power');
+% If forceReRun is false, then just narrow the list of dates to those for which LZc hasn't been calculated
 if ~forceReRun
-    eDates = dates(end);
-    % INCOMPLETE: trying to avoid having to load the entire data file,
-    % which is combersome. Just want to check whether the variable already
-    % has fields populated for this date, and if so, skip this date.
-
-%     variableInfo = whos('-file', '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\mouseEphys_out_psychedelics.mat');
-%     ismember('pop', variableInfo) % returns true
-%     ismember('doesNotExist', variableInfo) % returns false
-%     for ii = 1:length(dates)
-%         thisDate = ['date' dates{ii}];
-%         try
-%             expts = fieldnames(mouseEphys_out.(animalName).(thisDate)); % this line requires 
-%             if ~isfield(mouseEphys_out.(animalName).(thisDate).(expts{1}),'bandPow')
-%                 eDates{iCount} = thisDate; % if not a field, populate this
-%                 iCount = iCount+1;
-%             end
-%         catch
-%             eDates{ii} = thisDate;
-%         end
-%     end
+    for ii = 1:length(dates)
+        thisDate = ['date' dates{ii}];
+        try
+            if ~isfield(ephysData.(animalName),thisDate)
+                eDates{iCount} = thisDate; % if not a field, populate this
+                iCount = iCount+1;
+            end
+        catch
+            eDates{ii} = thisDate;
+        end
+    end
+else
+    for ii = 1:length(dates)
+        eDates{ii} = ['date' dates{ii}];
+    end
 end
 
+if ~exist('eDates','var')
+    error('apparently, there are no new dates to run');
+end
 %Downsampled Fs
 dsFs = 200; % Hz
 
@@ -83,8 +83,8 @@ eParams.windowLength = windowLength; % epoch duration (sec)
 eParams.windowOverlap = windowOverlap; % epoch fractional overlap
 
 %main analysis section
-for iDate = 1:length(dates)%1:length(eDates)
-    thisDate = ['date' dates{iDate}];
+for iDate = 1:length(eDates)%1:length(eDates)
+    thisDate = eDates{iDate};%['date' eDates{iDate}];
     disp('------------------------');
     disp(['Animal ' animalName ' - Date: ' thisDate]);
     disp('------------------------');
@@ -213,11 +213,12 @@ for iDate = 1:length(dates)%1:length(eDates)
             end
             
             % LEMPEL-ZIV COMPLEXITY ANALYSIS
-%             [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
-%             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = Cnorm(theseTrials,:);
-%             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = Cnorm(theseTrials,:)...
-%                 ./mean(Cnormrand(theseTrials,:,:),3); %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
-% %             
+            [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
+            LZc = Cnorm(theseTrials,:);
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = LZc;
+            surrogateAvg = mean(Cnormrand(theseTrials,:,:),3); % average across n (dimension 3) surrogate signals
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = LZc./surrogateAvg; %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
+            
             % First compute keeping trials to get band power as time series
             cfg           = [];
             cfg.trials    = theseTrials;
