@@ -49,6 +49,8 @@ catch
         setElectrodeLocationFromAnimal('LFP16',animal);
     elseif strcmp(animal(1:3),'DRE')
         setElectrodeLocationFromAnimal('DREADD07',animal);
+    elseif strcmp(animal(1:3),'Mag')
+        setElectrodeLocationFromAnimal('Mag003',animal);
     else
         error('Animal type not recognized.')
     end
@@ -263,12 +265,6 @@ end
 % TODO: add functionality to update a master WPLI table with these data
 
 % TODO: add some summary to say what ran/didn't run
-
-% RUN LZC (NOTE: THIS TAKES A LONG TIME ~30mins for each full day of data)
-try
-    mouseDelirium_LZC(animal,runICA,forceReRun,ephysData,params);
-catch
-end
 
 % DONE!
 disp('By golly you''ve done it');

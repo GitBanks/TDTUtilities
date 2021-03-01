@@ -1,13 +1,13 @@
 function [fileName] = plotFieldTripSpectra(animalList,mouseEphys_out,batchParams)
-%Plot spectra from fieldTrip output of mouseDelirium_specAnalysis.m for all treatments/experiments. 
+% Plot spectra from fieldTrip output of mouseEphys_specAnalysis.m for all treatments/experiments. 
 
-%AnimalList must be a cell array of animal names; savePlots is a toggle to save the figure automatically,
-%mouseEphys_out is the fieldtrip output structure; batchParams are user-generated descriptions of expt. - ZS 18n14 
+% animalList must be a cell array of animal names; savePlots is a toggle to save the figure automatically,
+% mouseEphys_out is the saved output from the spec analysis output structure; batchParams are user-generated descriptions of expt. - ZS 18n14 
 
 % % test case % %
 % animalList = {'EEG57'}; 
 
-% if not entered, load the saved data file
+% if not entered, load the saved data file (warning: hardcoded)
 if ~exist('mouseEphys_out','var')
     load('W:\Data\PassiveEphys\EEG animal data\mouseEphys_out_psychedelics.mat','mouseEphys_out','batchParams')
 end
@@ -20,7 +20,7 @@ end
 
 outPath = 'M:\mouseEEG\Power\Spectra\';
 addpath('M:\Ziyad\');
-colorOrder = colorZ; %updated 1/24/2019
+colorOrder = colorZ; % updated 1/24/2019
 for iAnimal = 1:length(animalList)
     thisName = animalList{iAnimal};
     
@@ -28,24 +28,19 @@ for iAnimal = 1:length(animalList)
     chanLabels = batchParams.(thisName).ephysInfo.chanLabels;
     
     % note: these need to be sorted chronologically
-    ephysDates = fieldnames(mouseEphys_out.(thisName));
-    theseDates = checkDateChronology(ephysDates);  
+    theseDates = fieldnames(mouseEphys_out.(thisName));
+%     theseDates = checkDateChronology(ephysDates);  
      
     % loop through each date and save a new figure for each
     for iDate = 1:length(theseDates)
         try
             thisDate = theseDates{iDate};
-            % format treatment... there's probably a shorter way to do this, no??
+            % format treatment... TODO: simplify this
             thisTreat = batchParams.(thisName).(thisDate).treatment;
             thisTreat = strrep(thisTreat,'_conc','');
             thisTreat = strrep(thisTreat,'0p9_vol','');
             if size(thisTreat,2) > 1
-                %             thisTreat = thisTreat{1};
-                if iscell(thisTreat)
-                    treatStr = sprintf('%s + %s', thisTreat{:});
-                else
-                    treatStr = sprintf('%s + %s', thisTreat);
-                end
+                treatStr = strjoin(thisTreat,' + ');
             else
                 if iscell(thisTreat)
                     treatStr = thisTreat{:};
@@ -104,18 +99,13 @@ for iAnimal = 1:length(animalList)
                 end
                 if iChan==1 || iChan==2
                     yticklabels('');
-                end
-                
-                if iChan==1
-                    % add title superimposed on the subplots (will be sensitive
-                    % to changes in the figure size or subplot size!)
-                    sgtitle([thisName ' - ' thisDate ' - ' treatStr],'FontWeight','Bold')
-                end
-                
+                end           
                 iCount = iCount+1;
             end
-            
             clear iCount
+            
+            % add title over all subplots
+            sgtitle([thisName ' - ' thisDate ' - ' treatStr],'FontWeight','Bold');
             
             % ask user if they would like to save
             buttonName = questdlg_timer(10,['Would you like to save figure to ' outPath '?'],...
@@ -130,7 +120,6 @@ for iAnimal = 1:length(animalList)
         catch 
             warning([thisDate ' spectra failed to plot']);
         end
-        close
-    end
-   
-end
+        close % close new figure once done
+    end % dates
+end % animals

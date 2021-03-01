@@ -8,7 +8,7 @@ function csvAssembler(date,index,nStimTypes,nTrialsPerStim)
 % [date,index] = fixDateIndexToFiveForSynapse(date,index);
 % trialPattern = createTrialPattern(nStimTypes,nTrialsPerStim);
 
-%date = '18711';
+%date = '21225';
 %index = '000';
 %nStimTypes = 5
 %nTrialsPerStim = 100
@@ -22,7 +22,7 @@ textC = 'Row-';
 %fileName = ['\\Anesbl2\C\TDT\Synapse\ParFiles\' date '-' index '.seq.csv'];
 fileName = ['\\144.92.237.183\TDT\Synapse\ParFiles\' date '-' index '.seq.csv'];
 
-sequenceCellArray = cell(nStimTypes*nTrialsPerStim+1,2);
+%sequenceCellArray = cell(nStimTypes*nTrialsPerStim+1,2);
 trialPattern = createTrialPattern(nStimTypes,nTrialsPerStim);
 %sequenceCellArray{1,2} = textA;
 

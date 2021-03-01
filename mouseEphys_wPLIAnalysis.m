@@ -283,7 +283,7 @@ for iDate = 1:length(dates)
     gBatchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     toc
     catch why
-        keyboard
+        %keyboard
         warning(why.message);
     end
 end %loop over dates
