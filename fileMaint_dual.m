@@ -187,14 +187,9 @@ runBatchROIAnalysis(animal); % this script executes the movement analysis
 
 % 7. RUN SPECTRAL ANALYSIS AND PLOT
 %=========================================================================%
-% add fieldtrip path... they say you're not supposed to do it all at once like this but ¯\_(?)_/¯
-addpath('Z:\fieldtrip-20170405\');
-forceReRun = 0; % if true, will run all dates found for this animal
-
 disp('starting spec analysis') ;
 tic
-% [ephysData,params] = loadEphysData('power'); % load existing spec
-% analysis structure
+forceReRun = 0; % if true, will run all dates found for this animal
 [batchParams, ephysData] = mouseEphys_specAnalysis(animal,forceReRun); 
 toc
 
@@ -242,10 +237,6 @@ end
 
 % 8. RUN WEIGHTED PHASE LAG INDEX (CONNECTIVITY) ANALYSIS & PLOT
 %=========================================================================%
-% these paths are necessary!
-addpath('Z:\DataBanks\Kovach Toolbox Rev 751\trunk\DBT'); 
-addpath('C:\Users\Matt Banks\Documents\Code\mouse-delirium\wpli');
-
 % calculate phase lag for a single day (is this preferable?) and save
 disp('starting wpli analysis'); 
 

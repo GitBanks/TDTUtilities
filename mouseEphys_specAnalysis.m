@@ -1,4 +1,4 @@
-function [batchParams, mouseEphys_out,failedTable] = mouseEphys_specAnalysis(animalName,forceReRun)
+function [batchParams, mouseEphys_out] = mouseEphys_specAnalysis(animalName,forceReRun)
 % Computes the power spectrum (and Lempel-Ziv complexity (WIP) for
 % mouse ephys data from delirium project (either EEG or LFP).
 % Workflow is
@@ -30,16 +30,18 @@ batchParams = getBatchParamsByAnimal(animalName);
 % list of frequency bands
 bandNames = mouseEEGFreqBands.Names;
 batchParams.(animalName).bandInfo = mouseEEGFreqBands;
+foi = [0.5 1:80]; % is this correct?
+eParams = batchParams.(animalName); % why are eParams and batchParams separate?
 
+% get list of experiments and dates
 exptList = getExperimentsByAnimal(animalName);
 dates = unique(cellfun(@(x) x(1:5), exptList(:,1), 'UniformOutput',false),'stable');
 
-iCount = 1;
-
+% load saved batch params 
 tempParams = load(EEGUtils.specFile,'batchParams');
-% If forceReRun is false, then just narrow the list of dates that aren't
-% already saved in specFile
 
+% If forceReRun is false, then just narrow the list of dates that aren't already saved in specFile
+iCount = 1;
 if ~forceReRun
     for ii = 1:length(dates)
         thisDate = ['date' dates{ii}];
@@ -63,31 +65,29 @@ if ~exist('eDates','var')
     error('apparently there are no new dates to run');
 end
 
-%Downsampled Fs
+% Downsampled Fs
 dsFs = 200; % Hz
 
-%Trial rejection criteria
+% Trial rejection criteria
 maxSDCriterion = 0.5;
 minSDCriterion = 0.2;
 rejectAcrossChannels = 1;
 
-eParams = batchParams.(animalName); % why are eParams and batchParams separate?
-
-%window length and overlap
+% window length and overlap
 windowLength = 4;
 windowOverlap = 0.25;
 eParams.windowLength = windowLength; % epoch duration (sec)
 eParams.windowOverlap = windowOverlap; % epoch fractional overlap
 
-%main analysis section
-for iDate = 1:length(eDates)%1:length(eDates)
-    thisDate = eDates{iDate};%['date' eDates{iDate}];
+% Main analysis section
+for iDate = 1:length(eDates)
+    thisDate = eDates{iDate};
     disp('------------------------');
     disp(['Animal ' animalName ' - Date: ' thisDate]);
     disp('------------------------');
     nExpts = length(eParams.(thisDate).exptIndex);
     try
-        %expts correspond to the TDT recording files, i.e. 000, 001, etc
+        % Expts correspond to the TDT recording files, i.e. 000, 001, etc
         for iExpt = 1:nExpts
             
             thisExpt = ['expt' eParams.(thisDate).exptIndex{iExpt}];
@@ -95,15 +95,13 @@ for iDate = 1:length(eDates)%1:length(eDates)
             % loadedData is matrix of nChan x nSamples
             [loadedData,eParams] = loadMouseEphysData(eParams,thisDate,iExpt);
 
-    
-            
             % Load behav data, divide into segments w/ overlap, calculate mean of each segment
             if noMovtToggle %movement will not be added if this is = 1!!!
-                meanMovementPerWindow = nan(10000,1);
+                meanMovementPerWindow = nan(1204,1); % TODO: maybe rethink how the non-movement condition is handled
             else
                 fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
                     '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat'];
-                meanMovementPerWindow = segmentMovementDataForAnalysis(fileNameStub,windowLength,windowOverlap);
+                [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(fileNameStub,windowLength,windowOverlap);
             end
             
             % Now convert to FieldTrip format:
@@ -112,9 +110,11 @@ for iDate = 1:length(eDates)%1:length(eDates)
             cfg = [];
             cfg.resamplefs = dsFs;
             cfg.detrend    = 'yes';
-            % the following line avoids numeric round off issues in the time axes upon resampling
-            %data_MouseEphys.time(1:end) = data_MouseEphys.time(1);
             
+            % the following line avoids numeric round off issues in the time axes upon resampling
+%             data_MouseEphys.time(1:end) = data_MouseEphys.time(1); % seems unnecessay - March 2021. This has been uncommented for a while, just re-evaluated             
+            
+            % downsample data 
             data_MouseEphysDS = ft_resampledata(cfg, data_MouseEphys);
             data_MouseEphysDS.sampleinfo = [1, size(data_MouseEphysDS.trial{1,1},2)];
             clear data_MouseEphys
@@ -164,11 +164,11 @@ for iDate = 1:length(eDates)%1:length(eDates)
             theseTrials = 1:length(nonRejects_all);
             theseTrials = theseTrials(nonRejects_all == 1);
             
-            %End of video is cut off or one extra ephys trial than video b/c of resolution, so manually cutting off
-            %ephys trials with no associated video]
+            % End of video is cut off or one extra ephys trial than video b/c of resolution, so manually cutting off
+            % ephys trials with no associated video]
             if length(theseTrials) > length(meanMovementPerWindow) || sum(theseTrials>length(meanMovementPerWindow)) > 0
                 theseTrials = theseTrials(theseTrials <= length(meanMovementPerWindow));
-                %Headstage became unplugged during index so manually removing these trials based on sudden spike in power
+                % Headstage became unplugged during index so manually removing these trials based on sudden spike in power
             elseif strcmp(animalName,'EEG33') && strcmp(thisDate,'date17530') && strcmp(thisExpt,'expt004')
                 theseTrials(131:242) = [];
             elseif strcmp(animalName,'EEG34') && strcmp(thisDate,'date17601') && strcmp(thisExpt,'expt004')
@@ -189,11 +189,12 @@ for iDate = 1:length(eDates)%1:length(eDates)
             cfg.taper     = 'hanning';
             cfg.output    = 'pow';
             cfg.pad       = ceil(max(cellfun(@numel, data_MouseEphysDS.time)/data_MouseEphysDS.fsample));
-            cfg.foi       = [0.5 1:80]; % is this correct?
+            cfg.foi       = foi;
             cfg.keeptrials= 'yes';
             tempSpec      = ft_freqanalysis(cfg, data_MouseEphysDS);
             mouseEphys_out.(animalName).(thisDate).(thisExpt).bandPow.cfg = cfg; %store config from band power
             
+            % Calculate average power in each band
             for iBand = 1:length(bandNames)
                 thisBand = bandNames{iBand};
                 fLims = mouseEEGFreqBands.Limits.(thisBand);
@@ -207,7 +208,7 @@ for iDate = 1:length(eDates)%1:length(eDates)
             cfg.method    = 'mtmfft';
             cfg.output    = 'pow';
             cfg.pad       = ceil(max(cellfun(@numel, data_MouseEphysDS.time)/data_MouseEphysDS.fsample));
-            cfg.foi       = [0.5 1:80]; % is this correct?
+            cfg.foi       = foi;
             cfg.tapsmofrq = 2;
             cfg.keeptrials= 'no';
             
@@ -223,19 +224,14 @@ for iDate = 1:length(eDates)%1:length(eDates)
             
             clear windowTimeLims indexLength meanMovementPerWindow
             
-        end %Loop over expts
+        end % Loop over expts
         batchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     catch why
         failedTable.(thisDate).(thisExpt) = why;
     end
-end %Loop over recording dates for this animal
-
-if ~exist('failedTable','var')
-    failedTable = [];
-end
+end % Loop over recording dates for this animal
 
 % save!
 saveBatchParamsAndEphysOut(batchParams,mouseEphys_out);
 toc
 end
-
