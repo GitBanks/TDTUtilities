@@ -226,7 +226,7 @@ for iDate = 1:length(dates)
                         mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).connSEM = NaN(nWindows,nChans*(nChans-1)/2);
                     end
                     bw = bands.Widths.(thisBand);
-                    freqRange = bands.Limits.(thisBand);
+                    freqRange = bands.Limits.(thisBand)
                     for iTrial = 1:nTrials
                         bandTFR=dbt(seg_dat.trial{iTrial}',seg_dat.fsample,bw,'offset',freqRange(1),'lowpass',freqRange(2)-bw);
                         if iTrial==1
@@ -239,12 +239,21 @@ for iDate = 1:length(dates)
                     csdDum = squeeze(mean(csdDum,4));
                     csdDum = gather(csdDum); %transferring the 'gpuArray' to local workspace with the 'gather' function:
                     [wpli,sem] = my_wPLI(csdDum);
+                    [dwpli,dsem] = my_DwPLI(csdDum);
                     %wPLI is returned as n_ChannCmb x nFreqs. Need to reshape back to
                     %nChanXnChan, and take average across frequency
                     tempWPLI = mean(wpli,2)';
                     tempSEM = mean(sem,2)';
+                    
+                    tempdWPLI = mean(dwpli,2)';
+                    tempdSEM = mean(dsem,2)';
+                    
                     mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).connVal(iWindow,:) = tempWPLI;
                     mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).connSEM(iWindow,:) = tempSEM;
+                
+                    mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).DconnVal(iWindow,:) = tempdWPLI;
+                    mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).DconnSEM(iWindow,:) = tempdSEM;
+                    
                 end %bands
                 firstWindow = 0;
             end   
