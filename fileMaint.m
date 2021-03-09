@@ -12,23 +12,19 @@ function fileMaint(animal)
 % WARNING this is only operating upon EEGdata files for now!!!
 % WARNING a few locations are hardcoded!
 
-%animal = 'EEG55';
+% animal = 'EEG55';
 
 listOfAnimalExpts = getExperimentsByAnimal(animal);
 
 forceReimport = 0;
-forceRegrid = 0;
 forceReimportTrials = 0;
 
-% before full automation, we can use this to set drug parameters in the DB
-% so that below we can run
+% before full automation, we can use this to set drug parameters in the DB so that below we can run
 manuallySetGlobalParamUI(animal); 
 
-descOfAnimalExpts = listOfAnimalExpts(:,2);
 listOfAnimalExpts = listOfAnimalExpts(:,1);
 
-% check to see if probe has been entered, and if not prompt user for that
-% info
+% check to see if probe has been entered, if not, copy existing template
 try
     [electrodeLocation] = getElectrodeLocationFromDateIndex(listOfAnimalExpts{1}(1:5),listOfAnimalExpts{1}(7:9));
 catch
@@ -45,25 +41,22 @@ catch
     end
 end
 
-if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\'],'dir')
-    mkdir(['W:\Data\PassiveEphys\EEG animal data\' animal '\']);
-    disp(['making dir: W:\Data\PassiveEphys\EEG animal data\' animal '\']);
-end
-
 for iList = 1:length(listOfAnimalExpts)
     date = listOfAnimalExpts{iList}(1:5);
     index = listOfAnimalExpts{iList}(7:9);
-    dirStrAnalysis = ['\\MEMORYBANKS\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+    dirStrAnalysis = [mousePaths.M 'PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
     dirStrRecSource = ['\\144.92.237.183\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\']; 
-    dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+    dirStrRawData = [mousePaths.W 'PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
     disp(['$$$ Processing ' date '-' index ' $$$']);
-    % %% STEP 1 MOVE 
+    
+    % STEP 1 MOVE TDT TANK FILE TO W DRIVE
     try
         moveDataRecToRaw(dirStrRecSource,dirStrRawData);
     catch
         disp('moveDataRecToRaw didn''t run.');
     end
-    % %% STEP 2 IMPORT 
+    
+    % STEP 2 CONVERT FROM TDT TANK FILE TO MATLAB FORMAT, SAVE TO MEMORYBANKS
     dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
     if isempty(dirCheck) || forceReimport
         disp('Handing info to existing importData function.  This will take a few minutes.');
@@ -76,73 +69,45 @@ for iList = 1:length(listOfAnimalExpts)
         disp('Data already imported, but updating trialinfo');
         updateStimInfoSynapse(date,index);
     end
-    % %% STEP 3 (sadly) move to W (sadly because analyzed data are going to 'raw data' storage zone)
-    if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\'],'dir')
-        mkdir(['W:\Data\PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
-        disp(['making dir: W:\Data\PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
-    end
-    currentDir = dir(dirStrAnalysis);
-    for iDir = 1:length(currentDir) %could add a check to see if files exist to save time (if they do)
-
-        if strfind(currentDir(iDir).name,'EEGdata') >0
-            fileString = [dirStrAnalysis currentDir(iDir).name];
-            load(fileString);
-            DSephysData = ephysData;
-            DSdT = dT;
-            save(['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\DS-' currentDir(iDir).name],'DSephysData','DSdT');
-            clear ephysData
-            clear DSephysData
-        end
-        if strfind(currentDir(iDir).name,'trial') >0
-            %if 
-            display(['Copying ' currentDir(iDir).name]);
-            copyfile([dirStrAnalysis currentDir(iDir).name],['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\' currentDir(iDir).name])
-            %else
-                
-            %end
-        end
-    end
 end
 
-runBatchROIAnalysis(animal) %ADDED 5/13/2019 as first step to implementing new analysis!
-
-% Ephys analysis and plotting 
-%============================================================%
-% To-do: add a check here to see if analysis/plotting is finished! 
+% STEP 3: RUN MOVEMENT ANALYSIS
 try
-addpath('Z:\fieldtrip-20170405\');
-disp('starting spec analysis') ; tic
-runICA = 0; %
-forceReRun = 0; %will run all dates found for this animal
-[gBatchParams, gMouseEphys_out] = mouseEphys_specAnalysis(animal,forceReRun);
-saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out); toc
+    runBatchROIAnalysis(animal) % ADDED 5/13/2019
 catch
+    warning('failed to run movement analysis');
+end
+
+% STEP 4: RUN SPEC ANALYSIS
+try
+    disp('starting spec analysis') ; 
+    tic
+    forceReRun = 0; %will run all dates found for this animal
+    [gBatchParams, gMouseEphys_out] = mouseEphys_specAnalysis(animal,forceReRun);
+    toc
+catch
+    warning('failed to run spec analysis'); 
 end
 
 % spectra
 try
-plotFieldTripSpectra({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
-catch 
+    plotFieldTripSpectra({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
+catch
 end
 
 % grady plots
 try
-plotTimeDActivityAndBP(animal,'delta',1);
-catch 
+    plotTimeDActivityAndBP(animal,'delta',1);
+catch
 end
 
-% TODO: generate master power and slope tables and add functionality to
-% just add entries
-
+% STEP 5: RUN WPLI ANALYSIS
 % calculate phase lag for a single day (is this preferable?) and save
-disp('starting wpli analysis'); 
-addpath('Z:\DataBanks\Kovach Toolbox Rev 751\trunk\DBT');
-addpath('C:\Users\Matt Banks\Documents\Code\mouse-delirium\wpli');
+disp('starting wpli analysis');
 tic
 [gBatchParams, gMouseEphys_conn] =  mouseEphys_wPLIAnalysis(animal,forceReRun);
-saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn); 
+saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn);
 toc
-% update WPLI table
 
 end
 

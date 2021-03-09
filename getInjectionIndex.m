@@ -1,16 +1,9 @@
-function indexPostInj = getInjectionIndex(animalName,exptDate)
+function indexPostInj = getInjectionIndex(exptDate,indices)
 % find index just after new injection (?)
 % animalName = 'EEG128';
 % exptDate = 'date20129';
 
 exptDate = strrep(exptDate,'date','');
-[outputList] = getExperimentsByAnimalAndDate(animalName,exptDate,'Spon');
-if isempty(outputList)
-    [outputList] = getExperimentsByAnimalAndDate(animalName,exptDate);
-end
-
-% get list of indices
-indices = unique(cellfun(@(x) x(7:9), outputList(:,1), 'UniformOutput',false),'stable');
 
 % 2. step through each and verify drug info (global param)
 for ii = 1:length(indices)

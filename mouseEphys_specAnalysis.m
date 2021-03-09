@@ -13,7 +13,7 @@ function [batchParams, mouseEphys_out] = mouseEphys_specAnalysis(animalName,forc
 % Example parameters
 % animalName = 'EEG55';
 % forceReRun = 1; %will re-run all available dates
-tic
+
 noMovtToggle = 0; % set equal to 1 to ignore movement analysis
 runICA = 0; % very rarely have to set this to true, determines if the heart rate analysis is run
 
@@ -28,9 +28,9 @@ end
 batchParams = getBatchParamsByAnimal(animalName);
 
 % list of frequency bands
+batchParams.(animalName).bandInfo = mouseEEGFreqBands; % information for band power calculation
 bandNames = mouseEEGFreqBands.Names;
-batchParams.(animalName).bandInfo = mouseEEGFreqBands;
-foi = [0.5 1:80]; % is this correct?
+foi = [0.5 1:80]; % frequencies for spectral calculation % NOTE: is this correct?
 eParams = batchParams.(animalName); % why are eParams and batchParams separate?
 
 % get list of experiments and dates
@@ -101,7 +101,12 @@ for iDate = 1:length(eDates)
             else
                 fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
                     '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat'];
-                [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(fileNameStub,windowLength,windowOverlap);
+                try
+                    [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(fileNameStub,windowLength,windowOverlap);
+                catch
+                    warning('failed to segment movement data, will now ignore movement analysis');
+                    noMovtToggle = 1; % set equal to 1 to ignore movement analysis
+                end
             end
             
             % Now convert to FieldTrip format:
@@ -182,7 +187,8 @@ for iDate = 1:length(eDates)
             surrogateAvg = mean(Cnormrand(theseTrials,:,:),3); % average across n (dimension 3) surrogate signals
             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = LZc./surrogateAvg; %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
             
-            % First compute keeping trials to get band power as time series
+            % SPECTRAL ANALYSIS
+            % First compute band power, keeping trials separate to generate a time series
             cfg           = [];
             cfg.trials    = theseTrials;
             cfg.method    = 'mtmfft';
@@ -212,26 +218,27 @@ for iDate = 1:length(eDates)
             cfg.tapsmofrq = 2;
             cfg.keeptrials= 'no';
             
+            % Calculate average spectral power
             mouseEphys_out.(animalName).(thisDate).(thisExpt).spec = ...
                 ft_freqanalysis(cfg, data_MouseEphysDS);
             
             mouseEphys_out.(animalName).(thisDate).(thisExpt).activity = ...
-                meanMovementPerWindow(theseTrials); %store movement array with only the accepted trials...
+                meanMovementPerWindow(theseTrials); % store movement array with only the accepted trials...
             
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).trialsKept = theseTrials'; %store theseTrials
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).trialsKept = theseTrials'; % store theseTrials
             
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).windowTimeLims = windowTimeLims(theseTrials,:); %store movement time windows with only accepted trials
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).windowTimeLims = windowTimeLims(theseTrials,:); % store movement time windows with only accepted trials
             
             clear windowTimeLims indexLength meanMovementPerWindow
             
         end % Loop over expts
         batchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     catch why
-        failedTable.(thisDate).(thisExpt) = why;
+        warning('Error Message:');
+        warning([why.message ' ' why.stack(1).name ' line ' num2str(why.stack(1).line)]);
     end
 end % Loop over recording dates for this animal
 
 % save!
 saveBatchParamsAndEphysOut(batchParams,mouseEphys_out);
-toc
 end

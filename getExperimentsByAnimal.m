@@ -1,9 +1,7 @@
 function [outputList] = getExperimentsByAnimal(animalName,findExptType,ignoreCheck)
 % Test params
-%animalName = 'DREADD06';
-%findExptType = 'CNO';
-%animalName = 'EEG68';
-%findExptType = 'CNO';
+% animalName = 'DREADD06';
+% findExptType = 'CNO';
 
 if nargin <1
    error('At least provide an animal name'); 
