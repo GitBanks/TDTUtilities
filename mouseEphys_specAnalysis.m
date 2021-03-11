@@ -1,21 +1,24 @@
 function [batchParams, mouseEphys_out] = mouseEphys_specAnalysis(animalName,forceReRun)
-% Computes the power spectrum (and Lempel-Ziv complexity (WIP) for
-% mouse ephys data from delirium project (either EEG or LFP).
+% Computes the power spectrum (and Lempel-Ziv complexity for Banks Lab
+% mouse ephys data.
 % Workflow is
-%   (a) get parameters for analysis using the function mouseDelirium_getBatchParamsByAnimal
-%   (b) load the recorded data, which must already be converted from TDT to Matlab format and down-sampled, using loadMouseEphysData
+%   (a) get parameters for analysis using the function getBatchParamsByAnimal
+%   (b) load the recorded data using loadMouseEphysData
 %   (c) convert data to FieldTrip compatible format using convertMouseEphysToFTFormat
 %   (d) break the continuous recording into segments using ft_redefinetrial
 %   (e) downsample the data further to save processing time using ft_resampledata
-%   (f) perform a spectral analysis on the data using ft_freqanalysis
-%   (g) compute power in specified bands
-%
-% Example parameters
-% animalName = 'EEG55';
-% forceReRun = 1; %will re-run all available dates
+%   (f) run Lempel-Ziv complexity analysis, using runLZc_withRandom
+%   (f) compute power in specified bands also using ft_freqanalysis
+%   (g) perform a spectral analysis on the data using ft_freqanalysis
+%   (h) save mouseEphys_out and batchParams to output file
 
-noMovtToggle = 0; % set equal to 1 to ignore movement analysis
-runICA = 0; % very rarely have to set this to true, determines if the heart rate analysis is run
+% input parameters:
+% animalName as the animal ID character string, e.g., 'EEG170';
+% forceReRun is a boolean (true or false) 
+
+ignoreMovement = 0; % set equal to 1 to ignore movement analysis
+runICA = 0; % determines if the ICA denoising procedure is run, rarely have 
+% to set this to true (only if we see heartrate noise) 
 
 switch nargin
     case 0
@@ -95,17 +98,15 @@ for iDate = 1:length(eDates)
             % loadedData is matrix of nChan x nSamples
             [loadedData,eParams] = loadMouseEphysData(eParams,thisDate,iExpt);
 
-            % Load behav data, divide into segments w/ overlap, calculate mean of each segment
-            if noMovtToggle %movement will not be added if this is = 1!!!
+            % Load video-derived movement, divide into segments w/ overlap, calculate mean of each segment
+            if ignoreMovement % movement will not be added if this is = 1!!!
                 meanMovementPerWindow = nan(1204,1); % TODO: maybe rethink how the non-movement condition is handled
             else
-                fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
-                    '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat'];
                 try
-                    [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(fileNameStub,windowLength,windowOverlap);
+                    [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(thisDate,thisExpt,windowLength,windowOverlap);
                 catch
                     warning('failed to segment movement data, will now ignore movement analysis');
-                    noMovtToggle = 1; % set equal to 1 to ignore movement analysis
+                    ignoreMovement = 1; % set equal to 1 to ignore movement analysis
                 end
             end
             
