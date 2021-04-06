@@ -25,7 +25,7 @@ end
 
 pathToCheck = 'M:\PassiveEphys\20'; % path stub 
 alreadyAnalyzed = zeros(length(listOfExpts),1); % preallocate logical
-for ii = 1:length(listOfExpts)
+for ii = 1:size(listOfExpts,1)
     % dirname is the directory where the movementBinary file is located
     dirname = [pathToCheck listOfExpts{ii}(1:2) '\' listOfExpts{ii} '\' ...
         listOfExpts{ii} '-movementBinary' '.mat'];
@@ -63,7 +63,7 @@ if ~isempty(listOfExpts)
         end
         for jj = 1:length(indices)
             index = indices{jj};
-            if animalNum > 51 % assumes animal name has a number associated with it (and follows the EEG animal order). New system videos started with EEG52
+            if animalNum > 51 || ~contains(animal,'EEG') % assumes animal name has a number associated with it (and follows the EEG animal order). New system videos started with EEG52
                 vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\20' date(1:2) '_' date '-' index '_Cam*.avi'];
             else
                 vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index ];

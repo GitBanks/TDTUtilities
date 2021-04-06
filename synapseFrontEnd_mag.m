@@ -1,4 +1,4 @@
-function [] = synapseFrontEnd_dual
+function [] = synapseFrontEnd_mag
 % FOR DUAL RECORDING DUMMY!
 
 % This GUI will allow user to select an experiment type for two animals
@@ -23,7 +23,7 @@ function [] = synapseFrontEnd_dual
 
 % ! TODO ! %  add a check to see if we can connect to recording computer path (sometimes network logs us out!) otherwise we can't guarantee importing will work consistantly
 % example path: \\144.92.237.187\c\Data\2018\
-S.enableMultiThread = 1; % for testing or using without parfor, set to 0
+S.enableMultiThread = 0; % for testing or using without parfor, set to 0
 S.recordingComputer = '144.92.237.183'; %'\\ANESBL2'; %
 S.recordingComputerSubfolder = '\Data\PassiveEphys\';%'\c\Data\';
 S.dbConn = dbConnect();
@@ -31,8 +31,8 @@ S.dbConn = dbConnect();
 [S.livingAnimals,S.livingAnimalsID] = getLivingAnimals; % get list of living animals for user to select
 
 % TODO % add nHoursPre to the GUI as a toggle or parameter
-S.nHoursPre = 2; %1 % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
-S.nHoursPost = 4; % we've been doing 4, but consider adding it as a toggle in addition to nHoursPre
+%S.nHoursPre = 2; %1 % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
+%S.nHoursPost = 4; % we've been doing 4, but consider adding it as a toggle in addition to nHoursPre
 
 % !! TODO !! % create parameter here to check for when inj is, and auto-next index stuff? urgent because this will allow us to streamline data collection
 
@@ -74,8 +74,29 @@ uicontrol('style','text',...
 
 updateDynamicDisplayBox('Starting Synapse');
 S = synapseConnectionProcess(S); % Start Synapse, connect to recording computer            
-S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline','a5 Inverse Agonist','Piroxicam','SeCl4','Caffeine','Caffeine Citrate','Psilocybin','Psilocybin + LPS','Ketanserin','Psilocybin + Ketanserin','WAY-100635 + Saline','WAY-100635 + Psilocybin','Ketanserin + Saline','Psilocybin + Saline','Saline + Saline','DMSO + Psilocybin','DMSO + Saline','Mifepristone + Psilocybin','Lisuride + Cort'}; 
-
+S.Preselects = {
+    'Saline'
+    'Ketamine'
+    'Psilocybin'
+    'Psilocybin + LPS'
+    'Ketanserin'
+    'Psilocybin + Ketanserin'
+    'WAY-100635 + Saline'
+    'WAY-100635 + Psilocybin'
+    'Ketanserin + Saline'
+    'Psilocybin + Saline'
+    'Saline + Saline'
+    'DMSO + Psilocybin'
+    'DMSO + Saline'
+    'Mifepristone + Psilocybin'
+    'Lisuride + Cort'
+    'DOI'
+    'Mifepristone + DOI'
+    'Vehicle + DOI'
+    'Vehicle + Saline'
+    '5-MeO-Pyr-T'
+    '5-MeO-MiPT'
+    }; 
 % LEFT
 S.pp(1) = uicontrol('style','pop',...
     'unit','pix',...
@@ -86,6 +107,30 @@ S.pp(2) = uicontrol('style','pop',...
     'unit','pix',...
     'position',[275 570 120 20],...
     'string',S.Preselects); 
+
+% allow number of hours pre and post to be edited here
+S.nHoursSelect = {'1','2','3','4','5','6','7','8'};
+uicontrol('style','text',...
+    'units','pix',...
+    'position',[50 670 70 20],...
+    'fontweight','bold',...
+    'string','nHoursPre');
+uicontrol('style','text',...
+    'units','pix',...
+    'position',[150 670 70 20],...
+    'fontweight','bold',...
+    'string','nHoursPost');
+S.nHourPrepp = uicontrol('style','pop',...
+    'unit','pix',...
+    'position',[50 650 70 20],...
+    'string',S.nHoursSelect); 
+S.nHourPostpp = uicontrol('style','pop',...
+    'unit','pix',...
+    'position',[150 650 70 20],...
+    'string',S.nHoursSelect); 
+
+
+
 
 S.pb = uicontrol('style','push',...
     'units','pix',...
@@ -149,8 +194,8 @@ pause(.5);
 
 disp(['notebook ' S.exptDate{1} ', index ' num2str([S.exptIndex{:}]) ' made, and ' sprintf('%s,',S.exptIndexLast{:}) ' will be analyzed']);
 
-updateDynamicDisplayBox('loading in parameter set');
-S = parameterCreationProcess(S); % create a parameter set and load it in. This starts recording and playing sequence automatically.
+updateDynamicDisplayBox('Starting recording');
+S = recordingStart(S); % create a parameter set and load it in. This starts recording and playing sequence automatically.
 % Here we use parallel computing to run a command to setup (and wait for)
 % next expt while it analyzes the last one.
 
@@ -165,16 +210,10 @@ else
     % skip analysis
 end
 
-if ~isempty(strfind(S.animalName{1},'LFP'))
-    sponTime = 610;
-elseif ~isempty(strfind(S.animalName{1},'EEG'))
-    sponTime = 3610;
-elseif ~isempty(strfind(S.animalName{1},'BX'))
-    sponTime = 3610;
-else
-    disp('I hope you didn''t plan to run any spontaneous recordings...')
-    sponTime = 610;
-end
+
+%this is the length of the recording!
+sponTime = 3610;
+
 
 if S.enableMultiThread % this will make program unavailable until *both* 1 and 2 are finished completely.
     parfor i = 1:2
@@ -301,11 +340,11 @@ end
 % % MOVIES: grid, prep % 
 
 
-function [S] = parameterCreationProcess(varargin) 
+function [S] = recordingStart(varargin) 
 S = varargin{1};
-sequenceUpdated = false;
-countX = 1;
-while ~sequenceUpdated
+% sequenceUpdated = false;
+% countX = 1;
+% while ~sequenceUpdated
     
     csvAssembler(S.exptDate{1},S.exptIndex{1},S.tempnStims(1),S.tempnTrials(1)); %setup trial file (writes to folder)
     
@@ -316,40 +355,40 @@ while ~sequenceUpdated
     S.syn.setMode(3); % recording set to auto start (3 is rec).
     pause(2); % reduced this from 4 8/30/18
     
-    if ~isempty(strfind(S.animalName{1},'EEG')) || ~isempty(strfind(S.animalName{1},'BX'))% Assumes both animals are EEG!!!!!!!!!!!!!!!!!!!!!!
-        result = 1;
-    else
-        seqList = S.syn.getParameterValues('ParSeq1','SequenceFileList');
-        result = 0;
-        if iscell(seqList) % do we need to check this?
-            for iList = 1:length(seqList)
-                [exptDate,exptIndex] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
-                if ~isempty(strfind([exptDate '-' exptIndex],seqList{iList}))
-                    result = S.syn.setParameterValue('ParSeq1','SequenceFileIndex',iList-1); %index starts at 0
-                end
-            end
-        end
-    end
+%     if ~isempty(strfind(S.animalName{1},'EEG')) || ~isempty(strfind(S.animalName{1},'BX'))% Assumes both animals are EEG!!!!!!!!!!!!!!!!!!!!!!
+%         result = 1;
+%     else
+%         seqList = S.syn.getParameterValues('ParSeq1','SequenceFileList');
+%         result = 0;
+%         if iscell(seqList) % do we need to check this?
+%             for iList = 1:length(seqList)
+%                 [exptDate,exptIndex] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
+%                 if ~isempty(strfind([exptDate '-' exptIndex],seqList{iList}))
+%                     result = S.syn.setParameterValue('ParSeq1','SequenceFileIndex',iList-1); %index starts at 0
+%                 end
+%             end
+%         end
+%     end
     
-    if result == 0
-        updateDynamicDisplayBox(['We are not able to update sequence ' num2str(countX)]);
-        S.pb = uicontrol('style','push',...
-        'units','pix',...
-        'posit',[270 650 120 30],...
-        'string', 'retry!',...
-        'fontsize',10,...
-        'callback',{@parameterRecreate,S});
-        pause(1);
-    end
-    if result == 1
-        pause(1);
-        updateDynamicDisplayBox('Starting sequence!'); 
+%     if result == 0
+%         updateDynamicDisplayBox(['We are not able to update sequence ' num2str(countX)]);
+%         S.pb = uicontrol('style','push',...
+%         'units','pix',...
+%         'posit',[270 650 120 30],...
+%         'string', 'retry!',...
+%         'fontsize',10,...
+%         'callback',{@parameterRecreate,S});
+%         pause(1);
+%     end
+%     if result == 1
+%         pause(1);
+%         updateDynamicDisplayBox('Starting sequence!'); 
         S.syn.setParameterValue('ParSeq1','Reset',0); % do we need to check to see if it's spon rec?  this may reset recording
-        sequenceUpdated = true;
-    end
-    countX = countX+1;
+%         sequenceUpdated = true;
+%     end
+%     countX = countX+1;
     
-end
+% end
 % auto start seq here? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -446,9 +485,12 @@ S.listFromToday = uicontrol('style','list',...
 
 
 function [S] = setupExpt(varargin)
-% not in 'setup' because it could get called again (planned drop down menu)
+% not in 'setup' because it could get called again
 % if the user wants to reset the day.
 [S] = varargin{3};
+S.nHoursPre = get(S.nHourPrepp,'Value');
+S.nHoursPost = get(S.nHourPostpp,'Value');
+
 for iAnimal = 1:length(S.pp)
     S.experimentDrugManipulation(iAnimal) = get(S.pp(iAnimal),'Value'); % Get the user's choice.
     S.experimentDrugName{iAnimal} = S.Preselects{S.experimentDrugManipulation(iAnimal)};

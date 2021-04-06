@@ -1,7 +1,7 @@
-function [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(animalName,runICA,forceReRun)
+function [batchParams, mouseEphys_conn] = mouseEphys_wPLIAnalysis(animalName,forceReRun)
 %
 % Computes the debiased weighted phase-lag index (Vinvk et al 2011) for 
-% mouse ephys data from delirium project (either EEG or LFP). Workflow is 
+% Banks Lab mouse EEG data. Workflow is 
 %
 %   (a) get parameters for analysis using the function mouseDelirium_getBatchParamsByAnimal
 %   (b) loads the imported data, which must already be converted from TDT 
@@ -25,22 +25,60 @@ function [gBatchParams, gMouseEphys_conn] = mouseDelirium_WPLI_dbt_Synapse(anima
 % Analysis type 0: mean activity in each trial
 % animalName = 'EEG52';
 
-if ~exist('animalName','var')
-    error('At least select an animal');
-end
-if ~exist('runICA','var')
-    % use runICA option only for removing heart-rate noise
-    runICA = 0; 
+runICA = 0; % very rarely have to set this to true, determines if the heart rate analysis is run
+switch nargin
+    case 0
+        error('at least select an animal!');
+    case 1
+        forceReRun = 0; % default not to rerun experiments
 end
 
 fPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
+if ~exist([fPath animalName],'file')
+    error(['No ephys data found on W drive for ' animalName]);
+end
 
 % a) get parameters for analysis (accesses the eNotebook)
-gBatchParams = mouseDelirium_getBatchParamsByAnimal(animalName);
-eParams = gBatchParams.(animalName);
+batchParams = getBatchParamsByAnimal(animalName);
+eParams = batchParams.(animalName);
+
+% list of frequency bands
+bandNames = mouseEEGFreqBands.Names;
+bands = mouseEEGFreqBands;
+batchParams.(animalName).bandInfo = bands;
+
+% get number of channels and generate combinations of channels
+nChans = length(eParams.ephysInfo.chanNums);
+chanCmb = getWPLIChanCmbs(nChans);
+nChanCmbs = size(chanCmb,1);
+
+exptList = getExperimentsByAnimal(animalName);
+dates = unique(cellfun(@(x) x(1:5), exptList(:,1), 'UniformOutput',false),'stable');
+
+tempParams = load(EEGUtils.pliFile,'batchParams');
+
+iCount = 1;
+% If forceReRun is false, then just run analysis on dates which don't
+% appear in the data structure i.e. haven't been analyzed
+if ~forceReRun
+    for ii = 1:length(dates)
+        thisDate = ['date' dates{ii}];
+        try
+            if ~isfield(tempParams.batchParams.(animalName),thisDate)
+                eDates{iCount} = thisDate; % if not a field, populate this
+                iCount = iCount+1;
+            end
+        catch
+            eDates{ii} = thisDate;
+        end
+    end
+else
+    for ii = 1:length(dates)
+        eDates{ii} = ['date' dates{ii}];
+    end
+end
 
 trial_l = 0.5; %length of trial that windows are divided into: sec
-
 windowLength = 20; %sec
 windowOverlap = 0.25; %amount of overlap (0.25 = 25%)
 
@@ -53,46 +91,17 @@ maxSDCriterion = 0.5;
 minSDCriterion = 0.2;
 rejectAcrossChannels = 1;
 
-nChans = length(eParams.ephysInfo.chanNums); % !TODO! % do we want to get nChans from the number of channels entered in DB instead?
-
-% Main analysis loop: divide into trials, no behavior parsing
-chanCmb = zeros(nChans*(nChans-1)/2,2);
-iCount = 0;
-for iChan = 1:nChans-1
-    for jChan = iChan+1:nChans
-        iCount = iCount+1;
-        chanCmb(iCount,1) = iChan;
-        chanCmb(iCount,2) = jChan;
-    end
-end
-nChanCmbs = size(chanCmb,1);
-
+%Set window length and overlap
 eParams.windowLength = windowLength;
 eParams.windowOverlap = windowOverlap;
-tempFields = fieldnames(eParams)';
- 
-%Check the MATLAB version before using field names to generate list of recording dates
-%WARNING: This section still crashes in 2015. 
-% ver = version;
-% if str2double(ver(end-3:end-2)) < 16 
-%     eDates = tempFields(strfind(tempFields,'date')); %for matlab versions <2016
-% else
-eDates = tempFields(contains(tempFields,'date')); %Only use for >2016b
-% end
 
-if ~forceReRun
-    eDates = eDates(end); %if false, only do most recent expt
-end
-
-if ~exist([fPath animalName],'file')
-    error(['No ephys data for ' animalName]);
-end
-
-for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
-    thisDate = eDates{iDate};       %eDates{end};      
+% Main analysis loop: divide into trials, no behavior parsing
+for iDate = 1:length(dates)
+    thisDate = ['date' dates{iDate}]; %concatenate date          
     disp('------------------------');
     disp(['Animal ' animalName ' - Date: ' thisDate]);
     disp('------------------------');
+    try
     nExpts = length(eParams.(thisDate).exptIndex); %NOTE: If using for earlier data, eParams needs to be "curated"
 
     %expts correspond to the TDT recording files, i.e. 000, 001, etc
@@ -104,56 +113,12 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
         % loadedData is matrix of nChan x nSamples
         [loadedData,eParams] = loadMouseEphysData(eParams,thisDate,iExpt);
 
-        %Load behav data, divide into segments w/ overlap,
-        %calculate mean of each segment
-        fileFound = 0;
+        % This section segments in the movement data into windows the
+        % same length as the wPLI data. 
         fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
-                    '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat']; %changed 5/17
-        try
-            load(['W:\Data\' fileNameStub],'finalLEDTimes','finalMovementArray','frameTimeStampsAdj');
-            fileFound = 1;
-        catch
-            try
-                load(['M:\' fileNameStub],'finalLEDTimes','finalMovementArray','frameTimeStampsAdj');
-                fileFound = 1;
-            catch
-                warning('No movement data found. Continuing without.');
-            end
-        end
-
-        if ~fileFound
-            meanMovementPerWindow = zeros(10000,1);
-            meanMovementPerWindow(:,:) = NaN;
-        else
-            indexLength = frameTimeStampsAdj(end); 
-
-            for iWindow = 1:indexLength
-                if ((iWindow-1)*windowLength)*(1-windowOverlap) + windowLength < indexLength
-                    windowTimeLims(iWindow,1) = ((iWindow-1)*windowLength)*(1-windowOverlap);
-                    windowTimeLims(iWindow,2) = ((iWindow-1)*windowLength)*(1-windowOverlap) + windowLength;
-                end
-            end
-            for iWindow = 1:size(windowTimeLims,1)
-                timeStampsInWindow = frameTimeStampsAdj(frameTimeStampsAdj <= windowTimeLims(iWindow,2));
-                timeStampsInWindow = timeStampsInWindow(timeStampsInWindow >= windowTimeLims(iWindow,1));
-                if ~isempty(timeStampsInWindow)
-                    for iFrame = 1:length(timeStampsInWindow)
-                        framesToUse(iFrame) = find(frameTimeStampsAdj == timeStampsInWindow(iFrame));
-                    end
-                    meanMovementPerWindow(iWindow,1) = mean(finalMovementArray(framesToUse));
-                else
-                    meanMovementPerWindow(iWindow,1) = NaN;
-                end
-                clear timeStampsInWindow framesToUse
-            end
-
-        end
-        % the movement array used to be added to each individual band
-        % field, but now we're just placing the array higher in the
-        % structure...
-        gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow;
-        disp('Movement calculated & added to ephys structure');
-
+                    '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat']; 
+        [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(fileNameStub,windowLength,windowOverlap);
+        
         % Now convert to FieldTrip format:
         [data_MouseEphys] = convertMouseEphysToFTFormat(loadedData,eParams,thisDate,iExpt);
 
@@ -170,7 +135,7 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
 
         %Remove heart rate noise using ICA
         if runICA || strcmp(animalName,'EEG18')
-            [data_MouseEphysDS,badcomp.thisExpt] = runICAtoRemoveECG(gBatchParams,data_MouseEphysDS,animalName,thisDate,thisExpt);
+            [data_MouseEphysDS,badcomp.thisExpt] = runICAtoRemoveECG(batchParams,data_MouseEphysDS,animalName,thisDate,thisExpt);
         end
 
         tempData = cell2mat(data_MouseEphysDS.trial);
@@ -211,8 +176,8 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
             display(['Cumulative accepted trials = ' num2str(sum(nonRejects_all))]);
         end
         clear tempSD tempMax
-        windowsToUse = 1:length(nonRejects_all);
-        windowsToUse = windowsToUse(nonRejects_all == 1);
+        theseTrials = 1:length(nonRejects_all);
+        theseTrials = theseTrials(nonRejects_all == 1);
 
         %End of video is cut off or one extra ephys trial than video b/c of resolution, so manually cutting off
         %ephys trials with no associated video
@@ -220,15 +185,15 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
             strcmp(animalName,'EEG39') && strcmp(thisDate,'date17622') && strcmp(thisExpt,'expt002') || ...
             strcmp(animalName,'EEG47') && strcmp(thisDate,'date18309') && strcmp(thisExpt,'expt004') || ...
             strcmp(animalName,'EEG49') && strcmp(thisDate,'date18328') && strcmp(thisExpt,'expt002')
-            windowsToUse = windowsToUse(windowsToUse <= length(meanMovementPerWindow));
+            theseTrials = theseTrials(theseTrials <= length(meanMovementPerWindow));
 
         %Headstage became unplugged during index so manually removing these trials based on sudden spike in power
         elseif strcmp(animalName,'EEG33') && strcmp(thisDate,'date17530') && strcmp(thisExpt,'expt004')
-            windowsToUse(ismember(windowsToUse,find(eParams.(thisDate).trialInfo(4).trialTimesRedef(:,1)>390 & ...
+            theseTrials(ismember(theseTrials,find(eParams.(thisDate).trialInfo(4).trialTimesRedef(:,1)>390 & ...
                 eParams.(thisDate).trialInfo(4).trialTimesRedef(:,2)<727))) = [];
     %                         windowsToUse(131:242) = [];
         elseif strcmp(animalName,'EEG34') && strcmp(thisDate,'date17601') && strcmp(thisExpt,'expt004')
-            windowsToUse(ismember(windowsToUse,find(eParams.(thisDate).trialInfo(4).trialTimesRedef(:,1)>1773 & ...
+            theseTrials(ismember(theseTrials,find(eParams.(thisDate).trialInfo(4).trialTimesRedef(:,1)>1773 & ...
                 eParams.(thisDate).trialInfo(4).trialTimesRedef(:,2)<2371))) = [];
     %                         windowsToUse(592:790) = [];
         end
@@ -236,7 +201,7 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
         %For each window, divide into trials of length trial_l and calculate wPLI for each segment
         firstWindow = 1;
         for iWindow = 1:nWindows
-            if sum(ismember(iWindow,windowsToUse))>0
+            if sum(ismember(iWindow,theseTrials))>0
                 thisWindow = iWindow;
 
                 seg_dat = [];
@@ -254,14 +219,14 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
                 seg_dat   = ft_redefinetrial(cfg, seg_dat);
                 nTrials = length(seg_dat.trial);
 
-                for iBand = 1:length(mouseDeliriumFreqBands.Names)
-                    thisBand = mouseDeliriumFreqBands.Names{iBand};
+                for iBand = 1:length(bandNames)
+                    thisBand = bandNames{iBand};
                     if firstWindow
-                        gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).(thisBand).connVal = NaN(nWindows,nChans*(nChans-1)/2);
-                        gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).(thisBand).connSEM = NaN(nWindows,nChans*(nChans-1)/2);
+                        mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).connVal = NaN(nWindows,nChans*(nChans-1)/2);
+                        mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).connSEM = NaN(nWindows,nChans*(nChans-1)/2);
                     end
-                    bw = mouseDeliriumFreqBands.Widths.(thisBand);
-                    freqRange = mouseDeliriumFreqBands.Limits.(thisBand);
+                    bw = bands.Widths.(thisBand);
+                    freqRange = bands.Limits.(thisBand)
                     for iTrial = 1:nTrials
                         bandTFR=dbt(seg_dat.trial{iTrial}',seg_dat.fsample,bw,'offset',freqRange(1),'lowpass',freqRange(2)-bw);
                         if iTrial==1
@@ -274,21 +239,41 @@ for iDate = 1:length(eDates) %may want to fix this just so most recent date runs
                     csdDum = squeeze(mean(csdDum,4));
                     csdDum = gather(csdDum); %transferring the 'gpuArray' to local workspace with the 'gather' function:
                     [wpli,sem] = my_wPLI(csdDum);
+                    [dwpli,dsem] = my_DwPLI(csdDum);
                     %wPLI is returned as n_ChannCmb x nFreqs. Need to reshape back to
                     %nChanXnChan, and take average across frequency
                     tempWPLI = mean(wpli,2)';
                     tempSEM = mean(sem,2)';
-                    gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).(thisBand).connVal(iWindow,:) = tempWPLI;
-                    gMouseEphys_conn.WPLI.(animalName).(thisDate).(thisExpt).(thisBand).connSEM(iWindow,:) = tempSEM;
+                    
+                    tempdWPLI = mean(dwpli,2)';
+                    tempdSEM = mean(dsem,2)';
+                    
+                    mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).connVal(iWindow,:) = tempWPLI;
+                    mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).connSEM(iWindow,:) = tempSEM;
+                
+                    mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).DconnVal(iWindow,:) = tempdWPLI;
+                    mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).DconnSEM(iWindow,:) = tempdSEM;
+                    
                 end %bands
                 firstWindow = 0;
             end   
-        end %loop over windows  
+        end %loop over windows 
+        
+        % addd windowed movement data to structure
+        mouseEphys_conn.(animalName).(thisDate).(thisExpt).activity = meanMovementPerWindow; %should I be worried about not excluding rejected trials from this?
+
     end %Loop over expts
 
     % Add in new params info to output batchParams structure
-    gBatchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
+    batchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     toc
+    catch why
+        %keyboard
+        warning(why.message);
+    end
 end %loop over dates
+
+% save data
+saveBatchParamsAndEphysConn(batchParams,mouseEphys_conn); 
 
 end

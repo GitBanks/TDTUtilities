@@ -5,18 +5,23 @@ function saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out)
 % 2. add updated animal
 % 3. save
 
+<<<<<<< HEAD
 % Hardcoded :( please consider making a config file...
 % outFileName = 'mouseEphys_out_noParse_4secPSD_delirium.mat';
 outFileName = 'mouseEphys_out_noParse_nu.mat';
 computerSpecPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
+=======
+specFile = EEGUtils.specFile;
 
-% if ~exist([computerSpecPath outFileName],'file')
-%     error([outFileName ' does not exist! check path.'])
-% end
+if ~exist(specFile,'file')
+    error([specFile ' does not exist! check path.'])
+end
+>>>>>>> 755eb0edd6bf7a1fda6c5f65db80bdc8da860fb6
+
 try
-    load([computerSpecPath outFileName],'mouseEphys_out','batchParams');
+    load(specFile,'mouseEphys_out','batchParams');
 catch
-    warning([computerSpecPath outFileName ' not found. Creating new save file']);
+    warning([specFile ' not found. Creating new save file']);
 end
 
 gName = fieldnames(gBatchParams);
@@ -24,9 +29,12 @@ gName = gName{1,1};
 dates = fieldnames(gMouseEphys_out.(gName));
 
 batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
+<<<<<<< HEAD
 % batchParams.(gName).bandInfo = gBatchParams.(gName).bandInfo;
 batchParams.(gName).windowLength = gBatchParams.(gName).windowLength;
 batchParams.(gName).windowOverlap = gBatchParams.(gName).windowOverlap;
+=======
+>>>>>>> 755eb0edd6bf7a1fda6c5f65db80bdc8da860fb6
 
 for iDate = 1:length(dates)
     thisDate = dates{iDate};
@@ -34,7 +42,7 @@ for iDate = 1:length(dates)
     mouseEphys_out.(gName).(thisDate) = gMouseEphys_out.(gName).(thisDate);
 end
 
-save([computerSpecPath outFileName],'mouseEphys_out','batchParams');
+save(specFile,'mouseEphys_out','batchParams');
 disp('mouseEphys_out and batchParams saved!');
 
 
