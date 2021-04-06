@@ -3,8 +3,6 @@ function [nGlobalPars,globalParNames,globalParVals]= getGlobalStimParams(exptDat
 % exptDate = '14520'
 % exptIndex = '003'
 
-
-% turn this into a function??
 dbConn = dbConnect(); %handle this better?  close db at end?
 masterResult = fetchAdjust(dbConn,['select exptID from masterexpt where exptDate=''' houseConvertDateTo_dbForm(exptDate) ''' and exptIndex=' num2str(str2num(exptIndex))]);
 exptID = masterResult{1,1};
