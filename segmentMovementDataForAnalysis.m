@@ -1,6 +1,8 @@
-function [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(fileNameStub,windowLength,windowOverlap)
+function [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(thisDate,thisExpt,windowLength,windowOverlap)
 % Load behav data, divide into segments w/ overlap,calculate mean of each segment
 fileFound = 0;
+fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
+    '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat'];
 try
     load(['\\144.92.218.131\Data\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj');
     fileFound = 1;
