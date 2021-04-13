@@ -3,6 +3,10 @@ function saveMagnetDataFiles(exptDate,Animal1,Animal2)
 % animals = {'EEG150','EEG151'};%first one must be tank file animal
 % animals = {'EEG152','EEG153'};
 % animals = {'EEG154','EEG155'};
+%saveMagnetDataFiles('21401', 'EEG181', 'EEG183');
+% animal1 = {'EEG181', 'EEG183'};
+% exptDate = '21401'
+
 
 if ~exist('Animal2','var')
     animals = {Animal1};
@@ -62,6 +66,10 @@ for ianimal = 1:length(animals)
         path = ['M:\PassiveEphys\20' exptDate(1:2) '\' date '-' idx '\'];
         
 %         path = ['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\'];
+        if ~exist(path)
+            mkdir(path)
+        end
+
         save([path filename],'magData','magDT');
         clear tank magData magDT
         catch why
