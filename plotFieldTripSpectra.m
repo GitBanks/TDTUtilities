@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-function [fname] = plotFieldTripSpectra(animalList,ephysData,params)
-%Plot spectra from fieldTrip output of mouseDelirium_specAnalysis.m for all treatments/experiments. 
-=======
-function [fileName] = plotFieldTripSpectra(animalList,mouseEphys_out,batchParams)
+function [fileName] = plotFieldTripSpectra(animalList,ephysData,params)
 % Plot spectra from fieldTrip output of mouseEphys_specAnalysis.m for all treatments/experiments. 
->>>>>>> 755eb0edd6bf7a1fda6c5f65db80bdc8da860fb6
 
 % animalList must be a cell array of animal names; savePlots is a toggle to save the figure automatically,
 % mouseEphys_out is the saved output from the spec analysis output structure; batchParams are user-generated descriptions of expt. - ZS 18n14 
@@ -12,15 +7,8 @@ function [fileName] = plotFieldTripSpectra(animalList,mouseEphys_out,batchParams
 % % test case % %
 % animalList = {'EEG57'}; 
 
-<<<<<<< HEAD
 if ~exist('ephysData','var') || ~exist('params','var')
     [ephysData,params] = loadEphysData('power');
-%     load('W:\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse_nu.mat','mouseEphys_out','batchParams')
-=======
-% if not entered, load the saved data file (warning: hardcoded)
-if ~exist('mouseEphys_out','var')
-    load('W:\Data\PassiveEphys\EEG animal data\mouseEphys_out_psychedelics.mat','mouseEphys_out','batchParams')
->>>>>>> 755eb0edd6bf7a1fda6c5f65db80bdc8da860fb6
 end
 
 if ~exist('animalList','var')
@@ -34,33 +22,12 @@ addpath('M:\Ziyad\');
 colorOrder = colorZ; % updated 1/24/2019
 for iAnimal = 1:length(animalList)
     thisName = animalList{iAnimal};
-<<<<<<< HEAD
-    %updated 1/24/2019 to avoid error due to mismatch in batchParams and
-    %ephysData for LFP9... 
-    ephysDates = fieldnames(ephysData.(thisName));
-    batchDates = fieldnames(params.(thisName));
-    batchDates = batchDates(contains(batchDates,'date'));
-    theseDates = intersect(ephysDates,batchDates);
-    
-    chanLabels = params.(thisName).ephysInfo.chanLabels;
-    maxForPlot = 10^-3.5;
-    minForPlot = 10^-7;
-    for iDate = 1:length(theseDates)
-        thisDate = theseDates{iDate};
-        thisTreat = params.(thisName).(thisDate).treatment;
-        thisTreat = strrep(thisTreat,'_conc','');
-        thisTreat = strrep(thisTreat,'0p9_vol','');
-        if size(thisTreat,2) > 1 
-%             thisTreat = thisTreat{1};
-            if iscell(thisTreat)
-                treatStr = sprintf('%s + %s', thisTreat{:});
-=======
     
     % get chan info
-    chanLabels = batchParams.(thisName).ephysInfo.chanLabels;
+    chanLabels = params.(thisName).ephysInfo.chanLabels;
     
     % note: these need to be sorted chronologically
-    theseDates = fieldnames(mouseEphys_out.(thisName));
+    theseDates = fieldnames(ephysData.(thisName));
 %     theseDates = checkDateChronology(ephysDates);  
      
     % loop through each date and save a new figure for each
@@ -68,12 +35,11 @@ for iAnimal = 1:length(animalList)
         try
             thisDate = theseDates{iDate};
             % format treatment... TODO: simplify this
-            thisTreat = batchParams.(thisName).(thisDate).treatment;
+            thisTreat = params.(thisName).(thisDate).treatment;
             thisTreat = strrep(thisTreat,'_conc','');
             thisTreat = strrep(thisTreat,'0p9_vol','');
             if size(thisTreat,2) > 1
                 treatStr = strjoin(thisTreat,' + ');
->>>>>>> 755eb0edd6bf7a1fda6c5f65db80bdc8da860fb6
             else
                 if iscell(thisTreat)
                     treatStr = thisTreat{:};
@@ -86,51 +52,27 @@ for iAnimal = 1:length(animalList)
             
             % set color order for current figure. These are colors I like - ZS 19124
             set(gcf,'DefaultAxesColorOrder',colorOrder);
-            expts = fieldnames(mouseEphys_out.(thisName).(thisDate));
+            expts = fieldnames(ephysData.(thisName).(thisDate));
             
             % times relative to injection (used to label each trace in the legend)
-            timeReInj = batchParams.(thisName).(thisDate).timeReInj;
+            timeReInj = params.(thisName).(thisDate).timeReInj;
             for iTime = 1:length(timeReInj)
                 timeStr{iTime} = ['hr ' num2str(timeReInj(iTime))];
             end
-<<<<<<< HEAD
-        end
-        figureName = ([thisName ' - ' thisDate ' - ' treatStr ' - no parse']);
-        figH = figure('Name',figureName);
-        
-        set(gcf,'DefaultAxesColorOrder',colorOrder); %set color order for current figure. These are colors I like - ZS 19124 
-        expts = fieldnames(ephysData.(thisName).(thisDate));
-        
-        timeReInj = params.(thisName).(thisDate).timeReInj;
-        for iTime = 1:length(timeReInj)
-            timeStr{iTime} = ['hr ' num2str(timeReInj(iTime))];
-        end
-        
-        iCount = 1;
-        for iChan = [4 1 3 2] %Plots AL AR PL PR in 2x2 subplots (in that order) - 18n13 ZS 
-            subH(iChan) = subtightplot(2,2,iCount,[.04 .04],[.1 .04],[.1 .04]);
-            
-            for iExpt = 1:size(expts,1)
-                thisExpt = expts{iExpt};
-                if ~isempty(ephysData.(thisName).(thisDate).(thisExpt).spec)
-                    f = ephysData.(thisName).(thisDate).(thisExpt).spec.freq;
-                    p = ephysData.(thisName).(thisDate).(thisExpt).spec.powspctrm(iChan,:);
-                    loglog(f,p,'LineWidth',1.5);
-=======
-            
+
             iCount = 1;
             for iChan = [4 1 3 2] %Plots AL AR PL PR in 2x2 subplots (in that order) - 18n13 ZS
                 subH(iChan) = subtightplot(2,2,iCount,[.04 .04],[.1 .12],[.1 .04]);
                 
                 for iExpt = 1:size(expts,1)
                     thisExpt = expts{iExpt};
-                    if ~isempty(mouseEphys_out.(thisName).(thisDate).(thisExpt).spec)
-                        f = mouseEphys_out.(thisName).(thisDate).(thisExpt).spec.freq;
-                        p = mouseEphys_out.(thisName).(thisDate).(thisExpt).spec.powspctrm(iChan,:);
+                    if ~isempty(ephysData.(thisName).(thisDate).(thisExpt).spec)
+                        f = ephysData.(thisName).(thisDate).(thisExpt).spec.freq;
+                        p = ephysData.(thisName).(thisDate).(thisExpt).spec.powspctrm(iChan,:);
                         loglog(f,p,'LineWidth',1.5);
                     end
                     hold on
->>>>>>> 755eb0edd6bf7a1fda6c5f65db80bdc8da860fb6
+
                 end
                 title([chanLabels{iChan} ' (' num2str(iChan) ')']);
                 
