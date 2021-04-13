@@ -3,9 +3,8 @@ function [batchParams, mouseEphys_conn] = mouseEphys_wPLIAnalysis(animalName,for
 % Computes the debiased weighted phase-lag index (Vinvk et al 2011) for 
 % Banks Lab mouse EEG data. Workflow is 
 %
-%   (a) get parameters for analysis using the function mouseDelirium_getBatchParamsByAnimal
-%   (b) loads the imported data, which must already be converted from TDT 
-%   to Matlab format and down-sampled, using loadMouseEphysData
+%   (a) get parameters for analysis using the function getBatchParamsByAnimal
+%   (b) loads the imported data using loadMouseEphysData
 %   (c) convert data to FieldTrip compatible format using convertMouseEphysToFTFormat
 %   (d) break the continuous recording into segments using ft_redefinetrial
 %   (e) downsample the data further to save processing time using ft_resampledata
@@ -13,7 +12,8 @@ function [batchParams, mouseEphys_conn] = mouseEphys_wPLIAnalysis(animalName,for
 %   (g) using the spectral coefficients from (f), compute the debiased WPLI
 %   using ft_connectivityanalysis. The WPLI takes a value in [0, 1] that can be interpreted as evidence for a
 %   consistent phase relationship between the signals
-%
+%   (h)  save mouseEphys_conn and batchParams to output file
+
 %   References:
 %   [1] Vinck, M., Oostenveld, R., Van Wingerden, M., Battaglia, F., & Pennartz, C. M. (2011). 
 %   An improved index of phase-synchronization for electrophysiological data in the presence of volume-conduction, 
@@ -21,21 +21,19 @@ function [batchParams, mouseEphys_conn] = mouseEphys_wPLIAnalysis(animalName,for
 %   [2] Kovach, C. K., & Gander, P. E. (2016). The demodulated band transform. 
 %   Journal of neuroscience methods, 261, 135-154.
 
-% General parameters
-% Analysis type 0: mean activity in each trial
-% animalName = 'EEG52';
+% input parameters:
+% animalName as the animal ID character string, e.g., 'EEG170';
+% forceReRun is a boolean (true or false) 
 
-runICA = 0; % very rarely have to set this to true, determines if the heart rate analysis is run
+ignoreMovement = 0; % set equal to 1 to ignore movement analysis
+runICA = 0; % determines if the ICA denoising procedure is run, rarely have 
+% to set this to true (only if we see heartrate noise) 
+
 switch nargin
     case 0
         error('at least select an animal!');
     case 1
-        forceReRun = 0; % default not to rerun experiments
-end
-
-fPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
-if ~exist([fPath animalName],'file')
-    error(['No ephys data found on W drive for ' animalName]);
+        forceReRun = 0; % default not to rerun analysis
 end
 
 % a) get parameters for analysis (accesses the eNotebook)
@@ -113,11 +111,17 @@ for iDate = 1:length(dates)
         % loadedData is matrix of nChan x nSamples
         [loadedData,eParams] = loadMouseEphysData(eParams,thisDate,iExpt);
 
-        % This section segments in the movement data into windows the
-        % same length as the wPLI data. 
-        fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
-                    '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat']; 
-        [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(fileNameStub,windowLength,windowOverlap);
+        % Load video-derived movement, divide into segments w/ overlap, calculate mean of each segment
+        if ignoreMovement % movement will not be added if this is = 1!!!
+            meanMovementPerWindow = nan(240,1); % TODO: maybe rethink how the non-movement condition is handled
+        else
+            try
+                [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(thisDate,thisExpt,windowLength,windowOverlap);
+            catch
+                warning('failed to segment movement data, will now ignore movement analysis');
+                ignoreMovement = 1; % set equal to 1 to ignore movement analysis
+            end
+        end
         
         % Now convert to FieldTrip format:
         [data_MouseEphys] = convertMouseEphysToFTFormat(loadedData,eParams,thisDate,iExpt);
@@ -226,7 +230,7 @@ for iDate = 1:length(dates)
                         mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).connSEM = NaN(nWindows,nChans*(nChans-1)/2);
                     end
                     bw = bands.Widths.(thisBand);
-                    freqRange = bands.Limits.(thisBand)
+                    freqRange = bands.Limits.(thisBand);
                     for iTrial = 1:nTrials
                         bandTFR=dbt(seg_dat.trial{iTrial}',seg_dat.fsample,bw,'offset',freqRange(1),'lowpass',freqRange(2)-bw);
                         if iTrial==1
@@ -239,18 +243,19 @@ for iDate = 1:length(dates)
                     csdDum = squeeze(mean(csdDum,4));
                     csdDum = gather(csdDum); %transferring the 'gpuArray' to local workspace with the 'gather' function:
                     [wpli,sem] = my_wPLI(csdDum);
-                    [dwpli,dsem] = my_DwPLI(csdDum);
-                    %wPLI is returned as n_ChannCmb x nFreqs. Need to reshape back to
-                    %nChanXnChan, and take average across frequency
+                    
+                    % wpli is returned as n_ChannCmb x nFreqs. Need to reshape back to
+                    % nChanXnChan, and take average across frequency
                     tempWPLI = mean(wpli,2)';
                     tempSEM = mean(sem,2)';
-                    
-                    tempdWPLI = mean(dwpli,2)';
-                    tempdSEM = mean(dsem,2)';
-                    
+
                     mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).connVal(iWindow,:) = tempWPLI;
                     mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).connSEM(iWindow,:) = tempSEM;
-                
+                    
+                    % calculate directed phase lag index... work in progress - March 2021 ZS
+                    [dwpli,dsem] = my_DwPLI(csdDum);
+                    tempdWPLI = mean(dwpli,2)';
+                    tempdSEM = mean(dsem,2)';
                     mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).DconnVal(iWindow,:) = tempdWPLI;
                     mouseEphys_conn.(animalName).(thisDate).(thisExpt).(thisBand).DconnSEM(iWindow,:) = tempdSEM;
                     
