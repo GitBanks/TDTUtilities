@@ -59,32 +59,36 @@ for iDate = 1:length(dateList)
         end
     end
     
-    % set drug treatment and dose information
-    isDiff = false(size(parVals)); % logical array for whether next element differs from subsequent element
-
-    if size(parNames) > 1
-        for ii = 1:size(parNames,2)
-            pars.expt(iDate).treatment(ii) = unique(parNames(:,ii));
-            pars.expt(iDate).dose{ii} = max(parVals(:,ii));
-            
-            % determine which indices occurred directly after injection period
-            % look through parVals and see when dose changed -> this 
-            % indicates that an injection occurred just before this index 
-            for jj = 2:size(parVals,1) % loop through number of indices
-                isDiff(jj,ii) = parVals(jj,ii) ~= parVals(jj-1,ii);
+    if exist('parVals','var')
+        % set drug treatment and dose information
+        isDiff = false(size(parVals)); % logical array for whether next element differs from subsequent element
+        
+        if size(parNames) > 1
+            for ii = 1:size(parNames,2)
+                pars.expt(iDate).treatment(ii) = unique(parNames(:,ii));
+                pars.expt(iDate).dose{ii} = max(parVals(:,ii));
+                
+                % determine which indices occurred directly after injection period
+                % look through parVals and see when dose changed -> this
+                % indicates that an injection occurred just before this index
+                for jj = 2:size(parVals,1) % loop through number of indices
+                    isDiff(jj,ii) = parVals(jj,ii) ~= parVals(jj-1,ii);
+                end
+                if sum(isDiff(:,1))~=0
+                    pars.expt(iDate).indexPostInj(ii) = indices(isDiff(:,ii)); % index post injection
+                else
+                    % if no injection...
+                    pars.expt(iDate).indexPostInj(ii) = {''};
+                    warning('detected treatment info but no change in drug dose was detected');
+                end
             end
-            if sum(isDiff(:,1))~=0
-                pars.expt(iDate).indexPostInj(ii) = indices(isDiff(:,ii)); % index post injection
-            else
-                % if no injection...
-                pars.expt(iDate).indexPostInj(ii) = {''};
-                warning('detected treatment info but no change in drug dose was detected');
-            end
+        else
+            % fill with dummy variables if no treatment info entered
+            pars.expt(iDate).treatment = '';
+            pars.expt(iDate).dose = nan;
         end
     else
-        % fill with dummy variables if no treatment info entered
-        pars.expt(iDate).treatment = '';
-        pars.expt(iDate).dose = nan;
+        warning(['parVals not found ' animalName ' ' thisDate]);
     end
         
     % set timeReInj based on number of pre-injection periods
