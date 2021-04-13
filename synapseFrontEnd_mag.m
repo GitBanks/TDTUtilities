@@ -96,6 +96,7 @@ S.Preselects = {
     'Vehicle + Saline'
     '5-MeO-Pyr-T'
     '5-MeO-MiPT'
+    'Pyr-T'
     }; 
 % LEFT
 S.pp(1) = uicontrol('style','pop',...
@@ -109,7 +110,7 @@ S.pp(2) = uicontrol('style','pop',...
     'string',S.Preselects); 
 
 % allow number of hours pre and post to be edited here
-S.nHoursSelect = {'1','2','3','4','5','6','7','8'};
+S.nHoursSelect = {'1','2','3','4','5','6','7','8','9','10','25'};
 uicontrol('style','text',...
     'units','pix',...
     'position',[50 670 70 20],...
@@ -151,6 +152,7 @@ uiwait(S.fh);  % everything set up now. wait for button pushes or exit.
 % END OF PROGRAM %
 if S.enableMultiThread; delete(gcp); end % important to turn off multithreading; if crashed, will need to manually stop this!
 synapseDisconnect(S.syn); % disconnect from synapse
+%fileMaint_Mag(S.exptDate{1},S.aa(1).String{S.animalNumber(1)},S.aa(1).String{S.animalNumber(2)});
 
 
 % ! TODO ! %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! We may want to run fileMaint (when finished as a function)
