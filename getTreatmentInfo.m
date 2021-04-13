@@ -22,7 +22,7 @@ for jj = 1:size(treatments.vals,1) % loop though number of treatments (first dim
         treatments.injIndex(jj,ii) = treatments.vals(jj,ii) ~= treatments.vals(jj,ii-1);
     end
     if sum(treatments.injIndex(jj,:)) ~= 1
-        warning('injection data seems incomplete - no inj time detected!');
+        disp('WARNING! injection data seems incomplete - no inj time detected!');
     end
 end
 %TODO: add check for treatments.pars to be sure of consistancy: error('injection data has been entered incorrectly');

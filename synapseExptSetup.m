@@ -38,9 +38,11 @@ end
 
 if ~usesIso || (useStims && ~usesIso)
     indexSubdivisions = {'a','b','c','d'};
-    indexDescriptionSequence(1:nHoursPre) = {'Pre-Inj'};
-    indexDescriptionSequence(nHoursPre+1:nHoursPost+nHoursPre) = {'Post-Inj'};
     
+        indexDescriptionSequence(1:nHoursPre) = {'Pre-Inj'};
+    
+        indexDescriptionSequence(nHoursPre+1:nHoursPost+nHoursPre) = {'Post-Inj'};
+   
     indexDescriptionRECtype = {
     'Spon'
     'Stim'

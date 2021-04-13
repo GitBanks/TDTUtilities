@@ -151,8 +151,8 @@ parfor i = 1:size(frames,3)
     scaleframe = true(size(subframe));
     scaleframe(subframe>scale*.3) = 0;
     frames(:,:,i) = scaleframe;
-    %imshow(scaleframe);
-    %pause(.01);
+%     imshow(scaleframe);
+%     pause(.01);
 end
 
 % calculate average frame rate (fps) based on number of frames and time elapsed in sec

@@ -1,12 +1,14 @@
 function [indexDur,timeOfDay] = getTimeAndDurationFromIndex(thisDate,thisIndex)
 % test params
 % fileN = 'W:\Data\PassiveEphys\2020\20o08-000';
-% date='20o08'
-% index='001'
+% thisDate='21318'
+% thisIndex='002'
 thisDate = strrep(thisDate,'date','');
 try
 fileN = ['W:\Data\PassiveEphys\20' thisDate(1:2) '\' thisDate '-' thisIndex];
+
 dataX = TDTbin2mat(fileN,'TYPE',{'scalars'});
+
 if isempty(dataX)
     tempIndex = num2str(str2double(thisIndex)-1);
     while size(tempIndex) <3

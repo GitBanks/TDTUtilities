@@ -175,8 +175,10 @@ if ~useOutsideHeaders
         if ~exist(BLOCK_PATH, 'dir')
             error('block path %s not found', BLOCK_PATH)
         end
+        warning('off','all');
         warning('no TSQ file found, attempting to read SEV files')
         data = SEV2mat(BLOCK_PATH, varargin{:});
+        warning('on','all');
         return
     elseif length(tsqList) > 1
         error('multiple TSQ files found')
@@ -586,7 +588,7 @@ if ~useOutsideHeaders
             break
         end
     end
-    fprintf('read up to t=%.2fs\n', lastTS);
+    fprintf('TDTbin2mat read data in length of t=%.2fs\n', lastTS);
     
     % put epocs into headerStruct
     for ii = 1:numel(epocs.name)
