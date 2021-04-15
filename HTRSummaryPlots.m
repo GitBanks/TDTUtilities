@@ -44,11 +44,6 @@ subTable = subTable(5:end,:); % for now, based on our data, just exclude the rec
 
 
 % loop through expts of interest
-% TODO make animalData a table?
-% sz = [1 4];
-% varTypes = {'string','string','double','double'};
-% varNames = {'AnimalName','Date','TimeArray','EventArray'};
-% eventTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 animalData = struct();
 for iList = 1:size(subTable,1)
     disp(['Loading session ' num2str(iList) ' of ' num2str(size(subTable,1))]);
@@ -59,23 +54,34 @@ end
 
 
 
+
+
+animalData= mergeHTRExperimentInfo(animalData);
+
+
+
+
+
 % for animals with odd combinations of recording hours (DOI for now) find
 % appropriate spans to pool: all animals that share *exclusive* sets only
-acceptedPermutations = [1,2];
+%acceptedPermutations = [1,2,25];
+acceptedPermutations = [1,2,3,4,5,7,8,9];
+%acceptedPermutations = [1,2,3,4,9];
 
 for iList = 1:size(animalData,2)
-    animalData(iList).data.hourOfRecording == acceptedPermutations
-  
-    
-    
+    useThese = ismember(animalData(iList).data.hourOfRecording,acceptedPermutations);
+    if sum(useThese) ~= size(acceptedPermutations,2)
+        useThese = false(size(useThese));
+    end
+    theseFields = fields(animalData(iList).data);
+    for iFields = 2:size(theseFields,1)
+        trimmedAnimalData(iList).data.(theseFields{iFields}) = animalData(iList).data.(theseFields{iFields})(1,useThese);
+    end
 end
 
 
 
-
-
-
-
+clear hourData
 hourData(1:25) = struct();
 hourData(1).events = [];
 hourData(1).nMice = [];
@@ -83,68 +89,107 @@ hourData(1).maxLength = [];
 hourData(1).dt = [];
 %hourData.events = 0;
 % look in each list for all hours and start grouping events by those hours
-for iList = 1:size(animalData,2)
-    for iHour = 1:size(animalData(iList).data.hourOfRecording,2)
-        thisHour = animalData(iList).data.hourOfRecording(iHour);
-        hourData(thisHour).events = cat(1,hourData(thisHour).events,animalData(iList).data.eventArray(1,iHour).events);
+for iList = 1:size(trimmedAnimalData,2)
+    for iHour = 1:size(trimmedAnimalData(iList).data.hourOfRecording,2)
+        thisHour = trimmedAnimalData(iList).data.hourOfRecording(iHour);
+        hourData(thisHour).events = cat(1,hourData(thisHour).events,trimmedAnimalData(iList).data.eventArray(1,iHour).events);
         if isempty(hourData(thisHour).nMice)
             hourData(thisHour).nMice = 0;
             hourData(thisHour).maxLength = 0;
             hourData(thisHour).dt = 0;
         end
         hourData(thisHour).nMice = hourData(thisHour).nMice+1;
-        hourData(thisHour).maxLength = max(animalData(iList).data.timeLength(iHour),hourData(thisHour).maxLength);
-        hourData(thisHour).dt = animalData(iList).data.timeDT(iHour);
+        hourData(thisHour).maxLength = max(trimmedAnimalData(iList).data.timeLength(iHour),hourData(thisHour).maxLength);
+        hourData(thisHour).dt = trimmedAnimalData(iList).data.timeDT(iHour);
     end
 end
 
 
 
 figure();
-% nHours = 6; % grab this more intelligently in the future please
-nHours = 2;
+nHours = size(acceptedPermutations,2);
 plotIndex = 1;
-binSize = 2;  %in minutes
+binSize = 5;  %in minutes
+clear meanHist
+maxHistY = 0;
+maxMeanY = 0;
 for iHour = 1:size(hourData,2)
     if ~isempty(hourData(iHour).events)
-        
         hourData(iHour).events = sort(hourData(iHour).events); % units = seconds
-        
         binSizeMin = binSize*60;
         timeArray = (0:hourData(thisHour).dt:hourData(iHour).maxLength*hourData(thisHour).dt);
-        edges = timeArray(1):binSizeMin:timeArray(end); 
+        edges = timeArray(1):binSizeMin:timeArray(end);
+        centers = edges+(binSizeMin/2);
+        centers = centers(1:end-1);
         Y = discretize(hourData(iHour).events,edges);
         subtightplot(2,nHours,plotIndex);
-      
-        
-        histogram(Y,length(edges));
-        ylim([0,24]);
+        nBins = length(edges)-1;
+        histogram(Y,nBins);
+        %ylim([0,24]);
         if iHour ~=1; yticklabels([]); end
-        
         timeSteps = [ 15 30 45 ];
         xticks(timeSteps/binSize); % 2 min
         xticklabels({'15' '30' '45' });
-        
-        
-        
-        title(['Hour ' num2str(iHour) '  n=' num2str(hourData(iHour).nMice)]);
-        counts = hist(Y,length(edges));
+        if iHour == 1
+            ylabel('Cumulative HTR');
+            title(['Pre inj  n=' num2str(hourData(iHour).nMice)]);
+        else
+            title(['Hour ' num2str(iHour) '  n=' num2str(hourData(iHour).nMice)]);
+        end
+        counts = hist(Y,nBins);
+        maxHistY = max(maxHistY,max(counts));
         meanHist(plotIndex,:) = counts/hourData(iHour).nMice;
-        
         subtightplot(2,nHours,plotIndex+nHours);
-        plot(edges/60,smooth(counts/hourData(iHour).nMice));
-        ylim([0,3]);
+        smoothedMean = smooth(counts/hourData(iHour).nMice);
+        maxMeanY = max(maxMeanY,max(smoothedMean));
+%         err = zeros(1,length(smoothedMean));
+%         err(:) = std(smoothedMean)/(sqrt(hourData(iHour).nMice));
+        for iError = 1:size(counts,2)
+            err(iError) = std(smoothedMean)/(sqrt(counts(iError)));
+            %err(iError) = std(counts)/(sqrt(counts(iError)));
+        end
+        %errorbar(centers/60,smoothedMean,err,'*r');
+        plot(centers/60,smoothedMean,'*r');
+        
+        xlim([edges(1)/60,edges(end)/60]);
         if iHour ~=1; yticklabels([]); end
-        
-        
-        
+        if iHour == 1
+            ylabel('smoothed average of HTR')
+        end
         plotIndex = plotIndex+1;
+    end
+end
+plotIndex = 1;
+for iHour = 1:size(hourData,2)
+    if ~isempty(hourData(iHour).events)
+    subtightplot(2,nHours,plotIndex);
+    ylim([0,maxHistY*1.2]);
+    subtightplot(2,nHours,plotIndex+nHours);
+    ylim([0,maxMeanY*1.05]);
+    plotIndex = plotIndex+1;
     end
 end
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+% TODO make animalData a table?
+% sz = [1 4];
+% varTypes = {'string','string','double','double'};
+% varNames = {'AnimalName','Date','TimeArray','EventArray'};
+% eventTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 
 
 
@@ -167,14 +212,6 @@ end
 %     %xticklabels({'15' '30' '45' });
 % 
 % end
-
-
-
-
-
-
-
-
 
 
 

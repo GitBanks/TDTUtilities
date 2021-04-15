@@ -4,7 +4,8 @@ function timeStruct = getHTRExperimentInfoFromDateName(thisDate,thisName)
 %thisName = 'EEG181'
 
 timeStruct = struct();
-timeStruct.TimeArray(1) = 0;
+%timeStruct.TimeArray(1) = 0;
+timeStruct.animalName = thisName;
 timeStruct.eventArray(1).events = 0;
 outputList = getExperimentsByAnimalAndDate(thisName,thisDate);
 treatments = getTreatmentInfo(thisName,thisDate);
@@ -31,6 +32,7 @@ for iFile = 1:size(outputList,1)
     % - arrange into cleanedEventTimes
    
     timeStruct.eventArray(iFile).events =htrEventTimes(:);
+    
     clear htrEventTimes
 end
 
