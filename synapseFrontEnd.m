@@ -27,8 +27,8 @@ function [] = synapseFrontEnd(animalName)
 
 % ! TODO ! %  add a check to see if we can connect to recording computer path (sometimes network logs us out!) otherwise we can't guarantee importing will work consistantly
 % example path: \\144.92.237.187\c\Data\2018\
-S.enableMultiThread = 1; % for testing or using without parfor, set to 0
-S.recordingComputer = '144.92.237.183'; %'\\ANESBL2'; %
+S.enableMultiThread = 0; % for testing or using without parfor, set to 0
+S.recordingComputer = '144.92.237.187'; %'\\ANESBL2'; %
 S.recordingComputerSubfolder = '\Data\PassiveEphys\';%'\c\Data\';
 S.dbConn = dbConnect();
 % TODO % animalName is presently a parameter, but a menu selection might be better?  or auto-populate with recent (living) animal? 
@@ -147,7 +147,7 @@ elseif ~isempty(strfind(S.animalName,'EEG'))
     sponTime = 3610;
 else
     disp('I hope you didn''t plan to run any spontaneous recordings...')
-    sponTime = 610;
+    sponTime = 3610;
 end
 
 if S.enableMultiThread % this will make program unavailable until *both* 1 and 2 are finished completely.
@@ -191,18 +191,21 @@ updateDynamicDisplayBox('waiting for recording to complete');
 % spontaneous mode
 % TODO % may want to allow time adjustments
 if tempnStims == -1 % represents 'spontaneous' mode
-    tic
-    while waitingForUserToFinishRecording
-        elapsedTime = toc;
-        %pause(sponTime); % this will wait 10 minutes before proceeding (for spon mode)
-        % !!TODO!! % make this a parameter, setting, or something other than a
-        % hard-coded number!!
-        if (elapsedTime > sponTime) || (synapseObj.getMode ~= 3)
-            waitingForUserToFinishRecording = false;
-            synapseObj.setMode(0);
-        end
-        pause(1);
-    end
+    %tic
+    synapseRECDisplay(sponTime)
+    waitingForUserToFinishRecording = false;
+%     while waitingForUserToFinishRecording
+%         elapsedTime = toc;
+%         
+%         %pause(sponTime); % this will wait 10 minutes before proceeding (for spon mode)
+%         % !!TODO!! % make this a parameter, setting, or something other than a
+%         % hard-coded number!!
+%         if (elapsedTime > sponTime) || (synapseObj.getMode ~= 3)
+%             waitingForUserToFinishRecording = false;
+%             synapseObj.setMode(0);
+%         end
+%         pause(1);
+%     end
 end
 % evoked / stimulation mode
 while waitingForUserToFinishRecording
@@ -282,7 +285,7 @@ while ~sequenceUpdated
     S.syn.setMode(3); % recording set to auto start (3 is rec).
     pause(2); % reduced this from 4 8/30/18
     
-    if ~isempty(strfind(S.animalName,'EEG'))
+    if ~isempty(strfind(S.animalName,'EEG')) || ~isempty(strfind(S.animalName,'ZZ'))
         result = 1;
     else
         seqList = S.syn.getParameterValues('ParSeq1','SequenceFileList');
@@ -341,7 +344,8 @@ while ~connected
     try
         if ~isempty(strfind({'Idle', 'Standby', 'Preview', 'Record'},S.syn.getModeStr()))
             S.syn.setMode(2); % switch between states to test connectivity
-            if S.syn.setMode(0);
+            pause(3);
+            if S.syn.setMode(0)
                 connected = true;
             end
         end
