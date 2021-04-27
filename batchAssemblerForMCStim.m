@@ -11,7 +11,7 @@ function batchAssemblerForMCStim(date,index)
 %date = '21309';
 %index = '001';
 nTrialsPerStim = 20;
-stimArray = [100,300,500,700,-100,-300,-500,-700];
+stimArray = [50,100,150,200,300,400,500,600];
 %must make a stim in MC to correspond with the above stims
 %stimArray = [10,50,100,200,300,400,500,600,700,-10,-50,-100,-200,-300,-400,-500,-600,-700];
 [date,index] = fixDateIndexToFiveForSynapse(date,index);
@@ -20,7 +20,7 @@ stimArray = [100,300,500,700,-100,-300,-500,-700];
 %IMPORTANT: fopen or Windows permissions to Matlab DO NOT like it when you
 %try to address this thorough the network.  If we ever run this on a remote
 %computer there will be trouble when switching to the format above.
-fileName = ['c:\Users\Ziyad Sultan\Documents\Multi Channel Systems\' date '-' index '.stb']; %BAD BAD BAD HARDCODING
+fileName = ['\\NESSUS\Users\LabRat\Documents\Multi Channel Systems\' date '-' index '.stb']; %BAD BAD BAD HARDCODING
 trialPattern = createTrialPattern(length(stimArray),nTrialsPerStim);
 
 [fid errMsg]= fopen(fileName,'w');
@@ -33,7 +33,7 @@ fprintf(fid, '%s\n',['Batch Control File']);
 fprintf(fid, '%s\n',['Version 1.00']);
 
 for iTrial = 1:length(trialPattern)
-    fprintf(fid, '%s\n', ['C:\Users\Ziyad Sultan\Documents\Multi Channel Systems\batchStimRespCurve\' num2str(stimArray(trialPattern(iTrial))) '.stm']);
+    fprintf(fid, '%s\n', ['C:\Users\LabRat\Documents\Multi Channel Systems\batchStimRespCurve\' num2str(stimArray(trialPattern(iTrial))) '.stm']);
 end
 
 saveFileRoot = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
