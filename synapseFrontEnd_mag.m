@@ -97,6 +97,8 @@ S.Preselects = {
     '5-MeO-Pyr-T'
     '5-MeO-MiPT'
     'Pyr-T'
+    '6-FDET'
+    '4-AcO-DMT'
     }; 
 % LEFT
 S.pp(1) = uicontrol('style','pop',...

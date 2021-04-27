@@ -8,66 +8,75 @@
 % WORKING PLAN: use the notebookDesc to tag which index is associated with
 % what experiment
 
-
 clear all
 % we have a few different conditions for each drug type.  A pop-up
 % selection thing could make this cleaner, but this works for now.
 % presumably this  will be arranged by database tags or something
 % clever, otherwise we're stuck making lists each time we need a summary
-% ========================
-treatment = 'DOI_conc';
-selection = 2; % selection is a choice of drug combinations
-dateTable = getDateAnimalUniqueByTreatment(treatment);
-excludeAnimal = 'ZZ05'; % there should really be a 'hasMagnet' flag in the database
-dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
-plotsToMake = unique(dateTable.DrugList);
-subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
-subTable = subTable(5:end,:); % for now, based on our data, just exclude the recording lengths that don;t fit together
-
-% ========================
+% % ========================
+% treatment = 'psilocybin';
+% selection = 6; % selection is a choice of drug combinations
+% dateTable = getDateAnimalUniqueByTreatment(treatment);
+% plotsToMake = unique(dateTable.DrugList);
+% subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
+% acceptedPermutations = [1,2];
+% % ========================
+% treatment = 'DOI_conc';
+% selection = 2; % selection is a choice of drug combinations
+% dateTable = getDateAnimalUniqueByTreatment(treatment);
+% excludeAnimal = 'ZZ05'; % there should really be a 'hasMagnet' flag in the database
+% dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+% plotsToMake = unique(dateTable.DrugList);
+% subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
+% subTable = subTable(5:end,:); % for now, based on our data, just exclude the recording lengths that don;t fit together
+% acceptedPermutations = [1,2,3,4,5,8,9,10];
+% % ========================
 % treatment = '5-MeO-MiPT';
 % selection = 1; % selection is a choice of drug combinations
 % dateTable = getDateAnimalUniqueByTreatment(treatment);
 % plotsToMake = unique(dateTable.DrugList);
 % subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
-
-% ========================
+% acceptedPermutations = [1,2];
+% % ========================
 % treatment = 'Pyr-T';
 % selection = 1; % selection is a choice of drug combinations
 % dateTable = getDateAnimalUniqueByTreatment(treatment);
 % plotsToMake = unique(dateTable.DrugList);
 % subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
+% acceptedPermutations = [1,2];
+% % ========================
+% treatment = '6-FDET';
+% selection = 1; % selection is a choice of drug combinations
+% dateTable = getDateAnimalUniqueByTreatment(treatment);
+% plotsToMake = unique(dateTable.DrugList);
+% subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
+% acceptedPermutations = [1,2];
+% % ========================
+treatment = '4-AcO-DMT';
+selection = 1; % selection is a choice of drug combinations
+dateTable = getDateAnimalUniqueByTreatment(treatment);
+plotsToMake = unique(dateTable.DrugList);
+subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
+acceptedPermutations = [1,2];
 
-% ========================
 
 
-
-
-% loop through expts of interest
+% loop through expts of interest.  Create a structure animalData that 
+% contains everything we need.  We will sort it below
 animalData = struct();
 for iList = 1:size(subTable,1)
     disp(['Loading session ' num2str(iList) ' of ' num2str(size(subTable,1))]);
     animalData(iList).data = getHTRExperimentInfoFromDateName(subTable.Date{iList},subTable.AnimalName{iList}); 
-    %we now have a structure that contains everything we need.  We still
-    %need to sort it below (find matching experiments, etc)
 end
 
-
-
-
-
+% This standalone function will merge experiments that happen 24 hours
+% later into the same recognized 'set'
 animalData= mergeHTRExperimentInfo(animalData);
-
-
-
-
 
 % for animals with odd combinations of recording hours (DOI for now) find
 % appropriate spans to pool: all animals that share *exclusive* sets only
-%acceptedPermutations = [1,2,25];
-acceptedPermutations = [1,2,3,4,5,7,8,9];
-%acceptedPermutations = [1,2,3,4,9];
-
+% this section relies on the acceptedPermutations variable entered at the
+% beginning
 for iList = 1:size(animalData,2)
     useThese = ismember(animalData(iList).data.hourOfRecording,acceptedPermutations);
     if sum(useThese) ~= size(acceptedPermutations,2)
@@ -79,16 +88,12 @@ for iList = 1:size(animalData,2)
     end
 end
 
-
-
-clear hourData
-hourData(1:25) = struct();
+% look in each list for all hours and start grouping events by those hours
+hourData(1:25) = struct(); %TODO! 25 should not be hardcoded! use existing hours instead? 
 hourData(1).events = [];
 hourData(1).nMice = [];
 hourData(1).maxLength = [];
 hourData(1).dt = [];
-%hourData.events = 0;
-% look in each list for all hours and start grouping events by those hours
 for iList = 1:size(trimmedAnimalData,2)
     for iHour = 1:size(trimmedAnimalData(iList).data.hourOfRecording,2)
         thisHour = trimmedAnimalData(iList).data.hourOfRecording(iHour);
@@ -104,8 +109,7 @@ for iList = 1:size(trimmedAnimalData,2)
     end
 end
 
-
-
+% Finally, we plot
 figure();
 nHours = size(acceptedPermutations,2);
 plotIndex = 1;
@@ -159,6 +163,7 @@ for iHour = 1:size(hourData,2)
         plotIndex = plotIndex+1;
     end
 end
+% A little loop to rescale plots after a max has been found above.
 plotIndex = 1;
 for iHour = 1:size(hourData,2)
     if ~isempty(hourData(iHour).events)
