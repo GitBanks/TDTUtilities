@@ -192,6 +192,7 @@ updateDynamicDisplayBox('waiting for recording to complete');
 % TODO % may want to allow time adjustments
 if tempnStims == -1 % represents 'spontaneous' mode
     %tic
+    pause(6)
     synapseRECDisplay(sponTime)
     waitingForUserToFinishRecording = false;
 %     while waitingForUserToFinishRecording

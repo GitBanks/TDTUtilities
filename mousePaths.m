@@ -5,7 +5,7 @@ classdef mousePaths
     properties (Constant)
         
         M = '\\144.92.237.185\Data\'; % M drive
-        W = '\\144.92.218.131\Data\'; % W drive
+        W = '\\144.92.218.131\Data\'; % W drive % keep in mind W has a ...\data\data\... path structure, so be sure that's accounted for when using this
         Z = '\\144.92.237.181\Data\'; % Z drive
         
     end

@@ -12,7 +12,7 @@ function fileMaint(animal)
 % WARNING this is only operating upon EEGdata files for now!!!
 % WARNING a few locations are hardcoded!
 
-% animal = 'EEG55';
+%animal = 'ZZ05';
 
 listOfAnimalExpts = getExperimentsByAnimal(animal);
 
@@ -36,6 +36,9 @@ catch
         setElectrodeLocationFromAnimal('LFP16',animal);
     elseif strcmp(animal(1:3),'DRE')
         setElectrodeLocationFromAnimal('DREADD07',animal);
+    elseif strcmp(animal(1:2),'ZZ')
+        %setElectrodeLocationFromAnimal('DREADD07',animal);
+        error('please enter probe configuration for this animal')
     else
         error('Animal type not recognized.')
     end
@@ -45,8 +48,8 @@ for iList = 1:length(listOfAnimalExpts)
     date = listOfAnimalExpts{iList}(1:5);
     index = listOfAnimalExpts{iList}(7:9);
     dirStrAnalysis = [mousePaths.M 'PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
-    dirStrRecSource = ['\\144.92.237.183\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\']; 
-    dirStrRawData = [mousePaths.W 'PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+    dirStrRecSource = ['\\144.92.237.187\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\']; 
+    dirStrRawData = [mousePaths.W 'data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
     disp(['$$$ Processing ' date '-' index ' $$$']);
     
     % STEP 1 MOVE TDT TANK FILE TO W DRIVE
@@ -77,37 +80,37 @@ try
 catch
     warning('failed to run movement analysis');
 end
+% 
+% % STEP 4: RUN SPEC ANALYSIS
+% try
+%     disp('starting spec analysis') ; 
+%     tic
+%     forceReRun = 0; %will run all dates found for this animal
+%     [gBatchParams, gMouseEphys_out] = mouseEphys_specAnalysis(animal,forceReRun);
+%     toc
+% catch
+%     warning('failed to run spec analysis'); 
+% end
 
-% STEP 4: RUN SPEC ANALYSIS
-try
-    disp('starting spec analysis') ; 
-    tic
-    forceReRun = 0; %will run all dates found for this animal
-    [gBatchParams, gMouseEphys_out] = mouseEphys_specAnalysis(animal,forceReRun);
-    toc
-catch
-    warning('failed to run spec analysis'); 
-end
+% % spectra
+% try
+%     plotFieldTripSpectra({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
+% catch
+% end
 
-% spectra
-try
-    plotFieldTripSpectra({animal},1,gMouseEphys_out,gBatchParams); %spectra will save if second param = 1
-catch
-end
+% % grady plots
+% try
+%     plotTimeDActivityAndBP(animal,'delta',1);
+% catch
+% end
 
-% grady plots
-try
-    plotTimeDActivityAndBP(animal,'delta',1);
-catch
-end
-
-% STEP 5: RUN WPLI ANALYSIS
-% calculate phase lag for a single day (is this preferable?) and save
-disp('starting wpli analysis');
-tic
-[gBatchParams, gMouseEphys_conn] =  mouseEphys_wPLIAnalysis(animal,forceReRun);
-saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn);
-toc
+% % STEP 5: RUN WPLI ANALYSIS
+% % calculate phase lag for a single day (is this preferable?) and save
+% disp('starting wpli analysis');
+% tic
+% [gBatchParams, gMouseEphys_conn] =  mouseEphys_wPLIAnalysis(animal,forceReRun);
+% saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn);
+% toc
 
 end
 

@@ -9,6 +9,8 @@ function importDataSynapse(exptDate,exptIndex)
 % exptIndex = '000';
 % exptDate = '18o19';
 % exptIndex = '005';
+% exptDate = '21426';
+% exptIndex = '007';
 
 % dirStrRawData = 'W:\Data\PassiveEphys\2018\18o01-001\'; %input
 % TODO / WIP works, but some parameters not handled appropriately (so
@@ -35,7 +37,7 @@ postStim = 500;
 signalTypes = {'EEG','LFP','SU'};
 % TODO don't hardcode any of the following:
 dirStrRawData = ['W:\Data\PassiveEphys\' '20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %input
-dirStrAnalysis = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %output
+dirStrAnalysis = ['\\MEMORYBANKS\data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %output
 
 
 % All stim info is now handled in here.  and saved, so there may be no
@@ -199,8 +201,15 @@ for iSignal = 1:length(signalTypes)
             if strcmp(signalTypes{iSignal},'LFP') || strcmp(signalTypes{iSignal},'SU')
                 dataFileName = [dirStrAnalysis exptDate '-' exptIndex '_' 'data0']; % 0 is hard coded because EEG data will be small, or should otherwise taken from the data.stream on it's own
             end
-            save(dataFileName,'ephysData','dT','-v7.3');
-            clear ephysData dT stimRange;
+            
+            if isfield(data.epocs,'stim')
+                stimTimes = data.epocs;
+                save(dataFileName,'ephysData','dT','stimTimes','-v7.3');
+                clear ephysData dT stimRange stimTimes;
+            else
+                save(dataFileName,'ephysData','dT','-v7.3');
+                clear ephysData dT stimRange;
+            end
         end
     end
 end
