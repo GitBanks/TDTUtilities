@@ -1,5 +1,5 @@
 function [] = synapseFrontEnd_mag
-% FOR DUAL RECORDING DUMMY!
+% FOR Mag RECORDING DUMMY!
 
 % This GUI will allow user to select an experiment type for two animals
 % for which the program will create all expected indices
@@ -94,7 +94,7 @@ S.Preselects = {
     'Mifepristone + DOI'
     'Vehicle + DOI'
     'Vehicle + Saline'
-    '5-MeO-Pyr-T'
+    '5-MeO-PyrT'
     '5-MeO-MiPT'
     'Pyr-T'
     '6-FDET'
