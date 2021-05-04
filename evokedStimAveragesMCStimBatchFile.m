@@ -1,4 +1,8 @@
 function evokedStimAveragesMCStimBatchFile(exptDate,exptIndex)
+
+% User-defined parameters
+chanLabels = {'ipsi mPFC','contra mPFC','contra vHipp'};
+dataType = 'LFP1';
 tPreStim = 0.2;
 tPostStim = 0.5;
 plotMaxVals = 1; % Set to 1 if you want to plot the stim-response curve for max values
@@ -6,7 +10,6 @@ minSearchWin = [4,20]*1.e-3; %Time window re stim time to search for peak minimu
 maxSearchWin = [10,50]*1.e-3; %Time window re stim time to search for peak maximum resp
 avgWinTime = 1.e-3; %Average over this window to get estimate of peak value
 baseWin = [-5,-0.5]*1.e-3; %Time window re stim time to calculate baseline value - subtracted from peak values
-% timeSpans = 4.9*60; %time in seconds (min*60) to group responses into
 
 if ~exist('exptDate','var') || ~exist('exptIndex','var')
     % exptDate = '21303';
@@ -27,7 +30,6 @@ if ~exist('exptDate','var') || ~exist('exptIndex','var')
      %exptIndex ='009';
 end
 
-chanLabels = {'ipsi mPFC','contr mPFC','contra vHipp'};
 % load saved trial pattern
 saveFileRoot = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
 load([saveFileRoot  'stimSet-' exptDate '-' exptIndex],'stimArray','trialPattern');
@@ -85,23 +87,24 @@ else
     stimTimes = timeArrayStim(tStimArray);
 end
 
-%stimTimes = stimTimes+.01; %secret time adjustment for old stim tracking
-%system
-
-
 % data are stored like this:
 % data.streams.LFP1.data(4,:)
 % data.streams.EEGw.data(4,:)
 % 1. step through rec types (data.streams.LFP1,data.streams.EEGw)
-dataType = 'LFP1';
 dTRec = 1/data.streams.(dataType).fs; % get sample rate and recording times
 avgWinIndex = floor(avgWinTime/dTRec);
 baseWinIndex = floor(baseWin/dTRec);
 timeArrayRec = (0:dTRec:length(data.streams.(dataType).data)*dTRec-dTRec);
-
 nChans = size(data.streams.(dataType).data,1);
 nROIs = floor(nChans/2); %Assuming twisted pair and local bipolar rereferencing
 nTrials = length(stimTimes); % we want to know how long the expected stim pattern lasts in case erroneous pulses (at end) are found.
+stimIndex = zeros(1,nTrials);
+for iTrial = 1:nTrials
+    stimIndex(iTrial) = find(timeArrayRec>stimTimes(iTrial),1,'first');
+end
+preStimIndex = floor(tPreStim/dTRec);
+postStimIndex = ceil(tPostStim/dTRec);
+
 if nTrials ~= length(trialPattern)
     disp(['WARNING! Number of stims in Synapse data file = ' num2str(nTrials)...
         ' but length of trialPattern = ' num2str(length(trialPattern))]);
@@ -114,18 +117,8 @@ if nTrials ~= length(trialPattern)
         temp = [trialPattern temp];
     end
 end
-%create the structure: stimSet, with different arrays of channels x trials x dataPoints
-% First get indices corresponding to each stimulus
-stimIndex = zeros(1,nTrials);
-for iTrial = 1:nTrials
-    stimIndex(iTrial) = find(timeArrayRec>stimTimes(iTrial),1,'first');
-end
-preStimIndex = floor(tPreStim/dTRec);
-postStimIndex = ceil(tPostStim/dTRec);
-% figure()
-% plot(data.streams.(dataType).data(1,:));
-% hold on
-% plot(stimIndex,4.e-3+zeros(1,length(stimIndex)),'vr');
+
+% Create the structure: stimSet, with different arrays of channels x trials x dataPoints
 stimSet = struct();
 for iStim = 1:nStims %Loop over all stim levels. These are indexed as integers 1:nStim
     % First grab all trials on which this stim was presented
@@ -143,25 +136,6 @@ for iStim = 1:nStims %Loop over all stim levels. These are indexed as integers 1
     end
 end
 
-%     for iChannel = 1:nChans
-%         trialIterator = 1;
-%         for iTrial = 1:nTrials %length(stimTimes)-1
-%             % look to be sure it's the correct stim type according to the trialPattern       
-%             % !!...test this..!!          
-%             if isequal(iStim,trialPattern(iTrial))
-% 
-%                 thisStim = find(timeArrayRec>stimTimes(iTrial),1);
-%                 %trialsInSpan(iTrial) = find(spansT>thisStim,1);
-%                 stimSet(iStim).data(iChannel,trialIterator,:) = data.streams.(dataType).data(iChannel,thisStim-round(tPreStim*data.streams.(dataType).fs):round(tPostStim*data.streams.(dataType).fs)+thisStim);
-%                 if mod(iChannel,2)==0
-%                     stimSet(iStim).sub(iChannel/2,trialIterator,:) = stimSet(iStim).data(iChannel,trialIterator,:) - stimSet(iStim).data(iChannel-1,trialIterator,:);
-%                 end
-%                 trialIterator = trialIterator +1;
-%             end
-%         end
-%     end
-% end
-
 % Find the mean for both the raw data and the subtraction
 % Also find min and max for plotting and for analysis purposes
 plotMax = -1.e10;
@@ -172,11 +146,8 @@ minVals = zeros(nStims,nROIs);
 maxIndex = zeros(nStims,nROIs); %Will contain index re stim time of max
 minIndex = zeros(nStims,nROIs); %Will contain index re stim time of min
 startSearchIndex = ceil(minSearchWin(1)/dTRec); %Start search for peaks after artifact
-% minSearchWin = [3,20]*1.e-3; %Time window to search for peak minimum resp
-% maxSearchWin = [10,50]*1.e-3; %Time window to search for peak maximum resp
 minSearchIndex = ceil(minSearchWin/dTRec); %Indexes of time window re stim time to search for peak minimum resp
 maxSearchIndex = floor(maxSearchWin/dTRec); %Indexes of time window to re stim time search for peak maximum resp
-
 for iStim = 1:nStims
     stimSet(iStim).dataMean = squeeze(mean(stimSet(iStim).data,2));
     stimSet(iStim).subMean = squeeze(mean(stimSet(iStim).sub,2));
@@ -190,6 +161,7 @@ for iStim = 1:nStims
         baseVals(iStim,iROI) = mean(stimSet(iStim).subMean(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
     end
 end
+
 %Now use maxVals and minVals to find better estimate of peak responses
 for iStim = 1:nStims
     for iROI = 1:nROIs
@@ -491,7 +463,6 @@ end
 % [roiPix,fullROI] = roiVidAnalysisBinary(vidFile,exptDate,[pulseAmp{iExpt} 'uAtest\']);
 
 
-
 % this was just for combining two movies since the video was too large for
 % analysis
 % finalMovementArray = cat(1,finalM1,finalM2);
@@ -509,12 +480,6 @@ end
 % plot(finalMovementArray)
 % figure()
 % plot(finalMovementArray)
-
-
-
-
-
-
 
 % for iPlot = 1:size(data.streams.(iType).data,1)
 % 
@@ -577,4 +542,23 @@ end
 %     
 % 
 % 
+% end
+
+%     for iChannel = 1:nChans
+%         trialIterator = 1;
+%         for iTrial = 1:nTrials %length(stimTimes)-1
+%             % look to be sure it's the correct stim type according to the trialPattern       
+%             % !!...test this..!!          
+%             if isequal(iStim,trialPattern(iTrial))
+% 
+%                 thisStim = find(timeArrayRec>stimTimes(iTrial),1);
+%                 %trialsInSpan(iTrial) = find(spansT>thisStim,1);
+%                 stimSet(iStim).data(iChannel,trialIterator,:) = data.streams.(dataType).data(iChannel,thisStim-round(tPreStim*data.streams.(dataType).fs):round(tPostStim*data.streams.(dataType).fs)+thisStim);
+%                 if mod(iChannel,2)==0
+%                     stimSet(iStim).sub(iChannel/2,trialIterator,:) = stimSet(iStim).data(iChannel,trialIterator,:) - stimSet(iStim).data(iChannel-1,trialIterator,:);
+%                 end
+%                 trialIterator = trialIterator +1;
+%             end
+%         end
+%     end
 % end
