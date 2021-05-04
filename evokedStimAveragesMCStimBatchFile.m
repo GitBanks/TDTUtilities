@@ -11,6 +11,16 @@ baseWin = [-5,-0.5]*1.e-3; %Time window re stim time to calculate baseline value
 % exptIndex = '001';
 % exptDate = '21303';
 % exptIndex = '012';
+
+exptDate = '21503';
+exptIndex = '005';
+
+% exptDate = '21503';
+% exptIndex = '003';
+% exptDate = '21426';
+% exptIndex = '010';
+%  exptDate = '21311';
+%  exptIndex ='009';
 exptDate = '21503';
 exptIndex = '005';
 %  exptDate = '21426';
@@ -76,6 +86,10 @@ else
     stimTimes = timeArrayStim(tStimArray);
 end
 
+%stimTimes = stimTimes+.01; %secret time adjustment for old stim tracking
+%system
+
+
 % data are stored like this:
 % data.streams.LFP1.data(4,:)
 % data.streams.EEGw.data(4,:)
@@ -85,6 +99,8 @@ dTRec = 1/data.streams.(dataType).fs; % get sample rate and recording times
 avgWinIndex = floor(avgWinTime/dTRec);
 baseWinIndex = floor(baseWin/dTRec);
 timeArrayRec = (0:dTRec:length(data.streams.(dataType).data)*dTRec-dTRec);
+
+
 
 nChans = size(data.streams.(dataType).data,1);
 nROIs = floor(nChans/2); %Assuming twisted pair and local bipolar rereferencing
