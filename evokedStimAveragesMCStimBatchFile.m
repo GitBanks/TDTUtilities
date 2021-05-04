@@ -1,32 +1,31 @@
 function evokedStimAveragesMCStimBatchFile(exptDate,exptIndex)
 tPreStim = 0.2;
 tPostStim = 0.5;
+plotMaxVals = 1; % Set to 1 if you want to plot the stim-response curve for max values
 minSearchWin = [4,20]*1.e-3; %Time window re stim time to search for peak minimum resp
 maxSearchWin = [10,50]*1.e-3; %Time window re stim time to search for peak maximum resp
 avgWinTime = 1.e-3; %Average over this window to get estimate of peak value
 baseWin = [-5,-0.5]*1.e-3; %Time window re stim time to calculate baseline value - subtracted from peak values
 % timeSpans = 4.9*60; %time in seconds (min*60) to group responses into
 
-% exptDate = '21303';
-% exptIndex = '001';
-% exptDate = '21303';
-% exptIndex = '012';
-
-exptDate = '21503';
-exptIndex = '005';
-
-% exptDate = '21503';
-% exptIndex = '003';
-% exptDate = '21426';
-% exptIndex = '010';
-%  exptDate = '21311';
-%  exptIndex ='009';
-exptDate = '21503';
-exptIndex = '005';
-%  exptDate = '21426';
-%  exptIndex = '010';
- %exptDate = '21311';
- %exptIndex ='009';
+if ~exist('exptDate','var') || ~exist('exptIndex','var')
+    % exptDate = '21303';
+    % exptIndex = '001';
+    % exptDate = '21303';
+    % exptIndex = '012';
+    % exptDate = '21503';
+    % exptIndex = '003';
+    % exptDate = '21426';
+    % exptIndex = '010';
+    %  exptDate = '21311';
+    %  exptIndex ='009';
+    exptDate = '21503';
+    exptIndex = '005';
+    %  exptDate = '21426';
+    %  exptIndex = '010';
+     %exptDate = '21311';
+     %exptIndex ='009';
+end
 
 chanLabels = {'ipsi mPFC','contr mPFC','contra vHipp'};
 % load saved trial pattern
@@ -99,8 +98,6 @@ dTRec = 1/data.streams.(dataType).fs; % get sample rate and recording times
 avgWinIndex = floor(avgWinTime/dTRec);
 baseWinIndex = floor(baseWin/dTRec);
 timeArrayRec = (0:dTRec:length(data.streams.(dataType).data)*dTRec-dTRec);
-
-
 
 nChans = size(data.streams.(dataType).data,1);
 nROIs = floor(nChans/2); %Assuming twisted pair and local bipolar rereferencing
@@ -229,14 +226,20 @@ for iROI = 1:nROIs
     subplot(2,nROIs,nROIs+iROI)
     hold on
     plot(stimArray,-minVals(:,iROI),'-o')
-    plot(stimArray,maxVals(:,iROI),'-v')
+    if plotMaxVals
+        plot(stimArray,maxVals(:,iROI),'-v')
+    end
     ax = gca;
     ax.XLabel.String = 'Stim intensity (\muA)';
     if iROI == 1
         ax.YLabel.String = 'Pk resp (V)';
     end
     if iROI == nROIs
-        legend('Min pk','Max pk');
+        if plotMaxVals
+            legend('Min pk','Max pk');
+        else
+            legend('Min pk');
+        end
     end
 end
 
