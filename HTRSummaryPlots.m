@@ -52,13 +52,19 @@ clear all
 % subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
 % acceptedPermutations = [1,2];
 % % ========================
-treatment = '4-AcO-DMT';
+% treatment = '4-AcO-DMT';
+% selection = 1; % selection is a choice of drug combinations
+% dateTable = getDateAnimalUniqueByTreatment(treatment);
+% plotsToMake = unique(dateTable.DrugList);
+% subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
+% acceptedPermutations = [1,2];
+% % ========================
+treatment = '5-MeO-PyrT';
 selection = 1; % selection is a choice of drug combinations
 dateTable = getDateAnimalUniqueByTreatment(treatment);
 plotsToMake = unique(dateTable.DrugList);
 subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
 acceptedPermutations = [1,2];
-
 
 
 % loop through expts of interest.  Create a structure animalData that 

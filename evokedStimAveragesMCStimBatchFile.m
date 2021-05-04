@@ -10,10 +10,15 @@ tPostStim = 0.5;
 % exptDate = '21303';
 % exptIndex = '012';
 
- exptDate = '21426';
- exptIndex = '010';
- %exptDate = '21311';
- %exptIndex ='009';
+exptDate = '21503';
+exptIndex = '005';
+
+% exptDate = '21503';
+% exptIndex = '003';
+% exptDate = '21426';
+% exptIndex = '010';
+%  exptDate = '21311';
+%  exptIndex ='009';
 
 % load saved trial pattern
 saveFileRoot = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
@@ -71,6 +76,10 @@ else
     stimTimes = timeArrayStim(tStimArray);
 end
 
+%stimTimes = stimTimes+.01; %secret time adjustment for old stim tracking
+%system
+
+
 % data are stored like this:
 % data.streams.LFP1.data(4,:)
 % data.streams.EEGw.data(4,:)
@@ -79,6 +88,8 @@ iType = 'LFP1';
 nChans = size(data.streams.LFP1.data,1);
 dTRec = 1/data.streams.(iType).fs; % get sample rate and recording times
 timeArrayRec = (0:dTRec:length(data.streams.(iType).data)*dTRec-dTRec);
+
+
 
 
 
