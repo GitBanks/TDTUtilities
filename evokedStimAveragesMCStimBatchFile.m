@@ -3,28 +3,28 @@ tPreStim = 0.2;
 tPostStim = 0.5;
 % timeSpans = 4.9*60; %time in seconds (min*60) to group responses into
 
-
-
 % exptDate = '21303';
 % exptIndex = '001';
 % exptDate = '21303';
 % exptIndex = '012';
-
- exptDate = '21426';
- exptIndex = '010';
+exptDate = '21503';
+exptIndex = '005';
+%  exptDate = '21426';
+%  exptIndex = '010';
  %exptDate = '21311';
  %exptIndex ='009';
 
+chanLabels = {'ipsi mPFC','contr mPFC','contra vHipp'};
 % load saved trial pattern
 saveFileRoot = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
 load([saveFileRoot  'stimSet-' exptDate '-' exptIndex],'stimArray','trialPattern');
-ampLabel = stimArray;
-
+for iStim = 1:length(stimArray)
+    ampLabel{iStim} = [num2str(stimArray(iStim)) '\mu' 'A'];
+end
 
 data = TDTbin2mat(saveFileRoot); % TDT loads the raw data
 % TODO! % % % % % % % % % % %  4/27/21 note: above is the first choice we need to make - do we really
 % want to load in raw data here, or depend on the imported data?
-
 
 % the 'Snc_' is the new (as of 4/27/21) method of finding stim times.  We still
 % want the old method in case we need to look at older data ('else' section)
@@ -75,43 +75,103 @@ end
 % data.streams.LFP1.data(4,:)
 % data.streams.EEGw.data(4,:)
 % 1. step through rec types (data.streams.LFP1,data.streams.EEGw)
-iType = 'LFP1';
-nChans = size(data.streams.LFP1.data,1);
-dTRec = 1/data.streams.(iType).fs; % get sample rate and recording times
-timeArrayRec = (0:dTRec:length(data.streams.(iType).data)*dTRec-dTRec);
+dataType = 'LFP1';
+dTRec = 1/data.streams.(dataType).fs; % get sample rate and recording times
+timeArrayRec = (0:dTRec:length(data.streams.(dataType).data)*dTRec-dTRec);
 
-
-
+nChans = size(data.streams.(dataType).data,1);
+nROIs = floor(nChans/2); %Assuming twisted pair and local bipolar rereferencing
 nStims = length(stimTimes); % we want to know how long the expected stim pattern lasts in case erroneous pulses (at end) are found.
+if nStims ~= length(trialPattern)
+    disp(['WARNING! Number of stims in Synapse data file = ' num2str(nStims)...
+        ' but length of trialPattern = ' num2str(length(trialPattern))]);
+    if nStims<length(trialPattern)
+        disp('Truncating trialPattern to match nStims...')
+        trialPattern = trialPattern(1:nStims);
+    else
+        disp('Padding trialPattern to match nStims...')
+        temp(1:length(trialPattern)-nStims) = trialPattern(end);
+        temp = [trialPattern temp];
+    end
+end
 %create the structure: stimSet, with different arrays of channels x trials x dataPoints
-for iStim = 1:length(stimArray)
-    for iChannel = 1:size(data.streams.(iType).data,1)
-        trialIterator = 1;
-        for iTrial = 1:nStims %length(stimTimes)-1
-            % look to be sure it's the correct stim type according to the trialPattern       
-            % !!...test this..!!          
-            if isequal(iStim,trialPattern(iTrial))
-
-                thisStim = find(timeArrayRec>stimTimes(iTrial),1);
-                %trialsInSpan(iTrial) = find(spansT>thisStim,1);
-                stimSet(iStim).data(iChannel,trialIterator,:) = data.streams.(iType).data(iChannel,thisStim-round(tPreStim*data.streams.(iType).fs):round(tPostStim*data.streams.(iType).fs)+thisStim);
-                if mod(iChannel,2)==0
-                    stimSet(iStim).sub(iChannel/2,trialIterator,:) = stimSet(iStim).data(iChannel,trialIterator,:) - stimSet(iStim).data(iChannel-1,trialIterator,:);
-                end
-                trialIterator = trialIterator +1;
-            end
+% First get indices corresponding to each stimulus
+stimIndex = zeros(1,nStims);
+for iTrial = 1:nStims
+    stimIndex(iTrial) = find(timeArrayRec>stimTimes(iTrial),1,'first');
+end
+preStimIndex = floor(tPreStim/dTRec);
+postStimIndex = ceil(tPostStim/dTRec);
+% figure()
+% plot(data.streams.(dataType).data(1,:));
+% hold on
+% plot(stimIndex,4.e-3+zeros(1,length(stimIndex)),'vr');
+stimSet = struct();
+for iStim = 1:length(stimArray) %Loop over all stim levels. These are indexed as integers 1:nStim
+    % First grab all trials on which this stim was presented
+    trialLgcl = trialPattern==iStim; % = true only when trialPattern is this stim
+    theseStim = stimIndex(trialLgcl);
+    for iTrial = 1:length(theseStim)
+        iStart = theseStim(iTrial)-preStimIndex;
+        iStop = theseStim(iTrial)+postStimIndex;
+        for iChan = 1:nChans
+            stimSet(iStim).data(iChan,iTrial,:) = data.streams.(dataType).data(iChan,iStart:iStop);
         end
+    end
+    for iSub = 1:nROIs
+        stimSet(iStim).sub(iSub,:,:) = stimSet(iStim).data(iSub*2,:,:) - stimSet(iStim).data(iSub*2-1,:,:);
     end
 end
 
+%     for iChannel = 1:nChans
+%         trialIterator = 1;
+%         for iTrial = 1:nStims %length(stimTimes)-1
+%             % look to be sure it's the correct stim type according to the trialPattern       
+%             % !!...test this..!!          
+%             if isequal(iStim,trialPattern(iTrial))
+% 
+%                 thisStim = find(timeArrayRec>stimTimes(iTrial),1);
+%                 %trialsInSpan(iTrial) = find(spansT>thisStim,1);
+%                 stimSet(iStim).data(iChannel,trialIterator,:) = data.streams.(dataType).data(iChannel,thisStim-round(tPreStim*data.streams.(dataType).fs):round(tPostStim*data.streams.(dataType).fs)+thisStim);
+%                 if mod(iChannel,2)==0
+%                     stimSet(iStim).sub(iChannel/2,trialIterator,:) = stimSet(iStim).data(iChannel,trialIterator,:) - stimSet(iStim).data(iChannel-1,trialIterator,:);
+%                 end
+%                 trialIterator = trialIterator +1;
+%             end
+%         end
+%     end
+% end
+
 %find the mean for both the raw data and the subtraction
-for iSet = 1:length(stimSet)
-    stimSet(iSet).dataMean = squeeze(mean(stimSet(iSet).data,2));
-    stimSet(iSet).subMean = squeeze(mean(stimSet(iSet).sub,2));
+plotMax = -1.e10;
+plotMin = 1.e10;
+minLatency = 3.e-3; %In seconds
+for iStim = 1:length(stimSet)
+    stimSet(iStim).dataMean = squeeze(mean(stimSet(iStim).data,2));
+    stimSet(iStim).subMean = squeeze(mean(stimSet(iStim).sub,2));
+    plotMax = max([plotMax,max(stimSet(iStim).subMean(:,preStimIndex+ceil(minLatency/dTRec):end))]);
+    plotMin = min([plotMin,min(stimSet(iStim).subMean(:,preStimIndex+ceil(minLatency/dTRec):end))]);
 end
 
-
-
+plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
+figure()
+for iROI = 1:nROIs
+    subplot(1,nROIs,iROI)
+    hold on
+    for iStim = 1:length(stimSet)
+        plot(plotTimeArray,stimSet(iStim).subMean(iROI,:));
+    end
+    ax = gca;
+    ax.YLim = [1.05*plotMin,1.05*plotMax];
+    ax.XLabel.String = 'time(sec)';
+    if iROI == 1
+        ax.YLabel.String = 'avg dataSub (V)';
+    end
+    ax.Title.String = chanLabels{iROI};
+    if iROI == nROIs
+        legend(ampLabel);
+    end
+end
 
 %figSub = figure();
 %nRow = length(stimSet)/2;
@@ -167,69 +227,68 @@ end
          %drawnow;
     % end
  %end
-
-
-
-
 % 
 % 
- figSub = figure();
- nRow = length(stimSet);
- nCol = 3;
- figure(figSub);
- plotTimeArray = -tPreStim:dTRec:tPostStim;
- useChannels = [2,4,6];
- colLabels = {'Contra mPFC','Ipsi mPFC','Contra vCA1'};
- minY = 0;
- maxY = 0;
- for iRow = 1:nRow
-     for iCol = 1:nCol
-         %subtightplot(nRow,nCol,iCol+(nCol*(iRow-1)));
-         subtightplot(nRow,nCol,iCol+(nCol*(iRow-1)))
-         try
-         plot(plotTimeArray,stimSet(iRow).subMean(iCol,1:end));
-         catch
-         plot(plotTimeArray,stimSet(iRow).subMean(iCol,1:end-1));
-        end
-             
-         hold on;
-         line([0 0], [-1 1],'Color','red','LineStyle','--');
-         if iRow ==1
-             title(colLabels(iCol));
-         end
-         if iRow ~= length(stimSet)
-             set(gca,'YTickLabel',[],'YTick',[]);
-         end
-%          if iCol == 1
-%              ylabel([num2str(ampLabel(iRow)) 'uA']);
-% %             if stimSetData(iCol).setNumber == 1
-% %                 title(['pre LTP stim. n=' num2str(size(stimSetData(iCol).subData,2))]);
-%  %             else
-%  %                 title(['post LTP stim n=' num2str(size(stimSetData(iCol).subData,2))]);
-%  %             end
-%          end    
-         
-         minY = min(minY,min(stimSet(iRow).subMean(iCol,plotTimeArray>.002)));
-         maxY = max(maxY,max(stimSet(iRow).subMean(iCol,plotTimeArray>.002)));
-         xlim([-0.01,0.05]);
-         drawnow;
-     end
- end
- 
- minY = minY*1.05;
- maxY = maxY*1.05;
- for iRow = 1:nRow
-     for iCol = 1:nCol
-         subtightplot(nRow,nCol,iCol+(nCol*(iRow-1)))
-         ylim([minY,maxY]);
-         xlim([-0.01,0.05]);
-         if iRow == nRow
-             set(gca,'XTick',[0,0.025],'XTickLabel',{'t=0','t=.025'});
-         else
-             set(gca,'XTickLabel',[],'XTick',[]);
-         end
-     end
- end
+% 
+% 
+% % 
+% % 
+%  figSub = figure();
+%  nRow = length(stimSet);
+%  nCol = 3;
+%  figure(figSub);
+%  useChannels = [2,4,6];
+%  colLabels = {'Contra mPFC','Ipsi mPFC','Contra vCA1'};
+%  minY = 0;
+%  maxY = 0;
+%  for iRow = 1:nRow
+%      for iCol = 1:nCol
+%          %subtightplot(nRow,nCol,iCol+(nCol*(iRow-1)));
+%          subtightplot(nRow,nCol,iCol+(nCol*(iRow-1)))
+%          try
+%          plot(plotTimeArray,stimSet(iRow).subMean(iCol,1:end));
+%          catch
+%          plot(plotTimeArray,stimSet(iRow).subMean(iCol,1:end-1));
+%         end
+%              
+%          hold on;
+%          line([0 0], [-1 1],'Color','red','LineStyle','--');
+%          if iRow ==1
+%              title(colLabels(iCol));
+%          end
+%          if iRow ~= length(stimSet)
+%              set(gca,'YTickLabel',[],'YTick',[]);
+%          end
+% %          if iCol == 1
+% %              ylabel([num2str(ampLabel(iRow)) 'uA']);
+% % %             if stimSetData(iCol).setNumber == 1
+% % %                 title(['pre LTP stim. n=' num2str(size(stimSetData(iCol).subData,2))]);
+% %  %             else
+% %  %                 title(['post LTP stim n=' num2str(size(stimSetData(iCol).subData,2))]);
+% %  %             end
+% %          end    
+%          
+%          minY = min(minY,min(stimSet(iRow).subMean(iCol,plotTimeArray>.002)));
+%          maxY = max(maxY,max(stimSet(iRow).subMean(iCol,plotTimeArray>.002)));
+%          xlim([-0.01,0.05]);
+%          drawnow;
+%      end
+%  end
+%  
+%  minY = minY*1.05;
+%  maxY = maxY*1.05;
+%  for iRow = 1:nRow
+%      for iCol = 1:nCol
+%          subtightplot(nRow,nCol,iCol+(nCol*(iRow-1)))
+%          ylim([minY,maxY]);
+%          xlim([-0.01,0.05]);
+%          if iRow == nRow
+%              set(gca,'XTick',[0,0.025],'XTickLabel',{'t=0','t=.025'});
+%          else
+%              set(gca,'XTickLabel',[],'XTick',[]);
+%          end
+%      end
+%  end
  
  
 
