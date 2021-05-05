@@ -45,7 +45,7 @@ catch
 end
 
 for iList = 1:length(listOfAnimalExpts)
-%for iList = 51
+%for iList = 54:55
     date = listOfAnimalExpts{iList}(1:5);
     index = listOfAnimalExpts{iList}(7:9);
     dirStrAnalysis = [mousePaths.M 'PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];

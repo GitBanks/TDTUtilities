@@ -7,9 +7,9 @@ tPostStim = 0.5;
 % exptIndex = '001';
 % exptDate = '21303';
 % exptIndex = '012';
-
-exptDate = '21503';
-exptIndex = '005';
+% 
+% exptDate = '21503';
+% exptIndex = '005';
 
 % exptDate = '21503';
 % exptIndex = '003';
@@ -17,8 +17,14 @@ exptIndex = '005';
 % exptIndex = '010';
 %  exptDate = '21311';
 %  exptIndex ='009';
-exptDate = '21503';
+% exptDate = '21503';
+% exptIndex = '005';
+
+exptDate = '21505';
+exptIndex = '004';
+exptDate = '21505';
 exptIndex = '005';
+
 %  exptDate = '21426';
 %  exptIndex = '010';
  %exptDate = '21311';
