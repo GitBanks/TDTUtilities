@@ -1,4 +1,12 @@
 %function plasticityPlots(exptDate,exptIndex)
+
+
+% this is for the 0.1 Hz plasticity expts (with LTP and LTD between).
+% this version has discrete sections that can (and should) get pulled out
+% for readability and modularity (plotPlasticityAmplitudePeaks() is already
+% an alternative version we might prefer, e.g.)
+
+
 %this is updated to include the new stim variables as of 04/28/21
 clear all
 
@@ -11,21 +19,22 @@ tPostStim = 0.5;
 
 indexLabels = {'Baseline','LTP','LTD'}; % these correspond to each stimset we load below
 
-exptDate = '21428';
-exptIndex = '009';
-[stimSet(1),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+exptDate = '21506';
+exptIndex = '007';
+[stimSet(1)] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
 
-exptDate = '21428';
-exptIndex = '013';
-[stimSet(2),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+exptDate = '21506';
+exptIndex = '010';
+[stimSet(2)] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
 
-exptDate = '21428';
-exptIndex = '015';
-[stimSet(3),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+exptDate = '21506';
+exptIndex = '012';
+[stimSet(3)] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
 
 
 % % % % ============ plot raw data overlay ============= % % % %
 % Raw subtracted traces
+dTRec = stimSet.dT;
 
 plotTimeArray = -tPreStim:dTRec:tPostStim;
 figure()
@@ -36,20 +45,24 @@ for iSet = 1:size(stimSet,2)
     catch
         plot(plotTimeArray,squeeze(stimSet(iSet).sub(1,:,1:end-1)));
     end
+    hold on
+        try
+        plot(plotTimeArray,squeeze(mean(stimSet(iSet).sub(1,:,:),2)),'k','LineWidth',2)
+        catch
+        plot(plotTimeArray,squeeze(mean(stimSet(iSet).sub(1,:,1:end-1),2)),'k','LineWidth',2)
+        end
     ylim([-2e-4,2e-4]);
 end
 
-
-
-% % % % ============ plot peak amplitude and get rise time (MIN) ============= % % % %
+% % % % ============ plot peak amplitude time series and get rise time and slope(MIN) ============= % % % %
 
 %finding peak amplitude
 %iSet = 2;
 iChan = 1;
 
 plotTimeArray = -tPreStim:dTRec:tPostStim;
-beginSlopeSearch = .005; %this is start of time window
-endSlopeSearch = .02; %this is end of time window
+beginTimeWindow = .005; %this is start of time window
+endTimeWindow = .02; %this is end of time window
 
 figure()
 minY = 0;
@@ -57,16 +70,21 @@ maxY = 0;
 %plotColor = {'or','ob','ok'};
 for iSet = 1:size(stimSet,2)
 % peak min
-searchWindow = plotTimeArray>beginSlopeSearch&plotTimeArray<endSlopeSearch;
+searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow;
 [MinA,Imin] = min(stimSet(iSet).subMean(iChan,searchWindow)); % this finds the lowest point within a range
-startIndex = find(plotTimeArray>beginSlopeSearch,1,'First'); % this is the beginning of the slope
+startIndex = find(plotTimeArray>beginTimeArray,1,'First'); %this is the first index of the recording
 minPeakIndex = startIndex+(Imin);
 
 avgMinPeaks = mean(stimSet(iSet).subMean(iChan,minPeakIndex+startIndex-4:minPeakIndex+startIndex+4));
 minBaseline = mean(stimSet(iSet).subMean(iChan,1:100));
 
+%This will plot out time series of every averaged peak
+% figure();
+% plot(avgMinPeaks-minBaseline,'o'); %This step corrects for the baseline and also plots
+
 %plot out trace to confirm following rise time calculations
 responseTrace = stimSet(iSet).subMean(iChan,searchWindow);
+
 % figure;
 % plot(plotTimeArray(searchWindow),responseTrace)
 % find rise time - note, might need to shorten search window to include
@@ -79,7 +97,6 @@ responseVar = stepinfo(responseTrace,timeWindowOfInterest,MinA);
 
 slopeStart = find(timeWindowOfInterest>responseVar.PeakTime-responseVar.RiseTime,1,'First');
 slopeEnd = find(timeWindowOfInterest==responseVar.PeakTime,1,'First');
-
 
 %BAD HAX
 slopeStart = round(slopeStart/2);
@@ -134,9 +151,6 @@ end
 % %this is peak amp max
 % stimSet(iSet).subMean(1,maxPeakIndex);
 % 
-
-
-
 
 
 
