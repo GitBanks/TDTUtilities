@@ -19,18 +19,6 @@ tPostStim = 0.5;
 
 indexLabels = {'Baseline','LTP','LTD'}; % these correspond to each stimset we load below
 
-exptDate = '21506';
-exptIndex = '007';
-[stimSet(1)] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
-
-exptDate = '21506';
-exptIndex = '010';
-[stimSet(2)] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
-
-exptDate = '21506';
-exptIndex = '012';
-[stimSet(3)] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
-
 exptDate = '21428';
 exptIndex = '009';
 %evokedData = struct();
@@ -49,23 +37,23 @@ exptIndex = '015';
 
 % % % % ============ plot raw data overlay ============= % % % %
 % Raw subtracted traces
-dTRec = stimSet.dT;
+%dTRec = stimSet.dT;
 
 plotTimeArray = -tPreStim:dTRec:tPostStim;
 figure()
 for iSet = 1:size(evokedData,2)
     subtightplot(3,1,iSet);
     try
-        plot(plotTimeArray,squeeze(evokedData(iSet).sub(1,:,:)));
+        plot(plotTimeArray,squeeze(evokedData(iSet).sub(1,:,:)),'k','LineWidth',2);
     catch
-        plot(plotTimeArray,squeeze(evokedData(iSet).sub(1,:,1:end-1)));
+        plot(plotTimeArray,squeeze(evokedData(iSet).sub(1,:,1:end-1)),'k','LineWidth',2);
     end
     hold on
-        try
-        plot(plotTimeArray,squeeze(mean(stimSet(iSet).sub(1,:,:),2)),'k','LineWidth',2)
-        catch
-        plot(plotTimeArray,squeeze(mean(stimSet(iSet).sub(1,:,1:end-1),2)),'k','LineWidth',2)
-        end
+%         try
+%         plot(plotTimeArray,squeeze(mean(stimSet(iSet).sub(1,:,:),2)),'k','LineWidth',2)
+%         catch
+%         plot(plotTimeArray,squeeze(mean(stimSet(iSet).sub(1,:,1:end-1),2)),'k','LineWidth',2)
+%         end
     ylim([-2e-4,2e-4]);
 end
 
@@ -86,11 +74,8 @@ maxY = 0;
 for iSet = 1:size(evokedData,2)
 % peak min
 searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow;
-[MinA,Imin] = min(stimSet(iSet).subMean(iChan,searchWindow)); % this finds the lowest point within a range
-startIndex = find(plotTimeArray>beginTimeArray,1,'First'); %this is the first index of the recording
-searchWindow = plotTimeArray>beginSlopeSearch&plotTimeArray<endSlopeSearch;
 [MinA,Imin] = min(evokedData(iSet).subMean(iChan,searchWindow)); % this finds the lowest point within a range
-startIndex = find(plotTimeArray>beginSlopeSearch,1,'First'); % this is the beginning of the slope
+startIndex = find(plotTimeArray>beginTimeWindow,1,'First'); % this is the beginning of the slope
 minPeakIndex = startIndex+(Imin);
 
 avgMinPeaks = mean(evokedData(iSet).subMean(iChan,minPeakIndex+startIndex-4:minPeakIndex+startIndex+4));
@@ -101,8 +86,6 @@ minBaseline = mean(evokedData(iSet).subMean(iChan,1:100));
 % plot(avgMinPeaks-minBaseline,'o'); %This step corrects for the baseline and also plots
 
 %plot out trace to confirm following rise time calculations
-responseTrace = stimSet(iSet).subMean(iChan,searchWindow);
-
 responseTrace = evokedData(iSet).subMean(iChan,searchWindow);
 % figure;
 % plot(plotTimeArray(searchWindow),responseTrace)
