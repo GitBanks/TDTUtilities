@@ -12,21 +12,162 @@ function fileMaint(animal)
 % WARNING this is only operating upon EEGdata files for now!!!
 % WARNING a few locations are hardcoded!
 
+% %test parameter
 %animal = 'ZZ05';
 
-listOfAnimalExpts = getExperimentsByAnimal(animal);
-
+%override parameters - used rarely
 forceReimport = 0;
 forceReimportTrials = 0;
 
-% before full automation, we can use this to set drug parameters in the DB so that below we can run
-manuallySetGlobalParamUI(animal); 
-
+% establish a clean list of all experiments we're interested in
+listOfAnimalExpts = getExperimentsByAnimal(animal);
+descOfAnimalExpts = listOfAnimalExpts(:,2);
 listOfAnimalExpts = listOfAnimalExpts(:,1);
 
+% before full automation, we can use this to set drug or eStim parameters 
+% in the DB
+manuallySetGlobalParamUI(animal); 
+
+% verify the electrode information has been entered correctly.  This is a
+% local function within FileMaint, below
+[electrodeLocation] = checkElectrode(listOfAnimalExpts{1}(1:5),listOfAnimalExpts{1}(7:9));
+
+% establish a few parameters to keep the main loop clean.
+% We should improve root locations - REC could be different.  We could also
+% check for connections here so that later attempts to connect don't fail
+dirStrAnalysisROOT = [mousePaths.M 'PassiveEphys\'];
+dirStrRecSourceAROOT = '\\144.92.237.187\Data\PassiveEphys\';
+dirStrRecSourceBROOT = '\\144.92.237.183\Data\PassiveEphys\'; 
+dirStrRawDataROOT = [mousePaths.W 'PassiveEphys\'];
+dirStrServer = '\\Server1\data\';
+
+% we often have network connection issues.  Handle that verification here,
+% so later errors aren't confusing.  checkConnection is a local function.
+checkConnection(dirStrAnalysisROOT);
+checkConnection(dirStrRecSourceAROOT);
+checkConnection(dirStrRecSourceBROOT);
+checkConnection(dirStrRawDataROOT);
+checkConnection(dirStrServer);
+
+
+% check all recorded files first?
+sz = [length(listOfAnimalExpts) 7];
+varTypes = {'string','string','logical','logical','string','logical','logical'};
+% the idea of this table is that if tasks are 'done', the logical should
+% evaluate 'true'.  The exception is video files - sometimes there's no
+% video
+varNames = {'DateIndex','Description','RECmoved','Imported','videoDone','RECAEmpty','RECBEmpty'};
+exptTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
+for iList = 1:length(listOfAnimalExpts)
+    exptTable.Description(iList) = descOfAnimalExpts{iList}{1};
+    date = listOfAnimalExpts{iList}(1:5);
+    index = listOfAnimalExpts{iList}(7:9);
+    exptTable.DateIndex(iList) = [date '-' index];
+    dirStrAnalysis = [dirStrAnalysisROOT '20' date(1:2) '\' date '-' index '\'];
+    dirStrRecSourceA = [dirStrRecSourceAROOT '20' date(1:2) '\' date '-' index '\']; 
+    dirStrRecSourceB = [dirStrRecSourceBROOT '20' date(1:2) '\' date '-' index '\']; 
+    dirStrRawData = [dirStrRawDataROOT '20' date(1:2) '\' date '-' index '\'];
+    if isempty(dir(dirStrRecSourceA))
+        exptTable.RECAEmpty(iList) = true;
+    end
+    if isempty(dir(dirStrRecSourceB))
+        exptTable.RECBEmpty(iList) = true;
+    end
+    % are files moved?
+    if exptTable.RECAEmpty(iList) == true && exptTable.RECBEmpty(iList) == true && ~isempty(dir([dirStrRawData '*.tbk']))
+        exptTable.RECmoved(iList) = true;
+    else
+        exptTable.RECmoved(iList) = false;
+    end
+    % are data imported?
+    if ~isempty(dir([dirStrAnalysis '*data*']))
+        exptTable.Imported(iList) = true;
+    else
+        exptTable.Imported(iList) = false;
+    end
+    % is video analyzed (if it exists)?
+    if isempty(dir([dirStrRawData '*_Cam*']))
+        exptTable.videoDone(iList) = 'none';
+    else
+        if ~isempty(dir([dirStrAnalysis '*-movementBinary*' '.mat'])) 
+            exptTable.videoDone(iList) = 'true';
+        else
+            exptTable.videoDone(iList) = 'false';
+        end
+    end
+end   
+
+
+% STEP 1 MOVE TDT TANK FILE TO W DRIVE
+operatingList = exptTable.DateIndex(exptTable.RECAEmpty == false);
+for iList = 1:length(operatingList)
+    date = operatingList{iList}(1:5);
+    index = operatingList{iList}(7:9);
+    dirStrRecSource = [dirStrRecSourceAROOT '20' date(1:2) '\' date '-' index '\']; 
+    dirStrRawData = [dirStrRawDataROOT '20' date(1:2) '\' date '-' index '\'];
+    disp(['Found REC data to move to W for ' date '-' index ]);
+    moveDataRecToRaw(dirStrRecSource,dirStrRawData);
+end
+
+operatingList = exptTable.DateIndex(exptTable.RECBEmpty == false);
+for iList = 1:length(operatingList)    
+    date = operatingList{iList}(1:5);
+    index = operatingList{iList}(7:9);
+    dirStrRecSource = [dirStrRecSourceBROOT '20' date(1:2) '\' date '-' index '\']; 
+    dirStrRawData = [dirStrRawDataROOT '20' date(1:2) '\' date '-' index '\'];
+    disp(['Found REC data to move to W for ' date '-' index ]);
+    try
+        moveDataRecToRaw(dirStrRecSource,dirStrRawData);
+    catch
+        disp('moveDataRecToRaw didn''t run.');
+    end
+end
+
+% STEP 2 CONVERT FROM TDT TANK FILE TO MATLAB FORMAT, SAVE TO MEMORYBANKS
+operatingList = exptTable.DateIndex(exptTable.Imported == false);
+for iList = 1:length(operatingList)    
+    date = operatingList{iList}(1:5);
+    index = operatingList{iList}(7:9);
+    dirStrAnalysis = [dirStrAnalysisROOT '20' date(1:2) '\' date '-' index '\'];
+    disp(['Found Raw data to import to W for ' date '-' index ]);
+%     dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
+%     if isempty(dirCheck) || forceReimport
+%         disp('Handing info to existing importData function.  This will take a few minutes.');
+%         try
+    importDataSynapse(date,index);
+%         catch
+%             disp([date '-' index ' not imported!!']);
+%         end
+%     elseif forceReimportTrials
+%         disp('Data already imported, but updating trialinfo');
+%         updateStimInfoSynapse(date,index);
+%     end
+end
+
+
+% % STEP 3: RUN MOVEMENT ANALYSIS
+% try
+%     runBatchROIAnalysis(animal) % ADDED 5/13/2019
+% catch
+%     warning('failed to run movement analysis');
+% end
+
+
+end
+
+
+
+
+
+
+
+
+
+
+function [electrodeLocation] = checkElectrode(date,index)
 % check to see if probe has been entered, if not, copy existing template
 try
-    [electrodeLocation] = getElectrodeLocationFromDateIndex(listOfAnimalExpts{1}(1:5),listOfAnimalExpts{1}(7:9));
+    [electrodeLocation] = getElectrodeLocationFromDateIndex(date,index);
 catch
     disp('Probe information not found.  Using template.');
     disp('WARNING!!! if probe configuration has changed, stop now and correct in database!!!');
@@ -44,43 +185,36 @@ catch
     end
 end
 
-% for iList = 1:length(listOfAnimalExpts)
-for iList = 47:48
-    date = listOfAnimalExpts{iList}(1:5);
-    index = listOfAnimalExpts{iList}(7:9);
-    dirStrAnalysis = [mousePaths.M 'PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
-    dirStrRecSource = ['\\144.92.237.187\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\']; 
-    dirStrRawData = [mousePaths.W 'data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
-    disp(['$$$ Processing ' date '-' index ' $$$']);
-    
-    % STEP 1 MOVE TDT TANK FILE TO W DRIVE
-    try
-        moveDataRecToRaw(dirStrRecSource,dirStrRawData);
-    catch
-        disp('moveDataRecToRaw didn''t run.');
-    end
-    
-    % STEP 2 CONVERT FROM TDT TANK FILE TO MATLAB FORMAT, SAVE TO MEMORYBANKS
-    dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
-    if isempty(dirCheck) || forceReimport
-        disp('Handing info to existing importData function.  This will take a few minutes.');
-        try
-            importDataSynapse(date,index);
-        catch
-            disp([date '-' index ' not imported!!']);
-        end
-    elseif forceReimportTrials
-        disp('Data already imported, but updating trialinfo');
-        updateStimInfoSynapse(date,index);
+
+end
+
+
+function checkConnection(location)
+    if exist(location,'dir') == 7
+        disp(['Connection to ' location ' confirmed']);
+    else
+        error(['Cannot connect to ' location ' Check connection to remote computer']);
     end
 end
 
-% STEP 3: RUN MOVEMENT ANALYSIS
-try
-    runBatchROIAnalysis(animal) % ADDED 5/13/2019
-catch
-    warning('failed to run movement analysis');
-end
+
+
+
+%     % %% MUA CHECK %% might want to fix up 'artifact rejection' option - some need it, some don't
+%     if ~isempty(strfind(descOfAnimalExpts{iList}{:},'Stim'))
+%         disp('Running MUA analysis')
+%         dirCheck = dir([dirStrAnalysis '*TrshldMUA_Stim*']);
+%         if isempty(dirCheck)
+%             analyzeMUAthresholdArtifactRejection('PassiveEphys',date,index,index,0,1,0,1,0,-.5,1.5,-.001,3,2,1,false);
+% %             analyzeMUAthresholdArtifactRejection(exptType,exptDate,exptIndex,threshIndex,rejectAcrossChannels,...
+% %     filterMUA,subtrCommRef,detection,interpolation,tPltStart,tPltStop,PSTHPlotMin,...
+% %     PSTHPlotMax,threshFac,batchBoolean,isArduino)
+%         else
+%             disp([date '-' index ' analyze MUA already done.']);
+%         end
+%     end
+
+
 % 
 % % STEP 4: RUN SPEC ANALYSIS
 % try
@@ -112,25 +246,6 @@ end
 % [gBatchParams, gMouseEphys_conn] =  mouseEphys_wPLIAnalysis(animal,forceReRun);
 % saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn);
 % toc
-
-end
-
-%     % %% MUA CHECK %% might want to fix up 'artifact rejection' option - some need it, some don't
-%     if ~isempty(strfind(descOfAnimalExpts{iList}{:},'Stim'))
-%         disp('Running MUA analysis')
-%         dirCheck = dir([dirStrAnalysis '*TrshldMUA_Stim*']);
-%         if isempty(dirCheck)
-%             analyzeMUAthresholdArtifactRejection('PassiveEphys',date,index,index,0,1,0,1,0,-.5,1.5,-.001,3,2,1,false);
-% %             analyzeMUAthresholdArtifactRejection(exptType,exptDate,exptIndex,threshIndex,rejectAcrossChannels,...
-% %     filterMUA,subtrCommRef,detection,interpolation,tPltStart,tPltStop,PSTHPlotMin,...
-% %     PSTHPlotMax,threshFac,batchBoolean,isArduino)
-%         else
-%             disp([date '-' index ' analyze MUA already done.']);
-%         end
-%     end
-
-
-
 
 
 

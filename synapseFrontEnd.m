@@ -35,7 +35,7 @@ S.dbConn = dbConnect();
 S.animalName = animalName;
 % TODO % we may want to add nHoursPre to the GUI as a toggle or parameter
 S.nHoursPre = 1; %1 % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
-S.nHoursPost = 4; % we've been doing 4, but consider adding it as a toggle in addition to nHoursPre
+S.nHoursPost = 6; % we've been doing 4, but consider adding it as a toggle in addition to nHoursPre
 
 % !! TODO !! % create parameter here to check for when inj is, and auto-next index stuff? urgent because this will allow us to streamline data collection
 
@@ -55,7 +55,9 @@ S.fh = figure('units','pixels',...
     'resize','off');  
 updateDynamicDisplayBox('Starting Synapse');
 S = synapseConnectionProcess(S); % Start Synapse, connect to recording computer            
-S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline','a5 Inverse Agonist','Piroxicam','Psilocybin','Psilocybin + LPS'};  %added Minocycline 2/12/2019 ZS % just add manipulations as needed for now.  if there's a funky setup, we need to edit synapseExptSetup to handle it (see how iso is handled)
+% S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline','a5 Inverse Agonist','Piroxicam','Psilocybin','Psilocybin + LPS'};  %added Minocycline 2/12/2019 ZS % just add manipulations as needed for now.  if there's a funky setup, we need to edit synapseExptSetup to handle it (see how iso is handled)
+S.Preselects = {'Stim alone','Saline','LPS','Psilocybin','DOI'};  %added Minocycline 2/12/2019 ZS % just add manipulations as needed for now.  if there's a funky setup, we need to edit synapseExptSetup to handle it (see how iso is handled)
+
 uicontrol('style','text',...
     'units','pix',...
     'position',[10 650 120 30],...
@@ -476,7 +478,8 @@ function [S] = setupExpt(varargin)
 S.experimentDrugManipulation = get(S.pp,'Value'); % Get the user's choice.
 disp(['Setting up ' S.Preselects{S.experimentDrugManipulation} ' experiment.']);
 %synapseExptSetup sets up all the indices
-S.Experiment = synapseExptSetup(S.animalName,S.Preselects{S.experimentDrugManipulation},S.nHoursPre,S.nHoursPost,S.forceStimPresentation);
+%S.Experiment = synapseExptSetup(S.animalName,S.Preselects{S.experimentDrugManipulation},S.nHoursPre,S.nHoursPost,S.forceStimPresentation);
+S.Experiment = synapseExptBlockSetup(S.animalName,S.Preselects{S.experimentDrugManipulation},S.nHoursPre,S.nHoursPost);
 S.ExperimentsRemaining = S.Experiment;
 setupExptToBeRun(S);
 

@@ -5,8 +5,11 @@ function saveMagnetDataFiles(exptDate,Animal1,Animal2)
 % animals = {'EEG154','EEG155'};
 %saveMagnetDataFiles('21401', 'EEG181', 'EEG183');
 % animal1 = {'EEG181', 'EEG183'};
-% exptDate = '21401'
-
+% exptDate = '21430'
+% Animal1 = {'Mag014', 'Mag015'};
+% exptDate = '21430'
+% Animal1 = 'Mag014'
+% Animal2 = 'Mag015'
 
 if ~exist('Animal2','var')
     animals = {Animal1};
@@ -26,7 +29,7 @@ tankpath = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\']; %tank file location
  
 % loop through animals
 for ianimal = 1:length(animals)
-    name = animals{ianimal};
+    name = animals{1,ianimal};
     tnk = istank(ianimal);
     % grab dates/expts
     expts = getExperimentsByAnimalAndDate(name,exptDate);

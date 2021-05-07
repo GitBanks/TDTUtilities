@@ -13,7 +13,8 @@ clear all
 %treatment = 'DOI_conc';
 %treatment = '5-MeO-MiPT';
 %treatment = 'Pyr-T';
-treatment = '4-AcO-DMT';
+%treatment = '4-AcO-DMT';
+treatment = '5-MeO-pyrT';
 dateTable = getDateAnimalUniqueByTreatment(treatment);
 
 
