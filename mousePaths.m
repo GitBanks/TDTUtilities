@@ -1,12 +1,34 @@
 classdef mousePaths
-   % an attempt to keep tricky file paths contained in one area.
-   % access them like: mousePaths.w
-   % Using the static IP address so hopefully avoiding mapping issues
-    properties (Constant)
-        
-        M = '\\144.92.237.185\Data\'; % M drive
-        W = '\\144.92.218.131\Data\'; % W drive % keep in mind W has a ...\data\data\... path structure, so be sure that's accounted for when using this
-        Z = '\\144.92.237.181\Data\'; % Z drive
-        
+    
+% an attempt to keep tricky file paths contained in one area.
+% access them like: mousePaths.w
+% Using the static IP address so hopefully avoiding mapping issues
+properties (Constant)
+    M = '\\144.92.237.185\Data\'; % M drive
+    W = '\\144.92.218.131\Data\data\'; % W drive % keep in mind W has a ...\data\data\... path structure, so be sure that's accounted for when using this
+    Z = '\\144.92.237.181\Data\'; % Z drive
+    RECA = '\\144.92.237.187\Data\PassiveEphys\';
+    RECB = '\\144.92.237.183\Data\PassiveEphys\';
+end
+
+
+methods
+    
+    function checkConnection(location)
+        if exist(location,'dir') == 7
+            disp(['Connection to ' location ' confirmed']);
+        else
+            error(['Cannot connect to ' location ' Check connection to remote computer']);
+        end
     end
+    
+    function checkAllConnections
+        mc = ?mousePaths
+        mc.PropertyList(1,1).DefaultValue
+    end
+    
+    
+
+end
+
 end

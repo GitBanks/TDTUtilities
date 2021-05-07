@@ -13,28 +13,31 @@ indexLabels = {'Baseline','LTP','LTD'}; % these correspond to each stimset we lo
 
 exptDate = '21428';
 exptIndex = '009';
-[stimSet(1),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+%evokedData = struct();
+%[stimSet(1),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+[evokedData(1),dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
 
 exptDate = '21428';
 exptIndex = '013';
-[stimSet(2),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+%[stimSet(2),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+[evokedData(2),dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
 
 exptDate = '21428';
 exptIndex = '015';
-[stimSet(3),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
-
+%[stimSet(3),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+[evokedData(3),dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
 
 % % % % ============ plot raw data overlay ============= % % % %
 % Raw subtracted traces
 
 plotTimeArray = -tPreStim:dTRec:tPostStim;
 figure()
-for iSet = 1:size(stimSet,2)
+for iSet = 1:size(evokedData,2)
     subtightplot(3,1,iSet);
     try
-        plot(plotTimeArray,squeeze(stimSet(iSet).sub(1,:,:)));
+        plot(plotTimeArray,squeeze(evokedData(iSet).sub(1,:,:)));
     catch
-        plot(plotTimeArray,squeeze(stimSet(iSet).sub(1,:,1:end-1)));
+        plot(plotTimeArray,squeeze(evokedData(iSet).sub(1,:,1:end-1)));
     end
     ylim([-2e-4,2e-4]);
 end
@@ -55,18 +58,18 @@ figure()
 minY = 0;
 maxY = 0;
 %plotColor = {'or','ob','ok'};
-for iSet = 1:size(stimSet,2)
+for iSet = 1:size(evokedData,2)
 % peak min
 searchWindow = plotTimeArray>beginSlopeSearch&plotTimeArray<endSlopeSearch;
-[MinA,Imin] = min(stimSet(iSet).subMean(iChan,searchWindow)); % this finds the lowest point within a range
+[MinA,Imin] = min(evokedData(iSet).subMean(iChan,searchWindow)); % this finds the lowest point within a range
 startIndex = find(plotTimeArray>beginSlopeSearch,1,'First'); % this is the beginning of the slope
 minPeakIndex = startIndex+(Imin);
 
-avgMinPeaks = mean(stimSet(iSet).subMean(iChan,minPeakIndex+startIndex-4:minPeakIndex+startIndex+4));
-minBaseline = mean(stimSet(iSet).subMean(iChan,1:100));
+avgMinPeaks = mean(evokedData(iSet).subMean(iChan,minPeakIndex+startIndex-4:minPeakIndex+startIndex+4));
+minBaseline = mean(evokedData(iSet).subMean(iChan,1:100));
 
 %plot out trace to confirm following rise time calculations
-responseTrace = stimSet(iSet).subMean(iChan,searchWindow);
+responseTrace = evokedData(iSet).subMean(iChan,searchWindow);
 % figure;
 % plot(plotTimeArray(searchWindow),responseTrace)
 % find rise time - note, might need to shorten search window to include
@@ -110,7 +113,7 @@ end
 
 minY = minY*1.05;
 maxY = maxY*1.05;
-for iSet = 1:size(stimSet,2)
+for iSet = 1:size(evokedData,2)
     subtightplot(3,1,iSet);
     ylim([minY,maxY]);
 end
@@ -146,7 +149,7 @@ end
 
 % % % % ============ plot comparison of baseline, LTP LTD  ============= % % % %
 figSub = figure();
-nRow = length(stimSet);
+nRow = length(evokedData);
 nCol = 3;
 figure(figSub);
 plotTimeArray = -tPreStim:dTRec:tPostStim;
@@ -159,9 +162,9 @@ for iRec = 1:nRow
          subtightplot(nRow,nCol,iBrainLoc+(nCol*(iRec-1)));
 %          subtightplot(nRow,nCol,iBrainLoc+(nCol*(iRec-1)))
          try
-            plot(plotTimeArray,stimSet(iRec).subMean(iBrainLoc,1:end));
+            plot(plotTimeArray,evokedData(iRec).subMean(iBrainLoc,1:end));
          catch
-            plot(plotTimeArray,stimSet(iRec).subMean(iBrainLoc,1:end-1));
+            plot(plotTimeArray,evokedData(iRec).subMean(iBrainLoc,1:end-1));
         end
              
          hold on;
@@ -183,8 +186,8 @@ for iRec = 1:nRow
 %          end
          
          
-         minY = min(minY,min(stimSet(iRec).subMean(iBrainLoc,plotTimeArray>.005&plotTimeArray<.1)));
-         maxY = max(maxY,max(stimSet(iRec).subMean(iBrainLoc,plotTimeArray>.005&plotTimeArray<.1)));
+         minY = min(minY,min(evokedData(iRec).subMean(iBrainLoc,plotTimeArray>.005&plotTimeArray<.1)));
+         maxY = max(maxY,max(evokedData(iRec).subMean(iBrainLoc,plotTimeArray>.005&plotTimeArray<.1)));
          xlim([-0.01,0.05]);
          drawnow;
      end
