@@ -1,5 +1,5 @@
 function setElectrodeLocationFromAnimal(originalAnimal,targetAnimal)
-% Copies electrode map and description from one animal to another in the 
+% Copies electrode map and description from one animal to another in the
 % database, because most maps are standardized and replicated.
 % test example
 % originalAnimal = 'LFP16';
@@ -16,11 +16,11 @@ try
     animalIDTarget = fetchAdjust(dbConn,['SELECT animalID FROM animals WHERE animalName = ''' targetAnimal '''']);
     animalIDTarget = animalIDTarget{1};
     % add a check here to make sure there isn't already a probe for this animal
-    if ~isempty(fetchAdjust(dbConn,['SELECT * FROM probe WHERE animalID='  num2str(animalIDTarget) ]));
+    if ~isempty(fetchAdjust(dbConn,['SELECT * FROM probe WHERE animalID='  num2str(animalIDTarget) ]))
         error('probe information already exists')
     end
-catch
-    error('Second animal not found');
+catch why
+    keyboard
 end
 
 addNotebookEntry = ['INSERT INTO probe (probeName, channelNames, probeTarget,'...

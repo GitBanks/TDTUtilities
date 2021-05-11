@@ -9,6 +9,3 @@ for iExpt = 1:length(pars.expt)
     end
 end
 
-params.windowLength = pars.windowLength; %sec
-params.windowOverlap = pars.windowOverlap; %sec 
-

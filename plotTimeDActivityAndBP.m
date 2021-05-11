@@ -5,7 +5,7 @@ function [] = plotTimeDActivityAndBP(animalName,band,saveP)
 
 % HISTORY: 
 %   3/21/19 I inherited this script from Liz & Sean and am now making my own
-%   edits. My previous copy was not saved due to a git mistake - Ziyad Sultan
+%   edits. - Ziyad Sultan
 %   Switched from cubic method to pchip based on matlab warnings. Add
 %   saving feature. Adjust xticklabels to represent hours. 
 
@@ -35,37 +35,39 @@ switch nargin
         disp('note: plot will not be saved');
 end
 
-if ~exist('mouseEphys_out','var')
-    disp('loading mouseEphys_out structure')
-    load('\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\mouseEphys_out_noParse.mat');
-    disp('mouseEphys_out loaded')
+if ~exist('ephysData','var')
+    disp('loading ephysData structure')
+    [ephysData,params] = loadEphysData('power');
+%     load('\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\ephysData_noParse_psychedelics.mat');
+    disp('ephysData loaded')
 end
 
-chan = 1; % only set to do one chan for now!!!
+chan = 3; % only set to do one chan for now!!!
 
-ephysDates = fields(mouseEphys_out.(animalName));
-batchDates = fields(batchParams.(animalName));
+ephysDates = fields(ephysData.(animalName));
+batchDates = fields(params.(animalName));
 dates = intersect(batchDates,ephysDates);
-chanLabels = batchParams.(animalName).ephysInfo.chanLabels;
+chanLabels = params.(animalName).ephysInfo.chanLabels;
 
 %WARNING: ASSUMES 4SEC WINDOWLENGTH AND .25SEC OVERLAP
+disp('using 4sec windowLength and .25 overlap');
 windowLength = 4;
 windowOverlap = .25;
 
 disp('extracting band power and activity');
 for iDate = 1:length(dates)
-    expts = fields(mouseEphys_out.(animalName).(dates{iDate}));
+    expts = fields(ephysData.(animalName).(dates{iDate}));
     tempExptBandpower = [];
     tempExptActivity = [];
     for iExpt = 1:length(expts)
-        trialsKeptThisExpt = mouseEphys_out.(animalName).(dates{iDate}).(expts{iExpt}).trialsKept;
-        ephysDataThisExpt = zeros(1,size(batchParams.(animalName).(dates{iDate}).trialInfo(iExpt).trialTimesRedef,1));
-        movementDataThisExpt = zeros(1,size(batchParams.(animalName).(dates{iDate}).trialInfo(iExpt).trialTimesRedef,1));
+        trialsKeptThisExpt = ephysData.(animalName).(dates{iDate}).(expts{iExpt}).trialsKept;
+        ephysDataThisExpt = zeros(1,size(params.(animalName).(dates{iDate}).trialInfo(iExpt).trialTimesRedef,1));
+        movementDataThisExpt = zeros(1,size(params.(animalName).(dates{iDate}).trialInfo(iExpt).trialTimesRedef,1));
         for iWindow = 1:length(ephysDataThisExpt)
             if ismember(iWindow,trialsKeptThisExpt)
-                ephysDataThisExpt(iWindow) = mouseEphys_out.(animalName).(dates{iDate}).(expts{iExpt}).bandPow.(band)(trialsKeptThisExpt == iWindow,chan)/...
-                    mouseEphys_out.(animalName).(dates{iDate}).(expts{iExpt}).bandPow.all(trialsKeptThisExpt== iWindow,chan); %commented out 5/23/2019
-                movementDataThisExpt(iWindow) = mouseEphys_out.(animalName).(dates{iDate}).(expts{iExpt}).activity(trialsKeptThisExpt == iWindow);
+                ephysDataThisExpt(iWindow) = ephysData.(animalName).(dates{iDate}).(expts{iExpt}).bandPow.(band)(trialsKeptThisExpt == iWindow,chan)/...
+                    ephysData.(animalName).(dates{iDate}).(expts{iExpt}).bandPow.all(trialsKeptThisExpt== iWindow,chan); %commented out 5/23/2019
+                movementDataThisExpt(iWindow) = ephysData.(animalName).(dates{iDate}).(expts{iExpt}).activity(trialsKeptThisExpt == iWindow);
             else
                 ephysDataThisExpt(iWindow) = NaN;
                 movementDataThisExpt(iWindow) = NaN;
@@ -79,17 +81,17 @@ for iDate = 1:length(dates)
         tempExptBandpower = [tempExptBandpower ephysDataThisExpt];
         tempExptActivity = [tempExptActivity movementDataThisExpt];
         if iExpt ~=length(expts)
-            nWindowsBetweenIndices = round((batchParams.(animalName).(dates{iDate}).trialInfo(iExpt+1).trialTimes(1) - ...
-                (batchParams.(animalName).(dates{iDate}).trialInfo(iExpt).trialTimes(end) + 20))/windowLength*...
+            nWindowsBetweenIndices = round((params.(animalName).(dates{iDate}).trialInfo(iExpt+1).trialTimes(1) - ...
+                (params.(animalName).(dates{iDate}).trialInfo(iExpt).trialTimes(end) + 20))/windowLength*...
                 (1-windowOverlap));
             tempExptBandpower = [tempExptBandpower NaN(1,nWindowsBetweenIndices)];
             tempExptActivity = [tempExptActivity NaN(1,nWindowsBetweenIndices)];
         end
         tempIndexPop(iExpt) = length(tempExptBandpower);
-        tempTimeSincePoke(iExpt) = round((batchParams.(animalName).(dates{iDate}).trialInfo(iExpt).trialTimes(1) - batchParams.(animalName).(dates{iDate}).trialInfo(2).trialTimes(1))/60,1);
-        tempTimeReInj(iExpt) = batchParams.(animalName).(dates{iDate}).timeReInj(iExpt);
+        tempTimeSincePoke(iExpt) = round((params.(animalName).(dates{iDate}).trialInfo(iExpt).trialTimes(1) - params.(animalName).(dates{iDate}).trialInfo(2).trialTimes(1))/60,1);
+        tempTimeReInj(iExpt) = params.(animalName).(dates{iDate}).timeReInj(iExpt);
         if iExpt == length(expts)
-           tempTimeSincePoke(iExpt + 1) = round((batchParams.(animalName).(dates{iDate}).trialInfo(iExpt).trialTimes(end) - batchParams.(animalName).(dates{iDate}).trialInfo(2).trialTimes(1))/60,1);
+           tempTimeSincePoke(iExpt + 1) = round((params.(animalName).(dates{iDate}).trialInfo(iExpt).trialTimes(end) - params.(animalName).(dates{iDate}).trialInfo(2).trialTimes(1))/60,1);
         end
     end
     timeRelation(iDate).Bandpower = tempExptBandpower;
@@ -121,9 +123,9 @@ for iPlot = 1:length(timeRelation)
     plot((timeRelation(iPlot).Activity)/scaleFactor+offset);
     xlim([-20,length(timeRelation(iPlot).Activity)+20])
     ylim([0,yMaxCalc*10]);
-        if size(batchParams.(animalName).(dates{iPlot}).treatment,2) > 1
-            treatments = batchParams.(animalName).(dates{iPlot}).treatment;
-        end
+%         if size(params.(animalName).(dates{iPlot}).treatment,2) > 1
+            treatments = params.(animalName).(dates{iPlot}).treatment;
+%         end
         for iTreat = 1%:size(treatments,2)
             tempX = timeRelation(iPlot).indexPop(iTreat);
             tempY = max(ylim);
@@ -142,7 +144,7 @@ for iPlot = 1:length(timeRelation)
     ylabel(dates{iPlot});
     if iPlot == length(timeRelation)
        xlabel('Time re: inj (hr)');
-       legend([band ' power'],'activity','Location','NorthEast');
+       legend([band ' power'],'movement','Location','NorthEast');
     end
 end
 clear timeRelation
@@ -154,17 +156,3 @@ if saveP
     outPath = 'M:\mouseEEG\Power vs activity\';
     savePlot(outPath,figureName)
 end
-
-
-% OLD SHIT:
-%     plot(timeRelation(iPlot).indexPop,0,'k*');
-%     xlim([0,length(timeRelation(length(timeRelation)).Activity)]);
-%what the fuck is this??
-% for iDate = 1:2 
-%     timeRelation(iDate).Activity = timeRelation(iDate).Activity/4;
-% end
-%     set(gca,'xticklabel',timeRelation(iPlot).timeSincePoke);
-%timeRelation(iDate).div = tempExptBandpower./tempExptActivity; %what is this???
-
-
-

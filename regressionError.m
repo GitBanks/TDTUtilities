@@ -1,4 +1,4 @@
-function [xval,yhat,ylow,yupp] = regressionError(y,x1)
+function [xval,yhat,ylow,yupp,stats] = regressionError(y,x1)
 % regressionError Calculate linear fit and confidence intervals for the mean
 %
 %   regressionError(y,x1) uses x1 as a linear predictor of y plus an
@@ -10,7 +10,8 @@ function [xval,yhat,ylow,yupp] = regressionError(y,x1)
 X = [ones(size(x1)) x1];
 n = length(y);
 
-[b] = regress(y,X);
+% [b,bint,r,rint,stats]
+[b,~,~,~,stats] = regress(y,X);
 b0 = b(1);
 b1 = b(2);
 

@@ -5,35 +5,23 @@ function saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out)
 % 2. add updated animal
 % 3. save
 
-% TO-DO: Fix how dates are handled. Right now only one date is saved in
-% ephys. Attempted a fix - 3/21/2019 ZS
+specFile = EEGUtils.specFile;
 
-% Hardcoded :( please consider making a config file...
-outFileName = 'mouseEphys_out_noParse.mat';
-computerSpecPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
+if ~exist(specFile,'file')
+    error([specFile ' does not exist! check path.'])
+end
 
-if ~exist([computerSpecPath outFileName],'file')
-    error([outFileName ' does not exist! check path.'])
+try
+    load(specFile,'mouseEphys_out','batchParams');
+catch
+    warning([specFile ' not found. Creating new save file']);
 end
 
 gName = fieldnames(gBatchParams);
 gName = gName{1,1};
 dates = fieldnames(gMouseEphys_out.(gName));
 
-% this take like 30 sec to load... is this sustainable?
-load([computerSpecPath outFileName],'mouseEphys_out','batchParams');
-
-
-animals = fieldnames(batchParams);
-
-%add check to see if ephys info has already been entered for this animal. 
-if ~sum(contains(animals,gName)) > 0 %added 4/22/19
-    batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
-    batchParams.(gName).ephysInfo = gBatchParams.(gName).bandInfo;
-elseif ~contains(fieldnames(batchParams.(gName)),'ephysInfo')
-    batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;  
-    batchParams.(gName).ephysInfo = gBatchParams.(gName).bandInfo;
-end
+batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
 
 for iDate = 1:length(dates)
     thisDate = dates{iDate};
@@ -41,7 +29,7 @@ for iDate = 1:length(dates)
     mouseEphys_out.(gName).(thisDate) = gMouseEphys_out.(gName).(thisDate);
 end
 
-save([computerSpecPath outFileName],'mouseEphys_out','batchParams');
+save(specFile,'mouseEphys_out','batchParams');
 disp('mouseEphys_out and batchParams saved!');
 
 
