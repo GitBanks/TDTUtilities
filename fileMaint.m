@@ -35,11 +35,12 @@ manuallySetGlobalParamUI(animal);
 % establish a few parameters to keep the main loop clean.
 % We should improve root locations - REC could be different.  We could also
 % check for connections here so that later attempts to connect don't fail
-dirStrAnalysisROOT = [mousePaths.M 'PassiveEphys\'];
-dirStrRecSourceAROOT = '\\144.92.237.187\Data\PassiveEphys\';
-dirStrRecSourceBROOT = '\\144.92.237.183\Data\PassiveEphys\'; 
-dirStrRawDataROOT = [mousePaths.W 'PassiveEphys\'];
-dirStrServer = '\\Server1\data\';
+dirStrAnalysisROOT = [mousePaths.M 'PassiveEphys\']; % 'M' drive
+dirStrRecSourceAROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
+dirStrRecSourceBROOT = '\\144.92.237.183\Data\PassiveEphys\'; %Gilgamesh
+dirStrRawDataROOT = [mousePaths.W 'PassiveEphys\']; %'W' drive
+dirStrServer = '\\144.92.237.186\'; %Helmholz
+% dirStrServer = '\\Server1\data\';
 
 % we often have network connection issues.  Handle that verification here,
 % so later errors aren't confusing.  checkConnection is a local function.
