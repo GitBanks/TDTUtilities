@@ -1,14 +1,12 @@
-function evokedStimAveragesMCStimBatchFile(exptDate,exptIndex,chanLabels)
+function evokedStimAveragesMCStimBatchFile(exptDate,exptIndex)
 
 %%
 % User-defined parameters
 if ~exist('exptDate','var') || ~exist('exptIndex','var') || ~exist('chanLabels','var')
-%     exptDate = '21505';
-%     exptIndex = '005';
-    exptDate = '21517'; chanLabels = {'contra vHipp','ipsi mPFC','contra mPFC'};
-    exptIndex = '001';
-%     exptDate = '21510'; chanLabels = {'contra mPFC','contra vHipp','ipsi mPFC'};
-%     exptIndex = '000';
+%     exptDate = '21517'; 
+%     exptIndex = '002';
+    exptDate = '21510';
+    exptIndex = '000';
      %exptDate = '21311';
      %exptIndex ='009';
 end
@@ -16,6 +14,13 @@ outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
 if ~exist(outPath,'dir')
     mkdir(outPath);
 end
+
+animalName = getAnimalByDateIndex(exptDate,exptIndex);
+electrodeLocs = getElectrodeLocationFromDateIndex(exptDate,exptIndex);
+
+%%%%NOTE: The following assumes that channels are arranged in pairs and
+%%%%every other label is a new ROI name
+ROILabels = electrodeLocs(1:2:6);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set time windows and polarities for peak searching 
@@ -32,7 +37,7 @@ pkSign(1) = +1;
 tPreStim = 0.02; %sec
 tPostStim = 0.2; %sec
 % Start searching for peaks and troughs of responses after this time
-artifactEnd = 2.e-3; %sec;
+artifactEnd = 5.e-3; %sec;
 % Average over this window to get estimate of peak value
 avgWinTime = 1.e-3; %sec; 
 % Time window re stim time to calculate baseline value that is subtracted from peak values
@@ -93,7 +98,7 @@ for iPk = 1:nPks
     legendLabs{iPk} = ['Pk ' num2str(iPk)];
 end
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
-FigName = ['Stim-Resp plot - ' exptDate '_' exptIndex];
+FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
 thisFig = figure('Name',FigName);
 for iROI = 1:nROIs
     % Plot avg traces
@@ -109,7 +114,7 @@ for iROI = 1:nROIs
     if iROI == 1
         ax.YLabel.String = 'avg dataSub (V)';
     end
-    ax.Title.String = chanLabels{iROI};
+    ax.Title.String = ROILabels{iROI};
     if iROI == nROIs
         legend(ampLabel);
     end
