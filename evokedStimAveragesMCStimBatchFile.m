@@ -5,20 +5,27 @@ function evokedStimAveragesMCStimBatchFile(exptDate,exptIndex,chanLabels)
 if ~exist('exptDate','var') || ~exist('exptIndex','var') || ~exist('chanLabels','var')
 %     exptDate = '21505';
 %     exptIndex = '005';
-    exptDate = '21510'; chanLabels = {'contra mPFC','contra vHipp','ipsi mPFC'};
-    exptIndex = '000';
+    exptDate = '21517'; chanLabels = {'contra vHipp','ipsi mPFC','contra mPFC'};
+    exptIndex = '001';
+%     exptDate = '21510'; chanLabels = {'contra mPFC','contra vHipp','ipsi mPFC'};
+%     exptIndex = '000';
      %exptDate = '21311';
      %exptIndex ='009';
+end
+outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+if ~exist(outPath,'dir')
+    mkdir(outPath);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set time windows and polarities for peak searching 
-pkSearchWin = [4,20;20,50]*1.e-3; %Time window re stim time to search for peak minimum resp
-nPks = size(pkSearchWin,2);
+% pkSearchWin = [4,20;20,50]*1.e-3; %Time window re stim time (sec) to search for peak minimum resp
+pkSearchWin = [10,25]*1.e-3; %Time window re stim time (sec) to search for peak minimum resp
+nPks = size(pkSearchWin,1);
 %Is pk #k a peak (+1) or a trough (-1)?
 pkSign = ones(nPks,1);
 pkSign(1) = +1;
-pkSign(2) = -1;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Window for analysis and plotting, relative to stim time
@@ -86,7 +93,8 @@ for iPk = 1:nPks
     legendLabs{iPk} = ['Pk ' num2str(iPk)];
 end
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
-figure()
+FigName = ['Stim-Resp plot - ' exptDate '_' exptIndex];
+thisFig = figure('Name',FigName);
 for iROI = 1:nROIs
     % Plot avg traces
     subplot(2,nROIs,iROI)
@@ -120,4 +128,5 @@ for iROI = 1:nROIs
         legend(legendLabs);
     end
 end
+saveas(thisFig,[outPath FigName]);
 
