@@ -73,7 +73,7 @@ preStimIndex = floor(tPreStim/dTRec);
 postStimIndex = ceil(tPostStim/dTRec);
 
 if nTrials ~= length(trialPattern)
-    disp(['WARNING! Number of stims in Synapse data file = ' num2str(nTrials)...
+    disp(['WARNING! Number of trials in Synapse data file = ' num2str(nTrials)...
         ' but length of trialPattern = ' num2str(length(trialPattern))]);
     if nTrials<length(trialPattern)
         disp('Truncating trialPattern to match nTrials...')
