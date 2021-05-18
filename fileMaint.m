@@ -36,10 +36,12 @@ manuallySetGlobalParamUI(animal);
 % We should improve root locations - REC could be different.  We could also
 % check for connections here so that later attempts to connect don't fail
 dirStrAnalysisROOT = [mousePaths.M 'PassiveEphys\']; % 'M' drive
-dirStrRecSourceAROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
+%dirStrRecSourceAROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
+dirStrRecSourceAROOT = '\\144.92.237.183\Data\PassiveEphys\'; % FAKE THIS OUT SINCE IT"S NOT HANDLING BAD CONNECTIONS WELL
 dirStrRecSourceBROOT = '\\144.92.237.183\Data\PassiveEphys\'; %Gilgamesh
 dirStrRawDataROOT = [mousePaths.W 'PassiveEphys\']; %'W' drive
-dirStrServer = '\\144.92.237.186\'; %Helmholz
+%dirStrServer = '\\144.92.237.186\'; %Helmholz
+dirStrServer = '\\HELMHOLTZ\'; %Helmholz another way
 % dirStrServer = '\\Server1\data\';
 
 % we often have network connection issues.  Handle that verification here,
