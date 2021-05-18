@@ -56,7 +56,7 @@ for iROI = 1:nROIs
         plotMin = min([plotMin,min(evDataSet(iSet).subMean(iROI,preStimIndex+startSearchIndex:end))]);
     end
     % Plot avg traces
-    subplot(1,nROIs,iROI)
+    subPlt(iROI) = subplot(1,nROIs,iROI);
     hold on
     for iSet = 1:nExpts
         plot(plotTimeArray,evDataSet(iSet).subMean(iROI,:));
@@ -73,62 +73,72 @@ for iROI = 1:nROIs
         legend(exptIndices);
     end
 end
+% Have user click on peaks in each subplot to inform peak search windows
+tPk = [];
+yPk = [];
+for iROI = 1:nROIs
+    ax=subPlt(iROI);
+    [tPk(iROI),yPk(iROI)] = ginput(1);
+end
 
 %%
 % % % % ============ plot peak amplitude time series ============= % % % %
-iChan = 1; % loop through this?
-plotTimeArray = -tPreStim:dTRec:tPostStim;
-beginTimeWindow = .005; %this is start of time window
-endTimeWindow = .02; %this is end of time window
-searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow;
-
-allCorrectedPeaks = []; % cat peaks for all hours
-allStimTimes = []; % cat event times for all hours
-timeElapsed = 0;
-for iSet = 1:size(evDataSet,2)
-    % peak min
-    % searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow
+FigName = ['Time series - ' animalName '_' exptDate];
+thisFig = figure('Name',FigName);
+for iROI = 1:nROIs
+    beginTimeWindow = tPk(iROI) - tPk(iROI)/2; %this is start of time window
+    endTimeWindow = tPk(iROI) + tPk(iROI)/2; %this is end of time window
+    searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow;
     startIndex = find(plotTimeArray>beginTimeWindow,1,'First');
 
-    %tracePeaks = zeros(1,size(stimSet(iSet).sub,2));
-    for iIndex = 1:size(evDataSet(iSet).sub,2)
-        [~,Imin] = min(evDataSet(iSet).sub(1,iIndex,searchWindow)); % this finds the lowest point within a range
-        minPeakIndex = startIndex+Imin;
-        indexRange = minPeakIndex-4:minPeakIndex+4;
-        tracePeaks(iIndex) = mean(evDataSet(iSet).sub(1,iIndex,indexRange),3);
+    allCorrectedPeaks = []; % cat peaks for all hours
+    allStimTimes = []; % cat event times for all hours
+    timeElapsed = 0;
+    for iSet = 1:nExpts
+        % peak min
+        % searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow
+        nTrials(iSet) = size(evDataSet(iSet).sub,2);
+        %tracePeaks = zeros(1,size(stimSet(iSet).sub,2));
+        for iTrial = 1:nTrials(iSet)
+            if yPk(iROI)<0
+                [~,pkIndex] = min(evDataSet(iSet).sub(iROI,iTrial,searchWindow)); % this finds the lowest point within a range
+            else
+                [~,pkIndex] = max(evDataSet(iSet).sub(iROI,iTrial,searchWindow)); % this finds the lowest point within a range
+            end
+            adjPeakIndex = startIndex+pkIndex;
+            indexRange = adjPeakIndex-4:adjPeakIndex+4;
+            tracePeaks(iTrial) = mean(evDataSet(iSet).sub(iROI,iTrial,indexRange),3);
+        end
+
+        traceBaseline = mean(evDataSet(iSet).sub(iROI,:,1:100),3);
+        allCorrectedPeaks = cat(2,allCorrectedPeaks,tracePeaks-traceBaseline);
+
+        timeElapsed = timeElapsed+recDelay(iSet);
+        allStimTimes = cat(2,allStimTimes,(evDataSet(iSet).stimOnset'+timeElapsed));
+        timeElapsed = timeElapsed+evDataSet(iSet).stimOnset(end);
+        nTrials(iSet) = size(evDataSet(iSet).sub,2);
+        clear tracePeaks
     end
-
-    traceBaseline = mean(evDataSet(iSet).sub(1,:,1:100),3);
-    allCorrectedPeaks = cat(2,allCorrectedPeaks,tracePeaks-traceBaseline);
-
-    timeElapsed = timeElapsed+recDelay(iSet);
-    allStimTimes = cat(2,allStimTimes,(evDataSet(iSet).stimOnset'+timeElapsed));
-    timeElapsed = timeElapsed+evDataSet(iSet).stimOnset(end);
-    npoints(iSet) = size(evDataSet(iSet).sub,2);
-    clear tracePeaks
-end
 
 
 %This will plot out time series of every averaged peak
 
+    plotColor = {'or','ob','ok'};
+    subplot(nROIs,1,iROI);
 
+    allStimTimes = allStimTimes/60;
 
-
-plotColor = {'or','ob','ok'};
-figure();
-
-allStimTimes = allStimTimes/60;
-
-plot(allStimTimes(1:npoints(1)),allCorrectedPeaks(1:npoints(1)),'o'); %This step corrects for the baseline and also plots the time series
-hold on
-plot(allStimTimes(npoints(1)+1:npoints(1)+npoints(2)),allCorrectedPeaks(npoints(1)+1:npoints(1)+npoints(2)),'o');
-plot(allStimTimes(npoints(1)+npoints(2)+1:end),allCorrectedPeaks(npoints(1)+npoints(2)+1:end),'o');
-xlabel('Time')
-ylabel('Adjusted min amplitude')
+    plot(allStimTimes(1:nTrials(1)),allCorrectedPeaks(1:nTrials(1)),'o'); %This step corrects for the baseline and also plots the time series
+    hold on
+    plot(allStimTimes(nTrials(1)+1:nTrials(1)+nTrials(2)),allCorrectedPeaks(nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
+    plot(allStimTimes(nTrials(1)+nTrials(2)+1:end),allCorrectedPeaks(nTrials(1)+nTrials(2)+1:end),'o');
+    xlabel('Time')
+    ylabel('Adjusted min amplitude')
+    title(ROILabels{iROI});
 
 % minY = 0;
 % maxY = 0;
-
+end
 
 
 
