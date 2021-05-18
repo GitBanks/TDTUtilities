@@ -85,3 +85,4 @@ end
 evData.dataMean = squeeze(mean(evData.data,2));
 evData.subMean = squeeze(mean(evData.sub,2));
 evData.info = data.info;
+evData.stimTimes = stimTimes;

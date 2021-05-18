@@ -114,8 +114,8 @@ for iROI = 1:nROIs
         allCorrectedPeaks = cat(2,allCorrectedPeaks,tracePeaks-traceBaseline);
 
         timeElapsed = timeElapsed+recDelay(iSet);
-        allStimTimes = cat(2,allStimTimes,(evDataSet(iSet).stimOnset'+timeElapsed));
-        timeElapsed = timeElapsed+evDataSet(iSet).stimOnset(end);
+        allStimTimes = cat(2,allStimTimes,(evDataSet(iSet).stimTimes'+timeElapsed));
+        timeElapsed = timeElapsed+evDataSet(iSet).stimTimes(end);
         nTrials(iSet) = size(evDataSet(iSet).sub,2);
         clear tracePeaks
     end
