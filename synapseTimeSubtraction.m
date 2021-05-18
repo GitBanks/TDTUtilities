@@ -1,7 +1,7 @@
 function timeOut = synapseTimeSubtraction(timeInOne,timeInTwo)
 % this finds time differences from the synapse beginning time stamp
 % given two times in the Synapse format
-% return the difference
+% return the difference in seconds
 % timeInOne='19:23:31';
 % timeInTwo='18:58:01';
 

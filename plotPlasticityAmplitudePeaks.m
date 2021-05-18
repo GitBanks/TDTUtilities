@@ -3,64 +3,109 @@
 % discrete sections for readability and modularity reasons.
 
 
-tPreStim = 0.2;
-tPostStim = 0.5;
+tPreStim = 0.02;
+tPostStim = 0.2;
 %timeSpans = 4.9*60; %time in seconds (min*60) to group responses into
 
 indexLabels = {'Baseline','LTP','LTD'}; % these correspond to each stimset we load below
 
 % % % % =========  load data in this block  ========= % % % %
 exptDate = '21515';
-exptIndex = '003';
-[stimSet(1)] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
+exptIndices = {'003','009','012'};
+nExpts = length(exptIndices);
+for iExpt = 1:nExpts
+    exptIndex = exptIndices{iExpt};
+    [dataTemp,dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
+    evDataSet(iExpt) = dataTemp;
+end
 
-exptDate = '21515';
-exptIndex = '009';
-[stimSet(2)] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
+% Get gaps between data files in seconds
+recDelay = zeros(1,nExpts);
+for iExpt = 2:nExpts
+    t2 = evDataSet(iExpt).info.utcStartTime;
+    t1 = evDataSet(iExpt-1).info.utcStopTime;
+    recDelay(iExpt) = synapseTimeSubtraction(t2,t1);
+end
 
-exptDate = '21515';
-exptIndex = '012';
-[stimSet(3)] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
+%%
+relevantROIs = {'PFC','CA1','Hipp'}; % labels in database can be any of these
+animalName = getAnimalByDateIndex(exptDate,exptIndices{1});
+electrodeLocs = getElectrodeLocationFromDateIndex(exptDate,exptIndices{1});
+%%%%NOTE: The following assumes that channels are arranged in pairs and
+%%%%that the channels are ordered in Synapse as they are in eNotebook
+ROILabels = electrodeLocs(contains(electrodeLocs,relevantROIs,'IgnoreCase',true));
+ROILabels = unique(ROILabels,'stable');
 
-recDelay(1) = 0;
-recDelay(2) = synapseTimeSubtraction(stimSet(2).timeOfDayStart,stimSet(1).timeOfDayStop);
-recDelay(3) = synapseTimeSubtraction(stimSet(3).timeOfDayStart,stimSet(2).timeOfDayStop);
+%%
+% Plot out averaged traces
+% Start searching for peaks and troughs of responses after this time
+artifactEnd = 5.e-3; %sec;
+[nROIs,nDataPts] = size(evDataSet(1).subMean);
+preStimIndex = floor(tPreStim/dTRec);
+postStimIndex = ceil(tPostStim/dTRec);
+startSearchIndex = ceil(artifactEnd/dTRec); %Start search for plot min and max after artifact
 
+plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
+FigName = ['Avg responses - ' animalName '_' exptDate];
+thisFig = figure('Name',FigName);
+for iROI = 1:nROIs
+    plotMax = -1.e10;
+    plotMin = 1.e10;
+    for iSet = 1:nExpts
+        plotMax = max([plotMax,max(evDataSet(iSet).subMean(iROI,preStimIndex+startSearchIndex:end))]);
+        plotMin = min([plotMin,min(evDataSet(iSet).subMean(iROI,preStimIndex+startSearchIndex:end))]);
+    end
+    % Plot avg traces
+    subplot(1,nROIs,iROI)
+    hold on
+    for iSet = 1:nExpts
+        plot(plotTimeArray,evDataSet(iSet).subMean(iROI,:));
+    end
+    ax = gca;
+    ax.XLim = [-tPreStim,tPostStim];
+    ax.YLim = [1.05*plotMin,1.05*plotMax];
+    ax.XLabel.String = 'time(sec)';
+    if iROI == 1
+        ax.YLabel.String = 'avg dataSub (V)';
+    end
+    ax.Title.String = ROILabels{iROI};
+    if iROI == nROIs
+        legend(exptIndices);
+    end
+end
 
-
+%%
 % % % % ============ plot peak amplitude time series ============= % % % %
 iChan = 1; % loop through this?
-dTRec = stimSet.dT;
 plotTimeArray = -tPreStim:dTRec:tPostStim;
 beginTimeWindow = .005; %this is start of time window
 endTimeWindow = .02; %this is end of time window
 searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow;
 
-
 allCorrectedPeaks = []; % cat peaks for all hours
 allStimTimes = []; % cat event times for all hours
 timeElapsed = 0;
-for iSet = 1:size(stimSet,2)
-% peak min
-% searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow
-startIndex = find(plotTimeArray>beginTimeWindow,1,'First');
+for iSet = 1:size(evDataSet,2)
+    % peak min
+    % searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow
+    startIndex = find(plotTimeArray>beginTimeWindow,1,'First');
 
-%tracePeaks = zeros(1,size(stimSet(iSet).sub,2));
-for iIndex = 1:size(stimSet(iSet).sub,2)
-    [~,Imin] = min(stimSet(iSet).sub(1,iIndex,searchWindow)); % this finds the lowest point within a range
-    minPeakIndex = startIndex+Imin;
-    indexRange = minPeakIndex-4:minPeakIndex+4;
-    tracePeaks(iIndex) = mean(stimSet(iSet).sub(1,iIndex,indexRange),3);
-end
+    %tracePeaks = zeros(1,size(stimSet(iSet).sub,2));
+    for iIndex = 1:size(evDataSet(iSet).sub,2)
+        [~,Imin] = min(evDataSet(iSet).sub(1,iIndex,searchWindow)); % this finds the lowest point within a range
+        minPeakIndex = startIndex+Imin;
+        indexRange = minPeakIndex-4:minPeakIndex+4;
+        tracePeaks(iIndex) = mean(evDataSet(iSet).sub(1,iIndex,indexRange),3);
+    end
 
-traceBaseline = mean(stimSet(iSet).sub(1,:,1:100),3);
-allCorrectedPeaks = cat(2,allCorrectedPeaks,tracePeaks-traceBaseline);
+    traceBaseline = mean(evDataSet(iSet).sub(1,:,1:100),3);
+    allCorrectedPeaks = cat(2,allCorrectedPeaks,tracePeaks-traceBaseline);
 
-timeElapsed = timeElapsed+recDelay(iSet);
-allStimTimes = cat(2,allStimTimes,(stimSet(iSet).stimOnset'+timeElapsed));
-timeElapsed = timeElapsed+stimSet(iSet).stimOnset(end);
-npoints(iSet) = size(stimSet(iSet).sub,2);
-clear tracePeaks
+    timeElapsed = timeElapsed+recDelay(iSet);
+    allStimTimes = cat(2,allStimTimes,(evDataSet(iSet).stimOnset'+timeElapsed));
+    timeElapsed = timeElapsed+evDataSet(iSet).stimOnset(end);
+    npoints(iSet) = size(evDataSet(iSet).sub,2);
+    clear tracePeaks
 end
 
 
@@ -94,7 +139,7 @@ ylabel('Adjusted min amplitude')
 
 %index that corresponds to time before stim
 
-traceBaseline = mean(stimSet.sub(1,:,1:100),3);
+traceBaseline = mean(evDataSet.sub(1,:,1:100),3);
 
 figure()
 plot(minPeaks-traceBaseline,'o');

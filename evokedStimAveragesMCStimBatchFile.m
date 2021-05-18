@@ -5,31 +5,37 @@ function evokedStimAveragesMCStimBatchFile(exptDate,exptIndex)
 if ~exist('exptDate','var') || ~exist('exptIndex','var') || ~exist('chanLabels','var')
 %     exptDate = '21517'; 
 %     exptIndex = '002';
-    exptDate = '21510';
+%     exptDate = '21510';
+%     exptIndex = '000';
+    exptDate = '21513';
     exptIndex = '000';
-     %exptDate = '21311';
-     %exptIndex ='009';
+%     exptDate = '21513';
+%     exptIndex = '001';
+%     exptDate = '21515';
+%     exptIndex = '002';
 end
 outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
 if ~exist(outPath,'dir')
     mkdir(outPath);
 end
 
+relevantROIs = {'PFC','CA1','Hipp'}; % labels in database can be any of these
 animalName = getAnimalByDateIndex(exptDate,exptIndex);
 electrodeLocs = getElectrodeLocationFromDateIndex(exptDate,exptIndex);
-
 %%%%NOTE: The following assumes that channels are arranged in pairs and
-%%%%every other label is a new ROI name
-ROILabels = electrodeLocs(1:2:6);
+%%%%that the channels are ordered in Synapse as they are in eNotebook
+ROILabels = electrodeLocs(contains(electrodeLocs,relevantROIs,'IgnoreCase',true));
+ROILabels = unique(ROILabels,'stable');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set time windows and polarities for peak searching 
-% pkSearchWin = [4,20;20,50]*1.e-3; %Time window re stim time (sec) to search for peak minimum resp
-pkSearchWin = [10,25]*1.e-3; %Time window re stim time (sec) to search for peak minimum resp
+pkSearchWin = [5,20;20,50]*1.e-3; %Time window re stim time (sec) to search for peak minimum resp
+% pkSearchWin = [10,25]*1.e-3; %Time window re stim time (sec) to search for peak minimum resp
 nPks = size(pkSearchWin,1);
-%Is pk #k a peak (+1) or a trough (-1)?
+%Is i_th pk a peak [set pkSign(i) = +1] or a trough [set pkSign(i) = -1]?
 pkSign = ones(nPks,1);
 pkSign(1) = +1;
+pkSign(2) = -1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

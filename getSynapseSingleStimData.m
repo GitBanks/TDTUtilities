@@ -1,13 +1,14 @@
 function [evData,dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim)
-
+%Returns stimulus-related data from TDT software organized according to
+%channel and snipped into segments of length tPreStim_tPostStim
 dataType = 'LFP1';
 
 % load saved trial pattern
-saveFileRoot = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+dataPath = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
 % load([saveFileRoot  'stimSet-' exptDate '-' exptIndex],'stimArray','trialPattern');
 % nStims = length(stimArray);
 
-data = TDTbin2mat(saveFileRoot); % TDT loads the raw data
+data = TDTbin2mat(dataPath); % load the raw data
 % TODO! % % % % % % % % % % %  4/27/21 note: above is the first choice we need to make - do we really
 % want to load in raw data here, or depend on the imported data?
 
@@ -17,7 +18,7 @@ data = TDTbin2mat(saveFileRoot); % TDT loads the raw data
 %      streamName = 'stim';
 % end
 if isfield(data.epocs,'Snc_') % this is the stim presentation info, we are getting this from the epocs
-    streamName = 'Snc_'; % this is the synchronization in to the RZ5 - better than 'stim out' time
+    streamName = 'Snc_'; % this is the synchronization into the RZ5 - better than 'stim out' time
     stimTimes = data.epocs.(streamName).onset;
 else
     % one of the following will be true (otherwise error out)
@@ -61,36 +62,15 @@ end
 % data.streams.EEGw.data(4,:)
 % 1. step through rec types (data.streams.LFP1,data.streams.EEGw)
 dTRec = 1/data.streams.(dataType).fs; % get sample rate and recording times
-timeArrayRec = (0:dTRec:length(data.streams.(dataType).data)*dTRec-dTRec);
 nChans = size(data.streams.(dataType).data,1);
 nROIs = floor(nChans/2); %Assuming twisted pair and local bipolar rereferencing
 nTrials = length(stimTimes); % we want to know how long the expected stim pattern lasts in case erroneous pulses (at end) are found.
-stimIndex = zeros(1,nTrials);
-for iTrial = 1:nTrials
-    stimIndex(iTrial) = find(timeArrayRec>stimTimes(iTrial),1,'first');
-end
+stimIndex = round(stimTimes/dTRec);
 preStimIndex = floor(tPreStim/dTRec);
 postStimIndex = ceil(tPostStim/dTRec);
 
-% if nTrials ~= length(trialPattern)
-%     disp(['WARNING! Number of stims in Synapse data file = ' num2str(nTrials)...
-%         ' but length of trialPattern = ' num2str(length(trialPattern))]);
-%     if nTrials<length(trialPattern)
-%         disp('Truncating trialPattern to match nTrials...')
-%         trialPattern = trialPattern(1:nTrials);
-%     else
-%         disp('Padding trialPattern to match nTrials...')
-%         temp(1:length(trialPattern)-nTrials) = trialPattern(end);
-%         temp = [trialPattern temp];
-%     end
-% end
-
-% Create the structure: stimSet, with different arrays of channels x trials x dataPoints
+% Create the structure: evData, with different arrays of channels x trials x dataPoints
 evData = struct();
-% for iStim = 1:nStims %Loop over all stim levels. These are indexed as integers 1:nStim
-    % First grab all trials on which this stim was presented
-%     trialLgcl = trialPattern==iStim; % = true only when trialPattern is this stim
-%     theseStim = stimIndex(trialLgcl);
 for iTrial = 1:nTrials
     iStart = stimIndex(iTrial)-preStimIndex;
     iStop = stimIndex(iTrial)+postStimIndex;
@@ -104,6 +84,4 @@ end
 
 evData.dataMean = squeeze(mean(evData.data,2));
 evData.subMean = squeeze(mean(evData.sub,2));
-
-
-% end
+evData.info = data.info;
