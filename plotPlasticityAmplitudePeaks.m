@@ -10,17 +10,17 @@ tPostStim = 0.5;
 indexLabels = {'Baseline','LTP','LTD'}; % these correspond to each stimset we load below
 
 % % % % =========  load data in this block  ========= % % % %
-exptDate = '21506';
-exptIndex = '007';
-[stimSet(1)] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+exptDate = '21515';
+exptIndex = '003';
+[stimSet(1)] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
 
-exptDate = '21506';
-exptIndex = '010';
-[stimSet(2)] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+exptDate = '21515';
+exptIndex = '009';
+[stimSet(2)] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
 
-exptDate = '21506';
+exptDate = '21515';
 exptIndex = '012';
-[stimSet(3)] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+[stimSet(3)] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
 
 recDelay(1) = 0;
 recDelay(2) = synapseTimeSubtraction(stimSet(2).timeOfDayStart,stimSet(1).timeOfDayStop);

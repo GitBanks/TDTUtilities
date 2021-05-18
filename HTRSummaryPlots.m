@@ -1,3 +1,4 @@
+function HTRSummaryPlots(treatment,selection,acceptedPermutations)
 
 % summary plots
 
@@ -8,7 +9,6 @@
 % WORKING PLAN: use the notebookDesc to tag which index is associated with
 % what experiment
 
-clear all
 % we have a few different conditions for each drug type.  A pop-up
 % selection thing could make this cleaner, but this works for now.
 % presumably this  will be arranged by database tags or something
@@ -59,12 +59,17 @@ clear all
 % subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
 % acceptedPermutations = [1,2];
 % % ========================
-treatment = '5-MeO-PyrT';
-selection = 1; % selection is a choice of drug combinations
+% treatment = '5-MeO-PyrT';
+% selection = 1; % selection is a choice of drug combinations
+% acceptedPermutations = [1,2];
+
 dateTable = getDateAnimalUniqueByTreatment(treatment);
 plotsToMake = unique(dateTable.DrugList);
 subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
-acceptedPermutations = [1,2];
+
+
+
+
 
 
 % loop through expts of interest.  Create a structure animalData that 
