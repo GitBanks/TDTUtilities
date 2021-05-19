@@ -68,33 +68,7 @@ for iStim = 1:nStims
     plotMin = min([plotMin,min(stimSet(iStim).subMean(:,preStimIndex+startSearchIndex:end))]);
 end
 
-%Estimate peak responses by averaging around the peaks and troughs
-avgWinIndex = floor(avgWinTime/dTRec);
-baseWinIndex = floor(baseWin/dTRec);
-%Start and stop indices of time window re stim time to search for peak minimum resp
-pkSearchIndex = ceil(pkSearchWin/dTRec); 
-pkVals = zeros(nPks,nStims,nROIs);
-for iStim = 1:nStims
-    tempMn = stimSet(iStim).subMean;
-    for iROI = 1:nROIs
-        for iPk = 1:nPks
-            i1 = preStimIndex+pkSearchIndex(iPk,1);
-            i2 = preStimIndex+pkSearchIndex(iPk,2);
-            if pkSign(iPk)>0
-                [~, pkIndex] = max(tempMn(iROI,i1:i2));
-            else
-                [~, pkIndex] = min(tempMn(iROI,i1:i2));
-            end
-            baseVal = ...
-                mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
-            i1 = preStimIndex+pkSearchIndex(iPk,1)+pkIndex-avgWinIndex;
-            i2 = preStimIndex+pkSearchIndex(iPk,1)+pkIndex+avgWinIndex;
-            pkVals(iPk,iStim,iROI) = mean(tempMn(iROI,i1:i2)) - baseVal;
-        end
-    end
-end
-
-%%
+%% Plot average traces
 ampLabel = [];
 for iStim = 1:nStims
     ampLabel{iStim} = [num2str(stimArray(iStim)) '\mu' 'A'];
@@ -124,7 +98,37 @@ for iROI = 1:nROIs
     if iROI == nROIs
         legend(ampLabel);
     end
-    % Plot stim-resp curves
+end
+
+%% Estimate peak responses by averaging around the peaks and troughs
+avgWinIndex = floor(avgWinTime/dTRec);
+baseWinIndex = floor(baseWin/dTRec);
+%Start and stop indices of time window re stim time to search for peak minimum resp
+pkSearchIndex = ceil(pkSearchWin/dTRec); 
+pkVals = zeros(nPks,nStims,nROIs);
+for iStim = 1:nStims
+    tempMn = stimSet(iStim).subMean;
+    for iROI = 1:nROIs
+        for iPk = 1:nPks
+            i1 = preStimIndex+pkSearchIndex(iPk,1);
+            i2 = preStimIndex+pkSearchIndex(iPk,2);
+            if pkSign(iPk)>0
+                [~, pkIndex] = max(tempMn(iROI,i1:i2));
+            else
+                [~, pkIndex] = min(tempMn(iROI,i1:i2));
+            end
+            baseVal = ...
+                mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
+            i1 = preStimIndex+pkSearchIndex(iPk,1)+pkIndex-avgWinIndex;
+            i2 = preStimIndex+pkSearchIndex(iPk,1)+pkIndex+avgWinIndex;
+            pkVals(iPk,iStim,iROI) = mean(tempMn(iROI,i1:i2)) - baseVal;
+        end
+    end
+end
+
+%% Plot stim-resp curves
+figure(thisFigure);
+for iROI = 1:nROIs
     subplot(2,nROIs,nROIs+iROI)
     hold on
     for iPk = 1:nPks
