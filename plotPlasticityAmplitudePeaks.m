@@ -10,7 +10,7 @@ if ~exist('exptDate','var') || ~exist('exptIndices','var')
 end
 nExpts = length(exptIndices);
 
-outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndices{1} '\'];
 if ~exist(outPath,'dir')
     mkdir(outPath);
 end
@@ -91,6 +91,8 @@ for iROI = 1:nROIs
         legend(legLabs);
     end
 end
+saveas(thisFigure,[outPath figureName]);
+%%
 % Have user click on peaks in each subplot to inform peak search windows
 msgFig = msgbox({'Click once in each subplot to indicate approximate location of peak.';...
     'Proceed from left to right!'});
@@ -98,11 +100,27 @@ uiwait(msgFig);
 figure(thisFigure);
 tPk = zeros(1,nROIs);
 yPk = zeros(1,nROIs);
+opts.Default = 'Yes'; % Can just hit enter to proceed
+opts.Interpreter = 'Tex'; % Apparently it is necessary to set this option
 for iROI = 1:nROIs
     subplot(subPlt(iROI));
-    [tPk(iROI),yPk(iROI)] = ginput(1);
+    proceed = 0;
+    while ~proceed
+        [tPk(iROI),yPk(iROI)] = ginput(1); % Gets single click input
+        hand = plot(tPk(iROI),yPk(iROI),'+r','MarkerSize',12);
+        answer = questdlg(['Accept pk for ' ROILabels{iROI} ' OK?'], ...
+        [ROILabels{iROI} 'peak estimate'], ...
+        'Yes','No',opts);
+        % Handle response
+        switch answer
+            case 'Yes'
+                proceed = 1;
+            case 'No'
+                delete(hand); % Removes erroneous peak marker
+                proceed = 0;
+        end
+    end
 end
-saveas(thisFigure,[outPath figureName]);
 
 %%
 % % % % ============ plot peak amplitude time series ============= % % % %
