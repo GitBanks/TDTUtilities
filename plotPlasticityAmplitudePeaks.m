@@ -1,23 +1,37 @@
-
+function plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% Function to plot out time series of evoked response amplitudes during
+% LTP/LTD expts. Allows user to choose time and sign of peaks from averqage
+% traces.
 % this is a rewrite of the PlasticityPlots script and should be broken into
 % discrete sections for readability and modularity reasons.
+if ~exist('exptDate','var') || ~exist('exptIndices','var') 
+    exptDate = '21515';
+    exptIndices = {'003','009','012'};
+end
+nExpts = length(exptIndices);
 
+outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+if ~exist(outPath,'dir')
+    mkdir(outPath);
+end
 
 tPreStim = 0.02;
 tPostStim = 0.2;
-%timeSpans = 4.9*60; %time in seconds (min*60) to group responses into
-
-indexLabels = {'Baseline','LTP','LTD'}; % these correspond to each stimset we load below
+pkAvgWin = 8; % Average over this window to estimate peak
+exptIndexLabels = {'Baseline','postLTP','postLTD'}; % these correspond to each stimset we load below
 
 % % % % =========  load data in this block  ========= % % % %
-exptDate = '21515';
-exptIndices = {'003','009','012'};
-nExpts = length(exptIndices);
+if exist('evDataSet','var')
+    clear evDataSet
+end
+nTrials = zeros(1,nExpts);
 for iExpt = 1:nExpts
     exptIndex = exptIndices{iExpt};
     [dataTemp,dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
     evDataSet(iExpt) = dataTemp;
+    nTrials(iExpt) = size(evDataSet(iExpt).sub,2);
 end
+nTotalTrials = sum(nTrials);
 
 % Get gaps between data files in seconds
 recDelay = zeros(1,nExpts);
@@ -46,20 +60,20 @@ postStimIndex = ceil(tPostStim/dTRec);
 startSearchIndex = ceil(artifactEnd/dTRec); %Start search for plot min and max after artifact
 
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
-FigName = ['Avg responses - ' animalName '_' exptDate];
-thisFig = figure('Name',FigName);
+figureName = ['Avg responses - ' animalName '_' exptDate];
+thisFigure = figure('Name',figureName);
 for iROI = 1:nROIs
     plotMax = -1.e10;
     plotMin = 1.e10;
-    for iSet = 1:nExpts
-        plotMax = max([plotMax,max(evDataSet(iSet).subMean(iROI,preStimIndex+startSearchIndex:end))]);
-        plotMin = min([plotMin,min(evDataSet(iSet).subMean(iROI,preStimIndex+startSearchIndex:end))]);
+    for iExpt = 1:nExpts
+        plotMax = max([plotMax,max(evDataSet(iExpt).subMean(iROI,preStimIndex+startSearchIndex:end))]);
+        plotMin = min([plotMin,min(evDataSet(iExpt).subMean(iROI,preStimIndex+startSearchIndex:end))]);
     end
     % Plot avg traces
     subPlt(iROI) = subplot(1,nROIs,iROI);
     hold on
-    for iSet = 1:nExpts
-        plot(plotTimeArray,evDataSet(iSet).subMean(iROI,:));
+    for iExpt = 1:nExpts
+        plot(plotTimeArray,evDataSet(iExpt).subMean(iROI,:));
     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
@@ -70,121 +84,77 @@ for iROI = 1:nROIs
     end
     ax.Title.String = ROILabels{iROI};
     if iROI == nROIs
-        legend(exptIndices);
+        legLabs = cell(1,nExpts);
+        for iExpt = 1:nExpts
+            legLabs{iExpt} = [exptIndices{iExpt} '-' exptIndexLabels{iExpt}];
+        end
+        legend(legLabs);
     end
 end
 % Have user click on peaks in each subplot to inform peak search windows
-tPk = [];
-yPk = [];
+msgFig = msgbox({'Click once in each subplot to indicate approximate location of peak.';...
+    'Proceed from left to right!'});
+uiwait(msgFig);
+figure(thisFigure);
+tPk = zeros(1,nROIs);
+yPk = zeros(1,nROIs);
 for iROI = 1:nROIs
-    ax=subPlt(iROI);
+    subplot(subPlt(iROI));
     [tPk(iROI),yPk(iROI)] = ginput(1);
 end
+saveas(thisFigure,[outPath figureName]);
 
 %%
 % % % % ============ plot peak amplitude time series ============= % % % %
-FigName = ['Time series - ' animalName '_' exptDate];
-thisFig = figure('Name',FigName);
+figureName = ['Plasticity peaks time series - ' animalName '_' exptDate];
+thisFigure = figure('Name',figureName);
 for iROI = 1:nROIs
     beginTimeWindow = tPk(iROI) - tPk(iROI)/2; %this is start of time window
     endTimeWindow = tPk(iROI) + tPk(iROI)/2; %this is end of time window
     searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow;
     startIndex = find(plotTimeArray>beginTimeWindow,1,'First');
 
-    allCorrectedPeaks = []; % cat peaks for all hours
-    allStimTimes = []; % cat event times for all hours
+    allAdjPeaks = zeros(1,nTotalTrials); % contains peaks for all recorded trials
+    allStimTimes = zeros(1,nTotalTrials); % contains stim times for all recorded trials
     timeElapsed = 0;
-    for iSet = 1:nExpts
-        % peak min
-        % searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow
-        nTrials(iSet) = size(evDataSet(iSet).sub,2);
-        %tracePeaks = zeros(1,size(stimSet(iSet).sub,2));
-        for iTrial = 1:nTrials(iSet)
+    lastTrial = 0;
+    for iExpt = 1:nExpts
+        for iTrial = 1:nTrials(iExpt)
             if yPk(iROI)<0
-                [~,pkIndex] = min(evDataSet(iSet).sub(iROI,iTrial,searchWindow)); % this finds the lowest point within a range
+                % If it's a negative-going peak, find the minimum
+                [~,tempPkIndex] = min(evDataSet(iExpt).sub(iROI,iTrial,searchWindow)); 
             else
-                [~,pkIndex] = max(evDataSet(iSet).sub(iROI,iTrial,searchWindow)); % this finds the lowest point within a range
+                % If it's a postitive-going peak, find the maximum
+                [~,tempPkIndex] = max(evDataSet(iExpt).sub(iROI,iTrial,searchWindow));
             end
-            adjPeakIndex = startIndex+pkIndex;
-            indexRange = adjPeakIndex-4:adjPeakIndex+4;
-            tracePeaks(iTrial) = mean(evDataSet(iSet).sub(iROI,iTrial,indexRange),3);
+            pkIndex = startIndex+tempPkIndex;
+            indexRange = pkIndex-pkAvgWin/2:pkIndex+pkAvgWin/2;
+            tracePeaks(iTrial) = mean(evDataSet(iExpt).sub(iROI,iTrial,indexRange),3);
         end
-
-        traceBaseline = mean(evDataSet(iSet).sub(iROI,:,1:100),3);
-        allCorrectedPeaks = cat(2,allCorrectedPeaks,tracePeaks-traceBaseline);
-
-        timeElapsed = timeElapsed+recDelay(iSet);
-        allStimTimes = cat(2,allStimTimes,(evDataSet(iSet).stimTimes'+timeElapsed));
-        timeElapsed = timeElapsed+evDataSet(iSet).stimTimes(end);
-        nTrials(iSet) = size(evDataSet(iSet).sub,2);
+        traceBaseline = mean(evDataSet(iExpt).sub(iROI,:,1:100),3);
+        allAdjPeaks(lastTrial+1:lastTrial+nTrials(iExpt)) = tracePeaks-traceBaseline;
+        timeElapsed = timeElapsed+recDelay(iExpt);
+        allStimTimes(lastTrial+1:lastTrial+nTrials(iExpt)) = evDataSet(iExpt).stimTimes'+timeElapsed;
+        timeElapsed = timeElapsed+evDataSet(iExpt).stimTimes(end);
+        lastTrial = lastTrial+nTrials(iExpt);
         clear tracePeaks
     end
 
-
-%This will plot out time series of every averaged peak
-
+%Plot out time series of peak amplitudes
     plotColor = {'or','ob','ok'};
     subplot(nROIs,1,iROI);
-
-    allStimTimes = allStimTimes/60;
-
-    plot(allStimTimes(1:nTrials(1)),allCorrectedPeaks(1:nTrials(1)),'o'); %This step corrects for the baseline and also plots the time series
+    allStimTimes = allStimTimes/60; %Convert seconds to minutes
+    plot(allStimTimes(1:nTrials(1)),allAdjPeaks(1:nTrials(1)),'o'); 
     hold on
-    plot(allStimTimes(nTrials(1)+1:nTrials(1)+nTrials(2)),allCorrectedPeaks(nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
-    plot(allStimTimes(nTrials(1)+nTrials(2)+1:end),allCorrectedPeaks(nTrials(1)+nTrials(2)+1:end),'o');
-    xlabel('Time')
-    ylabel('Adjusted min amplitude')
-    title(ROILabels{iROI});
-
-% minY = 0;
-% maxY = 0;
+    plot(allStimTimes(nTrials(1)+1:nTrials(1)+nTrials(2)),allAdjPeaks(nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
+    plot(allStimTimes(nTrials(1)+nTrials(2)+1:end),allAdjPeaks(nTrials(1)+nTrials(2)+1:end),'o');
+    baseMn = mean(allAdjPeaks(1:nTrials(1)));
+    plot([allStimTimes(1),allStimTimes(end)],[baseMn,baseMn],'--');
+    ax = gca;
+    ax.Title.String = ROILabels{iROI};
+    if iROI == nROIs
+        ax.XLabel.String = 'Time (min)';
+        ax.YLabel.String = 'Pk ampl';
+    end
 end
-
-
-
-
-
-
-%compute baseline for each trace and subtract from peak
-
-%index that corresponds to time before stim
-
-traceBaseline = mean(evDataSet.sub(1,:,1:100),3);
-
-figure()
-plot(minPeaks-traceBaseline,'o');
-
-%can add the data from baseline LTP and LTD
-
-
-
-
-
-
-
-
-
-
-
-
-% Plot
-% plotTimeArrayRec = -tPreStim:dTRec:tPostStim;
-% 
-% 
-% figure()
-% plot(plotTimeArrayRec,stimSet.dataMean(1,1:end-1))
-% 
-% 
-% 
-% 
-% figure()
-% plot(timeArrayRec,data.streams.LFP1.data(3,:))
-% 
-% figure()
-% plot(plotTimeArrayRec,squeeze(stimSet.sub(1,3:359,:)))
-% plot(plotTimeArrayRec,squeeze(mean(stimSet.sub(1,1:359,:),2)),'LineWidth',3)
-% 
-% figure()
-% plot(squeeze(stimSet.sub(1,1,:)))
-% 
-% plot(plotTimeArrayRec,squeeze(stimSet.sub(1,1,:)))
+saveas(thisFigure,[outPath figureName]);
