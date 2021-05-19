@@ -9,7 +9,7 @@
 % fileMaint_Mag('21505','Mag016','Mag017')
 % fileMaint_Mag('21506','Mag018','Mag019')
 % fileMaint_Mag('21507','Mag010','Mag011')
-fileMaint_Mag('21507','Mag012','Mag013') %failed
+% fileMaint_Mag('21507','Mag012','Mag013') %failed
 % fileMaint_Mag('21507','Mag014','Mag015')
 
 
@@ -23,8 +23,8 @@ fileMaint_Mag('21507','Mag012','Mag013') %failed
 %treatment = 'Pyr-T'; 
 %treatment = '4-AcO-DMT'; 
 %treatment = '5-MeO-pyrT';
-treatment = '5,6-DiMeO-MiPT'; 
-%treatment = '5-MeO-DET';
+%treatment = '5,6-DiMeO-MiPT'; 
+treatment = '5-MeO-DET';
 HTRPlotEventsScript(treatment);
 
 

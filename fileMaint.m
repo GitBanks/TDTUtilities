@@ -40,8 +40,8 @@ dirStrAnalysisROOT = [mousePaths.M 'PassiveEphys\']; % 'M' drive
 dirStrRecSourceAROOT = '\\144.92.237.183\Data\PassiveEphys\'; % FAKE THIS OUT SINCE IT"S NOT HANDLING BAD CONNECTIONS WELL
 dirStrRecSourceBROOT = '\\144.92.237.183\Data\PassiveEphys\'; %Gilgamesh
 dirStrRawDataROOT = [mousePaths.W 'PassiveEphys\']; %'W' drive
-%dirStrServer = '\\144.92.237.186\'; %Helmholz
-dirStrServer = '\\HELMHOLTZ\'; %Helmholz another way
+dirStrServer = '\\144.92.237.186\Users\'; %Helmholz
+%dirStrServer = '\\HELMHOLTZ\'; %Helmholz another way
 % dirStrServer = '\\Server1\data\';
 
 % we often have network connection issues.  Handle that verification here,
@@ -109,7 +109,11 @@ for iList = 1:length(operatingList)
     dirStrRecSource = [dirStrRecSourceAROOT '20' date(1:2) '\' date '-' index '\']; 
     dirStrRawData = [dirStrRawDataROOT '20' date(1:2) '\' date '-' index '\'];
     disp(['Found REC data to move to W for ' date '-' index ]);
-    moveDataRecToRaw(dirStrRecSource,dirStrRawData);
+    try
+        moveDataRecToRaw(dirStrRecSource,dirStrRawData);
+    catch
+        disp('moveDataRecToRaw didn''t run.');
+    end
 end
 
 operatingList = exptTable.DateIndex(exptTable.RECBEmpty == false);
@@ -132,21 +136,9 @@ for iList = 1:length(operatingList)
     date = operatingList{iList}(1:5);
     index = operatingList{iList}(7:9);
     dirStrAnalysis = [dirStrAnalysisROOT '20' date(1:2) '\' date '-' index '\'];
-    disp(['Found Raw data to import to W for ' date '-' index ]);
-%     dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
-%     if isempty(dirCheck) || forceReimport
-%         disp('Handing info to existing importData function.  This will take a few minutes.');
-%         try
-    importDataSynapse(date,index);
-%         catch
-%             disp([date '-' index ' not imported!!']);
-%         end
-%     elseif forceReimportTrials
-%         disp('Data already imported, but updating trialinfo');
-%         updateStimInfoSynapse(date,index);
-%     end
+    disp(['Found Raw data to import from W to mat format on M at ' date '-' index ]);
+    importDataSynapse(date,index); % may want to add a way to force it to re-import
 end
-
 
 % % STEP 3: RUN MOVEMENT ANALYSIS
 % try
@@ -189,15 +181,6 @@ catch
 end
 
 
-end
-
-
-function checkConnection(location)
-    if exist(location,'dir') == 7
-        disp(['Connection to ' location ' confirmed']);
-    else
-        error(['Cannot connect to ' location ' Check connection to remote computer']);
-    end
 end
 
 
