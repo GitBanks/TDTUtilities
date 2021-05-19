@@ -40,6 +40,7 @@ for iStep = 1:nIndexSteps
 end
 Experiment.exptDescriptionText = {
     [experimentDrugManipulation ' Baseline / spon - pre manipulation' ]
+    [experimentDrugManipulation ' stim/resp' ]
     [experimentDrugManipulation ' Baseline / stim - pre LTP/LTD' ]
     [experimentDrugManipulation ' LTP / stim ' ]
     [experimentDrugManipulation ' Post LTP / stim ' ]
