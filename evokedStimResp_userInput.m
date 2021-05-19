@@ -1,0 +1,224 @@
+function evokedStimResp_userInput(exptDate,exptIndex)
+
+%%
+% User-defined parameters
+if ~exist('exptDate','var') || ~exist('exptIndex','var') || ~exist('chanLabels','var')
+    exptDate = '21517'; 
+    exptIndex = '002';
+%     exptDate = '21510';
+%     exptIndex = '000';
+%     exptDate = '21513';
+%     exptIndex = '000';
+%     exptDate = '21513';
+%     exptIndex = '001';
+%     exptDate = '21515';
+%     exptIndex = '002';
+end
+outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+if ~exist(outPath,'dir')
+    mkdir(outPath);
+end
+
+relevantROIs = {'PFC','CA1','Hipp'}; % labels in database can be any of these
+animalName = getAnimalByDateIndex(exptDate,exptIndex);
+electrodeLocs = getElectrodeLocationFromDateIndex(exptDate,exptIndex);
+%%%%NOTE: The following assumes that channels are arranged in pairs and
+%%%%that the channels are ordered in Synapse as they are in eNotebook
+ROILabels = electrodeLocs(contains(electrodeLocs,relevantROIs,'IgnoreCase',true));
+ROILabels = unique(ROILabels,'stable');
+
+% Window for analysis and plotting, relative to stim time
+tPreStim = 0.02; %sec
+tPostStim = 0.2; %sec
+% Start searching for peaks and troughs of responses after this time
+artifactDur = 2.e-3; %sec;
+% Average over this window to get estimate of peak value
+avgWinTime = 1.e-3; %sec; 
+% Time window re stim time to calculate baseline value that is subtracted from peak values
+baseWin = [-5,-0.5]*1.e-3; %sec; 
+
+%%
+[stimSet,dTRec,stimArray] = getSynapseStimSetData(exptDate,exptIndex,tPreStim,tPostStim);
+nStims = length(stimSet);
+nROIs = size(stimSet(1).sub,1); %number of regions with recording electrodes
+preStimIndex = floor(tPreStim/dTRec);
+postStimIndex = ceil(tPostStim/dTRec);
+% 
+%% Ugly kludge alert!
+% Need to account for delay between stim times as saved by Synapse and stim
+% times as they appear in data. Do this by averaging across stimuli and
+% finding first peak after t=0 (i.e. after what Synapse thinks is the stim
+% time).
+pkThresh = 5.e-6;
+actualStimIndices = zeros(1,nROIs);
+tempData = zeros(size(stimSet(1).subMean));
+for iStim = 1:nStims
+    tempData = tempData+stimSet(iStim).subMean/nStims;
+end
+% figure()
+for iROI = 1:nROIs
+%     subplot(1,nROIs,iROI);
+%     plot(abs(tempData(iROI,:)));
+%     [tempPks,tempIndex] = findpeaks(abs(tempData(iROI,preStimIndex:end)),'Threshold',pkThresh);
+%     hold on
+%     plot(tempIndex(1)+preStimIndex,tempPks(1),'+');
+    [~,tempIndex] = findpeaks(abs(tempData(iROI,preStimIndex:end)),'Threshold',pkThresh);
+    actualStimIndices(iROI) = tempIndex(1)+preStimIndex;
+end
+%% Compute means and find min/max for plotting
+plotMax = -1.e10;
+plotMin = 1.e10;
+for iROI = 1:nROIs
+    startSearchIndex = actualStimIndices(iROI)+ceil(artifactDur/dTRec); %Start search for plot min and max after artifact
+    for iStim = 1:nStims
+        stimSet(iStim).dataMean = squeeze(mean(stimSet(iStim).data,2));
+        stimSet(iStim).subMean = squeeze(mean(stimSet(iStim).sub,2));
+        plotMax = max([plotMax,max(stimSet(iStim).subMean(:,startSearchIndex:end))]);
+        plotMin = min([plotMin,min(stimSet(iStim).subMean(:,startSearchIndex:end))]);
+    end
+end
+
+%% Plot average traces
+ampLabel = [];
+for iStim = 1:nStims
+    ampLabel{iStim} = [num2str(stimArray(iStim)) '\mu' 'A'];
+end
+legendLabs = [];
+for iPk = 1:nPks
+    legendLabs{iPk} = ['Pk ' num2str(iPk)];
+end
+plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
+FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
+thisFigure = figure('Name',FigName);
+for iROI = 1:nROIs
+    % Plot avg traces
+    subPlt(iROI) = subplot(1,nROIs,iROI);
+    hold on
+    for iStim = 1:length(stimSet)
+        plot(plotTimeArray,stimSet(iStim).subMean(iROI,:));
+    end
+    ax = gca;
+    ax.XLim = [-tPreStim,tPostStim];
+    ax.YLim = [1.05*plotMin,1.05*plotMax];
+    ax.XLabel.String = 'time(sec)';
+    if iROI == 1
+        ax.YLabel.String = 'avg dataSub (V)';
+    end
+    ax.Title.String = ROILabels{iROI};
+    if iROI == nROIs
+        legend(ampLabel);
+    end
+end
+
+%% Have user click on peaks in each subplot to inform peak search windows
+msgFig = msgbox({'Click once in each subplot to indicate approximate location of peaks.';...
+    'Proceed from left to right. Hit enter to end for each ROI.'});
+uiwait(msgFig);
+figure(thisFigure);
+opts.Default = 'Yes'; % Can just hit enter to proceed
+opts.Interpreter = 'Tex'; % Apparently it is necessary to set this option
+if exist('pkSearchData','var')
+    clear pkSearchData;
+end
+for iROI = 1:nROIs
+    subplot(subPlt(iROI));
+    proceed = 0;
+    while ~proceed
+        [temp_tPk,temp_yPk] = ginput; % Get click input
+        hand = plot(temp_tPk,temp_yPk,'+r','MarkerSize',12);
+        answer = questdlg(['Accept pk(s) for ' ROILabels{iROI} ' ?'], ...
+        [ROILabels{iROI} 'peak estimate'], ...
+        'Yes','No',opts);
+        % Handle response
+        switch answer
+            case 'Yes'
+                pkSearchData(iROI).tPk = temp_tPk;
+                pkSearchData(iROI).pkSign = sign(temp_yPk);
+                proceed = 1;
+            case 'No'
+                delete(hand); % Removes erroneous peak marker
+                proceed = 0;
+        end
+    end
+end
+
+%% Estimate peak responses by averaging around the peaks and troughs
+avgWinIndex = floor(avgWinTime/dTRec);
+baseWinIndex = floor(baseWin/dTRec);
+pkVals = struct();
+for iROI = 1:nROIs
+    pkVals(iROI).data = zeros(length(pkSearchData(iROI).tPk),nStims);
+    for iPk = 1:nPks
+        %Start and stop indices of time window re stim time to search for peak minimum resp
+        this_tPk = pkSearchData(iROI).tPk(iPk);
+        pkSearchIndices = ceil([this_tPk - this_tPk/2,this_tPk + this_tPk/2]/dTRec);
+        tempIndA = actualStimIndices(iROI)+pkSearchIndices;
+        pkSign = pkSearchData(iROI).pkSign(iPk);
+        for iStim = 1:nStims
+            tempMn = stimSet(iStim).subMean(iROI,:);
+            if pkSign>0
+                [~, pkIndex] = max(tempMn(tempIndA(1):tempIndA(2)));
+            else
+                [~, pkIndex] = min(tempMn(tempIndA(1):tempIndA(2)));
+            end
+%             plot(tempMn(tempIndA(1):tempIndA(2)));
+%             plot(pkIndex,yVal,'+');
+            baseVal = ...
+                mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
+            tempIndB(1) = actualStimIndices(iROI)+pkSearchIndices(1)+pkIndex-avgWinIndex;
+            tempIndB(2) = actualStimIndices(iROI)+pkSearchIndices(1)+pkIndex+avgWinIndex;
+            pkVals(iROI).data(iPk,iStim) = mean(tempMn(tempIndB(1):tempIndB(2))) - baseVal;
+        end
+    end
+end
+
+%% Plot avg traces and stim-resp curves
+figure(thisFigure);
+ampLabel = [];
+for iStim = 1:nStims
+    ampLabel{iStim} = [num2str(stimArray(iStim)) '\mu' 'A'];
+end
+legendLabs = [];
+for iPk = 1:nPks
+    legendLabs{iPk} = ['Pk ' num2str(iPk)];
+end
+plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
+FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
+thisFigure = figure('Name',FigName);
+for iROI = 1:nROIs
+    % Plot avg traces
+    subPlt(iROI) = subplot(2,nROIs,iROI);
+    hold on
+    for iStim = 1:length(stimSet)
+        plot(plotTimeArray,stimSet(iStim).subMean(iROI,:));
+    end
+    ax = gca;
+    ax.XLim = [-tPreStim,tPostStim];
+    ax.YLim = [1.05*plotMin,1.05*plotMax];
+    ax.XLabel.String = 'time(sec)';
+    if iROI == 1
+        ax.YLabel.String = 'avg dataSub (V)';
+    end
+    ax.Title.String = ROILabels{iROI};
+    if iROI == nROIs
+        legend(ampLabel);
+    end
+end
+
+for iROI = 1:nROIs
+    subplot(2,nROIs,nROIs+iROI)
+    hold on
+    for iPk = 1:nPks
+        plot(stimArray,pkSearchData(iROI).pkSign(iPk)*pkVals(iROI).data(iPk,:),'-o');
+    end
+    ax = gca;
+    ax.XLabel.String = 'Stim intensity (\muA)';
+    if iROI == 1
+        ax.YLabel.String = 'Pk resp (V)';
+    end
+    if iROI == nROIs
+        legend(legendLabs);
+    end
+end
+saveas(thisFigure,[outPath FigName]);
+
