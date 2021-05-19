@@ -3,9 +3,15 @@
 %% ==== Files =================================
 % Run these, in this format, for each day
 % This will move data files to where they need to be
-fileMaint_Mag('21514','Mag013','Mag014')
-fileMaint_Mag('21514','Mag015','Mag016')
-fileMaint_Mag('21514','Mag018','Mag019')
+% fileMaint_Mag('21514','Mag013','Mag014')
+% fileMaint_Mag('21514','Mag015','Mag016')
+% fileMaint_Mag('21514','Mag018','Mag019')
+% fileMaint_Mag('21505','Mag016','Mag017')
+% fileMaint_Mag('21506','Mag018','Mag019')
+% fileMaint_Mag('21507','Mag010','Mag011')
+% fileMaint_Mag('21507','Mag012','Mag013') %failed
+% fileMaint_Mag('21507','Mag014','Mag015')
+
 
 %% ==== Analysis ===============================
 % Run this after each day or when a drug is done

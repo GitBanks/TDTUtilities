@@ -1,6 +1,6 @@
 function  HTRPlotEventsScript(treatment)
 
-clear all
+%clear all
 
 % 3. step through dates - use get treatmentInfo to get exact times of
 % treatment
