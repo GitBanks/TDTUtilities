@@ -3,10 +3,27 @@
 
 
 %% ==== file management =============================
-fileMaint('ZZ06');
+% % % % !!!!! IMPORTANT NOTE: DO NOT run fileMaint on an animal while data
+% are being collected for it.  This might more INCOMPLETE files with unexpected results,
+% including data corruption!!!
+
+% READ THE WARNING!
+fileMaint('ZZ06'); 
+% READ THE WARNING!
+
+%% ==== Stim / response specific plots ==============
+
+% exptDate = '21517';
+% exptIndex = '002';
+% evokedStimResp_userInput(exptDate,exptIndex);
+
+exptDate = '21520';
+exptIndex = '005';
+evokedStimResp_userInput(exptDate,exptIndex);
 
 
-%% ==== whole day plasticity plots =================
+
+%% ==== whole day plasticity plots ==================
 
 %Session 2 day of injection
 exptDate = '21512';
