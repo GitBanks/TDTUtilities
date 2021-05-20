@@ -83,10 +83,6 @@ ampLabel = [];
 for iStim = 1:nStims
     ampLabel{iStim} = [num2str(stimArray(iStim)) '\mu' 'A'];
 end
-legendLabs = [];
-for iPk = 1:nPks
-    legendLabs{iPk} = ['Pk ' num2str(iPk)];
-end
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
 FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
 thisFigure = figure('Name',FigName);
@@ -141,14 +137,14 @@ for iROI = 1:nROIs
         end
     end
 end
-
+close(thisFigure);
 %% Estimate peak responses by averaging around the peaks and troughs
 avgWinIndex = floor(avgWinTime/dTRec);
 baseWinIndex = floor(baseWin/dTRec);
 pkVals = struct();
 for iROI = 1:nROIs
     pkVals(iROI).data = zeros(length(pkSearchData(iROI).tPk),nStims);
-    for iPk = 1:nPks
+    for iPk = 1:length(pkSearchData(iROI).tPk)
         %Start and stop indices of time window re stim time to search for peak minimum resp
         this_tPk = pkSearchData(iROI).tPk(iPk);
         pkSearchIndices = ceil([this_tPk - this_tPk/2,this_tPk + this_tPk/2]/dTRec);
@@ -173,18 +169,13 @@ for iROI = 1:nROIs
 end
 
 %% Plot avg traces and stim-resp curves
-figure(thisFigure);
+FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
+thisFigure = figure('Name',FigName);
 ampLabel = [];
 for iStim = 1:nStims
     ampLabel{iStim} = [num2str(stimArray(iStim)) '\mu' 'A'];
 end
-legendLabs = [];
-for iPk = 1:nPks
-    legendLabs{iPk} = ['Pk ' num2str(iPk)];
-end
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
-FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
-thisFigure = figure('Name',FigName);
 for iROI = 1:nROIs
     % Plot avg traces
     subPlt(iROI) = subplot(2,nROIs,iROI);
@@ -208,6 +199,11 @@ end
 for iROI = 1:nROIs
     subplot(2,nROIs,nROIs+iROI)
     hold on
+    legendLabs = [];
+    nPks = size(pkVals(iROI).data,1);
+    for iPk = 1:nPks
+        legendLabs{iPk} = ['Pk ' num2str(iPk)];
+    end
     for iPk = 1:nPks
         plot(stimArray,pkSearchData(iROI).pkSign(iPk)*pkVals(iROI).data(iPk,:),'-o');
     end
@@ -216,9 +212,7 @@ for iROI = 1:nROIs
     if iROI == 1
         ax.YLabel.String = 'Pk resp (V)';
     end
-    if iROI == nROIs
-        legend(legendLabs);
-    end
+    legend(legendLabs,'Location','SouthEast');
 end
 saveas(thisFigure,[outPath FigName]);
 
