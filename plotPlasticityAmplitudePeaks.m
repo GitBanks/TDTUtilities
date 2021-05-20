@@ -164,6 +164,8 @@ for iROI = 1:nROIs
     %Start and stop indices of time window re stim time to search for peak minimum resp
     this_tPk = pkSearchData(iROI).tPk;
     pkSearchIndices = ceil([this_tPk - this_tPk/2,this_tPk + this_tPk/2]/dTRec);
+    % Account for mystery delay in Synapse by adding on the actual stim
+    % indices here, i.e. shift the time origin just for estimating the peak.
     tempIndA = actualStimIndices(iROI)+pkSearchIndices;
 
     for iExpt = 1:nExpts
@@ -180,9 +182,13 @@ for iROI = 1:nROIs
                 mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
             tempIndB(1) = actualStimIndices(iROI)+pkSearchIndices(1)+pkIndex-avgWinIndex;
             tempIndB(2) = actualStimIndices(iROI)+pkSearchIndices(1)+pkIndex+avgWinIndex;
-            tracePeaks(iTrial) = mean(tempMn(tempIndB(1):tempIndB(2))) - baseVal;
+            % Multiply by sign of peak so that all data are magnitudes.
+            % Also correct for baseline.
+            tracePeaks(iTrial) = ...
+                pkSearchData(iROI).pkSign*mean(tempMn(tempIndB(1):tempIndB(2))) - baseVal;
         end
-
+        % concatenate the data from each experiment to get one long time
+        % series covering the whole recording session.
         allAdjPeaks(iROI,lastTrial+1:lastTrial+nTrials(iExpt)) = tracePeaks;
         timeElapsed = timeElapsed+recDelay(iExpt);
         allStimTimes(iROI,lastTrial+1:lastTrial+nTrials(iExpt)) = evDataSet(iExpt).stimTimes'+timeElapsed;
@@ -209,7 +215,7 @@ for iROI = 1:nROIs
     ax.Title.String = ROILabels{iROI};
     if iROI == nROIs
         ax.XLabel.String = 'Time (min)';
-        ax.YLabel.String = 'Pk ampl';
+        ax.YLabel.String = '|Pk ampl|';
     end
 end
 saveas(thisFigure,[outPath figureName]);
