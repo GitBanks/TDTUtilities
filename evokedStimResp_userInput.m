@@ -2,9 +2,9 @@ function evokedStimResp_userInput(exptDate,exptIndex)
 
 %%
 % User-defined parameters
-if ~exist('exptDate','var') || ~exist('exptIndex','var') || ~exist('chanLabels','var')
-    exptDate = '21517'; 
-    exptIndex = '002';
+if ~exist('exptDate','var') || ~exist('exptIndex','var')
+    exptDate = '21520'; 
+    exptIndex = '005';
 %     exptDate = '21510';
 %     exptIndex = '000';
 %     exptDate = '21513';
@@ -50,34 +50,47 @@ postStimIndex = ceil(tPostStim/dTRec);
 % finding first peak after t=0 (i.e. after what Synapse thinks is the stim
 % time).
 pkThresh = 5.e-6;
-actualStimIndices = zeros(1,nROIs);
 tempData = zeros(size(stimSet(1).subMean));
 for iStim = 1:nStims
     tempData = tempData+stimSet(iStim).subMean/nStims;
 end
 % figure()
+saveIndex = zeros(1,nROIs);
 for iROI = 1:nROIs
 %     subplot(1,nROIs,iROI);
 %     plot(abs(tempData(iROI,:)));
 %     [tempPks,tempIndex] = findpeaks(abs(tempData(iROI,preStimIndex:end)),'Threshold',pkThresh);
+%     if isempty(tempIndex)
+%         tempIndex(1) = 0;
+%         tempPks(1) = 0;
+%     end
+%     saveIndex(iROI) = tempIndex(1);
 %     hold on
 %     plot(tempIndex(1)+preStimIndex,tempPks(1),'+');
     [~,tempIndex] = findpeaks(abs(tempData(iROI,preStimIndex:end)),'Threshold',pkThresh);
-    actualStimIndices(iROI) = tempIndex(1)+preStimIndex;
+    if isempty(tempIndex)
+        tempIndex(1) = 0;
+    end
+    saveIndex(iROI) = tempIndex(1);
+end
+if sum(saveIndex) == 0
+    actualStimIndex = preStimIndex;
+else
+    indexAdjust = floor(mean(saveIndex(saveIndex>0)));
+    actualStimIndex = preStimIndex + indexAdjust;
 end
 %% Compute means and find min/max for plotting
-plotMax = -1.e10;
-plotMin = 1.e10;
+startSearchIndex = actualStimIndex+ceil(artifactDur/dTRec); %Start search for plot min and max after artifact
+stimSet(iStim).dataMean = squeeze(mean(stimSet(iStim).data,2));
+stimSet(iStim).subMean = squeeze(mean(stimSet(iStim).sub,2));
 for iROI = 1:nROIs
-    startSearchIndex = actualStimIndices(iROI)+ceil(artifactDur/dTRec); %Start search for plot min and max after artifact
+    plotMax(iROI) = -1.e10;
+    plotMin(iROI) = 1.e10;
     for iStim = 1:nStims
-        stimSet(iStim).dataMean = squeeze(mean(stimSet(iStim).data,2));
-        stimSet(iStim).subMean = squeeze(mean(stimSet(iStim).sub,2));
-        plotMax = max([plotMax,max(stimSet(iStim).subMean(:,startSearchIndex:end))]);
-        plotMin = min([plotMin,min(stimSet(iStim).subMean(:,startSearchIndex:end))]);
+        plotMax(iROI) = max([plotMax(iROI),max(stimSet(iStim).subMean(iROI,startSearchIndex:end))]);
+        plotMin(iROI) = min([plotMin(iROI),min(stimSet(iStim).subMean(iROI,startSearchIndex:end))]);
     end
 end
-
 %% Plot average traces
 ampLabel = [];
 for iStim = 1:nStims
@@ -95,7 +108,7 @@ for iROI = 1:nROIs
     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [1.05*plotMin,1.05*plotMax];
+    ax.YLim = [1.05*plotMin(iROI),1.05*plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
         ax.YLabel.String = 'avg dataSub (V)';
@@ -148,7 +161,7 @@ for iROI = 1:nROIs
         %Start and stop indices of time window re stim time to search for peak minimum resp
         this_tPk = pkSearchData(iROI).tPk(iPk);
         pkSearchIndices = ceil([this_tPk - this_tPk/2,this_tPk + this_tPk/2]/dTRec);
-        tempIndA = actualStimIndices(iROI)+pkSearchIndices;
+        tempIndA = actualStimIndex+pkSearchIndices;
         pkSign = pkSearchData(iROI).pkSign(iPk);
         for iStim = 1:nStims
             tempMn = stimSet(iStim).subMean(iROI,:);
@@ -161,8 +174,8 @@ for iROI = 1:nROIs
 %             plot(pkIndex,yVal,'+');
             baseVal = ...
                 mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
-            tempIndB(1) = actualStimIndices(iROI)+pkSearchIndices(1)+pkIndex-avgWinIndex;
-            tempIndB(2) = actualStimIndices(iROI)+pkSearchIndices(1)+pkIndex+avgWinIndex;
+            tempIndB(1) = actualStimIndex+pkSearchIndices(1)+pkIndex-avgWinIndex;
+            tempIndB(2) = actualStimIndex+pkSearchIndices(1)+pkIndex+avgWinIndex;
             pkVals(iROI).data(iPk,iStim) = mean(tempMn(tempIndB(1):tempIndB(2))) - baseVal;
         end
     end
@@ -185,7 +198,7 @@ for iROI = 1:nROIs
     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [1.05*plotMin,1.05*plotMax];
+    ax.YLim = [1.05*plotMin(iROI),1.05*plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
         ax.YLabel.String = 'avg dataSub (V)';
