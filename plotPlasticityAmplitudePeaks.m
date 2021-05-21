@@ -65,9 +65,9 @@ ROILabels = unique(ROILabels,'stable');
 % finding first peak after t=0 (i.e. after what Synapse thinks is the stim
 % time).
 pkThresh = 5.e-6;
-tempData = zeros(size(stimSet(1).subMean));
-for iStim = 1:nStims
-    tempData = tempData+stimSet(iStim).subMean/nStims;
+tempData = zeros(size(evDataSet(1).subMean));
+for iExpt = 1:nExpts
+    tempData = tempData+evDataSet(iExpt).subMean/nExpts;
 end
 % figure()
 saveIndex = zeros(1,nROIs);
@@ -104,9 +104,9 @@ thisFigure = figure('Name',figureName);
 for iROI = 1:nROIs
     plotMax(iROI) = -1.e10;
     plotMin(iROI) = 1.e10;
-    for iStim = 1:nStims
-        plotMax(iROI) = max([plotMax(iROI),prctile(stimSet(iStim).subMean(iROI,startSearchIndex:end),99)]);
-        plotMin(iROI) = min([plotMin(iROI),prctile(stimSet(iStim).subMean(iROI,startSearchIndex:end),1)]);
+    for iExpt = 1:nExpts
+        plotMax(iROI) = max([plotMax(iROI),prctile(evDataSet(iExpt).subMean(iROI,startSearchIndex:end),99)]);
+        plotMin(iROI) = min([plotMin(iROI),prctile(evDataSet(iExpt).subMean(iROI,startSearchIndex:end),1)]);
     end
     % Plot avg traces
     subPlt(iROI) = subplot(1,nROIs,iROI);
@@ -227,7 +227,7 @@ for iROI = 1:nROIs
     baseMn = mean(baseData);
     plot([allStimTimes(iROI,1),allStimTimes(iROI,end)],[baseMn,baseMn],'--');
     ax = gca;
-    ax.YLim = [prctile(1.05*allStimTimes(iROI,:),1),1.05*prctile(allStimTimes(iROI,:),99)];
+    ax.YLim = [1.05*prctile(allAdjPeaks(iROI,:),1),1.05*prctile(allAdjPeaks(iROI,:),99)];
     ax.Title.String = ROILabels{iROI};
     if iROI == nROIs
         ax.XLabel.String = 'Time (min)';
