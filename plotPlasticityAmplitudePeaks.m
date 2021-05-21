@@ -64,36 +64,49 @@ ROILabels = unique(ROILabels,'stable');
 % times as they appear in data. Do this by averaging across stimuli and
 % finding first peak after t=0 (i.e. after what Synapse thinks is the stim
 % time).
-pkThresh = 1.e-6;
-actualStimIndices = zeros(1,nROIs);
-tempData = zeros(size(evDataSet(1).subMean));
-for iExpt = 1:nExpts
-    tempData = tempData+evDataSet(iExpt).subMean/nExpts;
+pkThresh = 5.e-6;
+tempData = zeros(size(stimSet(1).subMean));
+for iStim = 1:nStims
+    tempData = tempData+stimSet(iStim).subMean/nStims;
 end
 % figure()
+saveIndex = zeros(1,nROIs);
 for iROI = 1:nROIs
 %     subplot(1,nROIs,iROI);
 %     plot(abs(tempData(iROI,:)));
 %     [tempPks,tempIndex] = findpeaks(abs(tempData(iROI,preStimIndex:end)),'Threshold',pkThresh);
+%     if isempty(tempIndex)
+%         tempIndex(1) = 0;
+%         tempPks(1) = 0;
+%     end
+%     saveIndex(iROI) = tempIndex(1);
 %     hold on
 %     plot(tempIndex(1)+preStimIndex,tempPks(1),'+');
     [~,tempIndex] = findpeaks(abs(tempData(iROI,preStimIndex:end)),'Threshold',pkThresh);
-    actualStimIndices(iROI) = tempIndex(1)+preStimIndex;
+    if isempty(tempIndex)
+        tempIndex(1) = 0;
+    end
+    saveIndex(iROI) = tempIndex(1);
 end
-
+if sum(saveIndex) == 0
+    actualStimIndex = preStimIndex;
+else
+    indexAdjust = floor(mean(saveIndex(saveIndex>0)));
+    actualStimIndex = preStimIndex + indexAdjust;
+end
 %% Plot out averaged traces
 % Start searching for peaks and troughs of responses after this time
-startSearchIndex = actualStimIndices(iROI)+ceil(artifactDur/dTRec); ; %Start search for plot min and max after artifact
+startSearchIndex = actualStimIndex+ceil(artifactDur/dTRec); ; %Start search for plot min and max after artifact
 
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
 figureName = ['Avg responses - ' animalName '_' exptDate];
 thisFigure = figure('Name',figureName);
 for iROI = 1:nROIs
-    plotMax = -1.e10;
-    plotMin = 1.e10;
-    for iExpt = 1:nExpts
-        plotMax = max([plotMax,max(evDataSet(iExpt).subMean(iROI,startSearchIndex:end))]);
-        plotMin = min([plotMin,min(evDataSet(iExpt).subMean(iROI,startSearchIndex:end))]);
+    plotMax(iROI) = -1.e10;
+    plotMin(iROI) = 1.e10;
+    for iStim = 1:nStims
+        plotMax(iROI) = max([plotMax(iROI),prctile(stimSet(iStim).subMean(iROI,startSearchIndex:end),99)]);
+        plotMin(iROI) = min([plotMin(iROI),prctile(stimSet(iStim).subMean(iROI,startSearchIndex:end),1)]);
     end
     % Plot avg traces
     subPlt(iROI) = subplot(1,nROIs,iROI);
@@ -103,7 +116,7 @@ for iROI = 1:nROIs
     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [1.05*plotMin,1.05*plotMax];
+    ax.YLim = [1.05*plotMin(iROI),1.05*plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
         ax.YLabel.String = 'avg dataSub (V)';
@@ -166,7 +179,7 @@ for iROI = 1:nROIs
     pkSearchIndices = ceil([this_tPk - this_tPk/2,this_tPk + this_tPk/2]/dTRec);
     % Account for mystery delay in Synapse by adding on the actual stim
     % indices here, i.e. shift the time origin just for estimating the peak.
-    tempIndA = actualStimIndices(iROI)+pkSearchIndices;
+    tempIndA = actualStimIndex+pkSearchIndices;
 
     for iExpt = 1:nExpts
         for iTrial = 1:nTrials(iExpt)
@@ -180,8 +193,8 @@ for iROI = 1:nROIs
             end
             baseVal = ...
                 mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
-            tempIndB(1) = actualStimIndices(iROI)+pkSearchIndices(1)+pkIndex-avgWinIndex;
-            tempIndB(2) = actualStimIndices(iROI)+pkSearchIndices(1)+pkIndex+avgWinIndex;
+            tempIndB(1) = actualStimIndex+pkSearchIndices(1)+pkIndex-avgWinIndex;
+            tempIndB(2) = actualStimIndex+pkSearchIndices(1)+pkIndex+avgWinIndex;
             % Multiply by sign of peak so that all data are magnitudes.
             % Also correct for baseline.
             tracePeaks(iTrial) = ...
@@ -209,9 +222,12 @@ for iROI = 1:nROIs
     hold on
     plot(allStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),allAdjPeaks(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
     plot(allStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),allAdjPeaks(iROI,nTrials(1)+nTrials(2)+1:end),'o');
-    baseMn = mean(allAdjPeaks(iROI,1:nTrials(1)));
+    baseData = allAdjPeaks(iROI,1:nTrials(1));
+    baseData = baseData(baseData>prctile(baseData,1)&baseData<prctile(baseData,99));
+    baseMn = mean(baseData);
     plot([allStimTimes(iROI,1),allStimTimes(iROI,end)],[baseMn,baseMn],'--');
     ax = gca;
+    ax.YLim = [prctile(1.05*allStimTimes(iROI,:),1),1.05*prctile(allStimTimes(iROI,:),99)];
     ax.Title.String = ROILabels{iROI};
     if iROI == nROIs
         ax.XLabel.String = 'Time (min)';

@@ -87,8 +87,8 @@ for iROI = 1:nROIs
     plotMax(iROI) = -1.e10;
     plotMin(iROI) = 1.e10;
     for iStim = 1:nStims
-        plotMax(iROI) = max([plotMax(iROI),max(stimSet(iStim).subMean(iROI,startSearchIndex:end))]);
-        plotMin(iROI) = min([plotMin(iROI),min(stimSet(iStim).subMean(iROI,startSearchIndex:end))]);
+        plotMax(iROI) = max([plotMax(iROI),prctile(stimSet(iStim).subMean(iROI,startSearchIndex:end),99)]);
+        plotMin(iROI) = min([plotMin(iROI),prctile(stimSet(iStim).subMean(iROI,startSearchIndex:end),1)]);
     end
 end
 %% Plot average traces
