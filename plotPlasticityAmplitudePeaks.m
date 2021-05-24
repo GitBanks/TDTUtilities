@@ -211,7 +211,7 @@ for iROI = 1:nROIs
 end
 
 %% Measure response magnitude of single trial via inner product of single 
-% trials with average trace
+% trials with average trace from baseline condition
 
 avgWinIndex = floor(avgWinTime/dTRec);
 baseWinIndex = floor(baseWin/dTRec);
@@ -225,11 +225,11 @@ for iROI = 1:nROIs
     % Account for mystery delay in Synapse by adding on the actual stim
     % indices here, i.e. shift the time origin just for estimating the peak.
     tempIndA = actualStimIndex+pkSearchIndices;
+    thisMn = squeeze(evDataSet(1).subMean(iROI,:));
 
     for iExpt = 1:nExpts
         traceIPAmpl = zeros(1,nTrials(iExpt));
         for iTrial = 1:nTrials(iExpt)
-            thisMn = squeeze(evDataSet(iExpt).subMean(iROI,:));
             tempData = squeeze(evDataSet(iExpt).sub(iROI,iTrial,:))';
             baseVal = ...
                 mean(tempData(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
