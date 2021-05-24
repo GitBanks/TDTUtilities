@@ -164,11 +164,10 @@ for iROI = 1:nROIs
     end
 end
 
-%% Measure peaks
+%% Measure response magnitude of single trial via peak amplitude
 
 avgWinIndex = floor(avgWinTime/dTRec);
 baseWinIndex = floor(baseWin/dTRec);
-pkVals = struct();
 allAdjPeaks = zeros(nROIs,nTotalTrials); % contains peaks for all recorded trials
 allStimTimes = zeros(nROIs,nTotalTrials); % contains stim times for all recorded trials
 for iROI = 1:nROIs
@@ -183,22 +182,22 @@ for iROI = 1:nROIs
 
     for iExpt = 1:nExpts
         for iTrial = 1:nTrials(iExpt)
-            tempMn = squeeze(evDataSet(iExpt).sub(iROI,iTrial,:));
+            tempData = squeeze(evDataSet(iExpt).sub(iROI,iTrial,:));
             if pkSearchData(iROI).pkSign<0
                 % If it's a negative-going peak, find the minimum
-                [~,pkIndex] = min(tempMn(tempIndA(1):tempIndA(2))); 
+                [~,pkIndex] = min(tempData(tempIndA(1):tempIndA(2))); 
             else
                 % If it's a postitive-going peak, find the maximum
-                [~,pkIndex] = max(tempMn(tempIndA(1):tempIndA(2))); 
+                [~,pkIndex] = max(tempData(tempIndA(1):tempIndA(2))); 
             end
             baseVal = ...
-                mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
+                mean(tempData(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
             tempIndB(1) = actualStimIndex+pkSearchIndices(1)+pkIndex-avgWinIndex;
             tempIndB(2) = actualStimIndex+pkSearchIndices(1)+pkIndex+avgWinIndex;
             % Multiply by sign of peak so that all data are magnitudes.
             % Also correct for baseline.
             tracePeaks(iTrial) = ...
-                pkSearchData(iROI).pkSign*mean(tempMn(tempIndB(1):tempIndB(2))) - baseVal;
+                pkSearchData(iROI).pkSign*mean(tempData(tempIndB(1):tempIndB(2))) - baseVal;
         end
         % concatenate the data from each experiment to get one long time
         % series covering the whole recording session.
@@ -210,6 +209,42 @@ for iROI = 1:nROIs
         clear tracePeaks
     end
 end
+
+%% Measure response magnitude of single trial via inner product of single 
+% trials with average trace
+
+avgWinIndex = floor(avgWinTime/dTRec);
+baseWinIndex = floor(baseWin/dTRec);
+allAdjIPAmpls = zeros(nROIs,nTotalTrials); % contains peaks for all recorded trials
+for iROI = 1:nROIs
+    timeElapsed = 0;
+    lastTrial = 0;
+    %Start and stop indices of time window re stim time to search for peak minimum resp
+    this_tPk = pkSearchData(iROI).tPk;
+    pkSearchIndices = ceil([this_tPk - this_tPk/2,this_tPk + this_tPk/2]/dTRec);
+    % Account for mystery delay in Synapse by adding on the actual stim
+    % indices here, i.e. shift the time origin just for estimating the peak.
+    tempIndA = actualStimIndex+pkSearchIndices;
+
+    for iExpt = 1:nExpts
+        traceIPAmpl = zeros(1,nTrials(iExpt));
+        for iTrial = 1:nTrials(iExpt)
+            thisMn = squeeze(evDataSet(iExpt).subMean(iROI,:));
+            tempData = squeeze(evDataSet(iExpt).sub(iROI,iTrial,:))';
+            baseVal = ...
+                mean(tempData(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
+            tempData = tempData-baseVal;
+            % Also correct for baseline.
+            traceIPAmpl(iTrial) = dot(tempData(tempIndA(1):tempIndA(2)),thisMn(tempIndA(1):tempIndA(2)))...
+                /norm(thisMn(tempIndA(1):tempIndA(2)));
+        end
+        % concatenate the data from each experiment to get one long time
+        % series covering the whole recording session.
+        allAdjIPAmpls(iROI,lastTrial+1:lastTrial+nTrials(iExpt)) = traceIPAmpl;
+        lastTrial = lastTrial+nTrials(iExpt);
+    end
+end
+
 
 %% Plot out time series of peak amplitudes
 figureName = ['Plasticity peaks time series - ' animalName '_' exptDate];
@@ -232,6 +267,30 @@ for iROI = 1:nROIs
     if iROI == nROIs
         ax.XLabel.String = 'Time (min)';
         ax.YLabel.String = '|Pk ampl|';
+    end
+end
+saveas(thisFigure,[outPath figureName]);
+%% Plot out time series of inner products
+figureName = ['Plasticity IP time series - ' animalName '_' exptDate];
+thisFigure = figure('Name',figureName);
+for iROI = 1:nROIs
+    plotColor = {'or','ob','ok'};
+    subplot(nROIs,1,iROI);
+    allStimTimes = allStimTimes/60; %Convert seconds to minutes
+    plot(allStimTimes(iROI,1:nTrials(1)),allAdjIPAmpls(iROI,1:nTrials(1)),'o'); 
+    hold on
+    plot(allStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),allAdjIPAmpls(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
+    plot(allStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),allAdjIPAmpls(iROI,nTrials(1)+nTrials(2)+1:end),'o');
+    baseData = allAdjIPAmpls(iROI,1:nTrials(1));
+    baseData = baseData(baseData>prctile(baseData,1)&baseData<prctile(baseData,99));
+    baseMn = mean(baseData);
+    plot([allStimTimes(iROI,1),allStimTimes(iROI,end)],[baseMn,baseMn],'--');
+    ax = gca;
+    ax.YLim = [1.05*prctile(allAdjIPAmpls(iROI,:),1),1.05*prctile(allAdjIPAmpls(iROI,:),99)];
+    ax.Title.String = ROILabels{iROI};
+    if iROI == nROIs
+        ax.XLabel.String = 'Time (min)';
+        ax.YLabel.String = '|IP ampl|';
     end
 end
 saveas(thisFigure,[outPath figureName]);
