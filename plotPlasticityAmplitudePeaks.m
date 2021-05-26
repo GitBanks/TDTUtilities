@@ -25,6 +25,7 @@ avgWinTime = 1.e-3; %sec;
 baseWin = [-5,-0.5]*1.e-3; %sec; 
 % pkAvgWin = 8; % Average over this window to estimate peak
 exptIndexLabels = {'Baseline','postLTP','postLTD'}; % these correspond to each stimset we load below
+smFac = 15; %smoothing window for time series plots
 
 %% =========  load data in this block  ========= % % % %
 if exist('evDataSet','var')
@@ -96,7 +97,7 @@ else
 end
 %% Plot out averaged traces
 % Start searching for peaks and troughs of responses after this time
-startSearchIndex = actualStimIndex+ceil(artifactDur/dTRec); ; %Start search for plot min and max after artifact
+startSearchIndex = actualStimIndex+ceil(artifactDur/dTRec); %Start search for plot min and max after artifact
 
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
 figureName = ['Avg responses - ' animalName '_' exptDate];
@@ -252,11 +253,16 @@ thisFigure = figure('Name',figureName);
 for iROI = 1:nROIs
     plotColor = {'or','ob','ok'};
     subplot(nROIs,1,iROI);
+    hold on
     allStimTimes = allStimTimes/60; %Convert seconds to minutes
     plot(allStimTimes(iROI,1:nTrials(1)),allAdjPeaks(iROI,1:nTrials(1)),'o'); 
-    hold on
+    plot(allStimTimes(iROI,1:nTrials(1)),smooth(allAdjPeaks(iROI,1:nTrials(1)),smFac),'-k','LineWidth',2);
     plot(allStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),allAdjPeaks(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
+    plot(allStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),...
+        smooth(allAdjPeaks(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),smFac),'-k','LineWidth',2);
     plot(allStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),allAdjPeaks(iROI,nTrials(1)+nTrials(2)+1:end),'o');
+    plot(allStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),...
+        smooth(allAdjPeaks(iROI,nTrials(1)+nTrials(2)+1:end),smFac),'-k','LineWidth',2);
     baseData = allAdjPeaks(iROI,1:nTrials(1));
     baseData = baseData(baseData>prctile(baseData,1)&baseData<prctile(baseData,99));
     baseMn = mean(baseData);
@@ -276,11 +282,16 @@ thisFigure = figure('Name',figureName);
 for iROI = 1:nROIs
     plotColor = {'or','ob','ok'};
     subplot(nROIs,1,iROI);
+    hold on
     allStimTimes = allStimTimes/60; %Convert seconds to minutes
     plot(allStimTimes(iROI,1:nTrials(1)),allAdjIPAmpls(iROI,1:nTrials(1)),'o'); 
-    hold on
+    plot(allStimTimes(iROI,1:nTrials(1)),smooth(allAdjIPAmpls(iROI,1:nTrials(1)),smFac),'-k','LineWidth',2);
     plot(allStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),allAdjIPAmpls(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
+    plot(allStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),...
+        smooth(allAdjIPAmpls(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),smFac),'-k','LineWidth',2);
     plot(allStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),allAdjIPAmpls(iROI,nTrials(1)+nTrials(2)+1:end),'o');
+    plot(allStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),...
+        smooth(allAdjIPAmpls(iROI,nTrials(1)+nTrials(2)+1:end),smFac),'-k','LineWidth',2);
     baseData = allAdjIPAmpls(iROI,1:nTrials(1));
     baseData = baseData(baseData>prctile(baseData,1)&baseData<prctile(baseData,99));
     baseMn = mean(baseData);
