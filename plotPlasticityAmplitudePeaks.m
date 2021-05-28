@@ -249,18 +249,18 @@ end
 %% Plot out time series of peak amplitudes
 figureName = ['Plasticity peaks time series - ' animalName '_' exptDate];
 thisFigure = figure('Name',figureName);
+plotStimTimes = allStimTimes/60; %Convert seconds to minutes
 for iROI = 1:nROIs
     plotColor = {'or','ob','ok'};
     subplot(nROIs,1,iROI);
-    allStimTimes = allStimTimes/60; %Convert seconds to minutes
-    plot(allStimTimes(iROI,1:nTrials(1)),allAdjPeaks(iROI,1:nTrials(1)),'o'); 
+    plot(plotStimTimes(iROI,1:nTrials(1)),allAdjPeaks(iROI,1:nTrials(1)),'o'); 
     hold on
-    plot(allStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),allAdjPeaks(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
-    plot(allStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),allAdjPeaks(iROI,nTrials(1)+nTrials(2)+1:end),'o');
+    plot(plotStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),allAdjPeaks(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
+    plot(plotStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),allAdjPeaks(iROI,nTrials(1)+nTrials(2)+1:end),'o');
     baseData = allAdjPeaks(iROI,1:nTrials(1));
     baseData = baseData(baseData>prctile(baseData,1)&baseData<prctile(baseData,99));
     baseMn = mean(baseData);
-    plot([allStimTimes(iROI,1),allStimTimes(iROI,end)],[baseMn,baseMn],'--');
+    plot([plotStimTimes(iROI,1),plotStimTimes(iROI,end)],[baseMn,baseMn],'--');
     ax = gca;
     ax.YLim = [1.05*prctile(allAdjPeaks(iROI,:),1),1.05*prctile(allAdjPeaks(iROI,:),99)];
     ax.Title.String = ROILabels{iROI};
@@ -273,18 +273,18 @@ saveas(thisFigure,[outPath figureName]);
 %% Plot out time series of inner products
 figureName = ['Plasticity IP time series - ' animalName '_' exptDate];
 thisFigure = figure('Name',figureName);
+plotStimTimes = allStimTimes/60; %Convert seconds to minutes
 for iROI = 1:nROIs
     plotColor = {'or','ob','ok'};
     subplot(nROIs,1,iROI);
-    allStimTimes = allStimTimes/60; %Convert seconds to minutes
-    plot(allStimTimes(iROI,1:nTrials(1)),allAdjIPAmpls(iROI,1:nTrials(1)),'o'); 
+    plot(plotStimTimes(iROI,1:nTrials(1)),allAdjIPAmpls(iROI,1:nTrials(1)),'o'); 
     hold on
-    plot(allStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),allAdjIPAmpls(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
-    plot(allStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),allAdjIPAmpls(iROI,nTrials(1)+nTrials(2)+1:end),'o');
+    plot(plotStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),allAdjIPAmpls(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
+    plot(plotStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),allAdjIPAmpls(iROI,nTrials(1)+nTrials(2)+1:end),'o');
     baseData = allAdjIPAmpls(iROI,1:nTrials(1));
     baseData = baseData(baseData>prctile(baseData,1)&baseData<prctile(baseData,99));
     baseMn = mean(baseData);
-    plot([allStimTimes(iROI,1),allStimTimes(iROI,end)],[baseMn,baseMn],'--');
+    plot([plotStimTimes(iROI,1),plotStimTimes(iROI,end)],[baseMn,baseMn],'--');
     ax = gca;
     ax.YLim = [1.05*prctile(allAdjIPAmpls(iROI,:),1),1.05*prctile(allAdjIPAmpls(iROI,:),99)];
     ax.Title.String = ROILabels{iROI};

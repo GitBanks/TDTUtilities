@@ -32,6 +32,7 @@ disp('            *              ');
 disp('Now saving the magnet data.');
 disp('            *              ');
 % magnet data import
+
 saveMagnetDataFiles(exptDate,Animal1,Animal2);
 close all
 
