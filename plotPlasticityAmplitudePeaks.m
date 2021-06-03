@@ -10,27 +10,36 @@ tPostStim = 0.5;
 indexLabels = {'Baseline','LTP','LTD'}; % these correspond to each stimset we load below
 
 % % % % =========  load data in this block  ========= % % % %
-exptDate = '21506';
-exptIndex = '007';
-[stimSet(1)] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+% exptDate = '21513';
+% exptIndex = '003';
+exptDate = '21513';
+exptIndex = '003';
+%evokedData = struct();
+%[stimSet(1),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+[evokedData(1),dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
 
-exptDate = '21506';
-exptIndex = '010';
-[stimSet(2)] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+% exptDate = '21513';
+% exptIndex = '005';
+exptDate = '21515';
+exptIndex = '009';
+%[stimSet(2),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+[evokedData(2),dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
 
-exptDate = '21506';
+% exptDate = '21513';
+% exptIndex = '007';
+exptDate = '21515';
 exptIndex = '012';
-[stimSet(3)] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
-
+%[stimSet(3),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
+[evokedData(3),dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
 recDelay(1) = 0;
-recDelay(2) = synapseTimeSubtraction(stimSet(2).timeOfDayStart,stimSet(1).timeOfDayStop);
-recDelay(3) = synapseTimeSubtraction(stimSet(3).timeOfDayStart,stimSet(2).timeOfDayStop);
+recDelay(2) = 0; %synapseTimeSubtraction(stimSet(2).timeOfDayStart,stimSet(1).timeOfDayStop);
+recDelay(3) = 0; %synapseTimeSubtraction(stimSet(3).timeOfDayStart,stimSet(2).timeOfDayStop);
 
 
 
 % % % % ============ plot peak amplitude time series ============= % % % %
 iChan = 1; % loop through this?
-dTRec = stimSet.dT;
+%dTRec = evokedData.dT;
 plotTimeArray = -tPreStim:dTRec:tPostStim;
 beginTimeWindow = .005; %this is start of time window
 endTimeWindow = .02; %this is end of time window
@@ -40,26 +49,26 @@ searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow;
 allCorrectedPeaks = []; % cat peaks for all hours
 allStimTimes = []; % cat event times for all hours
 timeElapsed = 0;
-for iSet = 1:size(stimSet,2)
+for iSet = 1:size(evokedData,2)
 % peak min
 % searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow
 startIndex = find(plotTimeArray>beginTimeWindow,1,'First');
 
-%tracePeaks = zeros(1,size(stimSet(iSet).sub,2));
-for iIndex = 1:size(stimSet(iSet).sub,2)
-    [~,Imin] = min(stimSet(iSet).sub(1,iIndex,searchWindow)); % this finds the lowest point within a range
+%tracePeaks = zeros(1,size(evokedData(iSet).sub,2));
+for iIndex = 1:size(evokedData(iSet).sub,2)
+    [~,Imin] = min(evokedData(iSet).sub(1,iIndex,searchWindow)); % this finds the lowest point within a range
     minPeakIndex = startIndex+Imin;
     indexRange = minPeakIndex-4:minPeakIndex+4;
-    tracePeaks(iIndex) = mean(stimSet(iSet).sub(1,iIndex,indexRange),3);
+    tracePeaks(iIndex) = mean(evokedData(iSet).sub(1,iIndex,indexRange),3);
 end
 
-traceBaseline = mean(stimSet(iSet).sub(1,:,1:100),3);
+traceBaseline = mean(evokedData(iSet).sub(1,:,1:100),3);
 allCorrectedPeaks = cat(2,allCorrectedPeaks,tracePeaks-traceBaseline);
 
 timeElapsed = timeElapsed+recDelay(iSet);
-allStimTimes = cat(2,allStimTimes,(stimSet(iSet).stimOnset'+timeElapsed));
-timeElapsed = timeElapsed+stimSet(iSet).stimOnset(end);
-npoints(iSet) = size(stimSet(iSet).sub,2);
+allStimTimes = cat(2,allStimTimes,(evokedData(iSet).stimOnset'+timeElapsed));
+timeElapsed = timeElapsed+evokedData(iSet).stimOnset(end);
+npoints(iSet) = size(evokedData(iSet).sub,2);
 clear tracePeaks
 end
 
@@ -94,7 +103,7 @@ ylabel('Adjusted min amplitude')
 
 %index that corresponds to time before stim
 
-traceBaseline = mean(stimSet.sub(1,:,1:100),3);
+traceBaseline = mean(evokedData.sub(1,:,1:100),3);
 
 figure()
 plot(minPeaks-traceBaseline,'o');
@@ -117,7 +126,7 @@ plot(minPeaks-traceBaseline,'o');
 % 
 % 
 % figure()
-% plot(plotTimeArrayRec,stimSet.dataMean(1,1:end-1))
+% plot(plotTimeArrayRec,evokedData.dataMean(1,1:end-1))
 % 
 % 
 % 
@@ -126,10 +135,10 @@ plot(minPeaks-traceBaseline,'o');
 % plot(timeArrayRec,data.streams.LFP1.data(3,:))
 % 
 % figure()
-% plot(plotTimeArrayRec,squeeze(stimSet.sub(1,3:359,:)))
-% plot(plotTimeArrayRec,squeeze(mean(stimSet.sub(1,1:359,:),2)),'LineWidth',3)
+% plot(plotTimeArrayRec,squeeze(evokedData.sub(1,3:359,:)))
+% plot(plotTimeArrayRec,squeeze(mean(evokedData.sub(1,1:359,:),2)),'LineWidth',3)
 % 
 % figure()
-% plot(squeeze(stimSet.sub(1,1,:)))
+% plot(squeeze(evokedData.sub(1,1,:)))
 % 
-% plot(plotTimeArrayRec,squeeze(stimSet.sub(1,1,:)))
+% plot(plotTimeArrayRec,squeeze(evokedData.sub(1,1,:)))
