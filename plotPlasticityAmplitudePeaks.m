@@ -1,144 +1,307 @@
-
+function plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% Function to plot out time series of evoked response amplitudes during
+% LTP/LTD expts. Allows user to choose time and sign of peaks from averqage
+% traces.
 % this is a rewrite of the PlasticityPlots script and should be broken into
 % discrete sections for readability and modularity reasons.
+if ~exist('exptDate','var') || ~exist('exptIndices','var') 
+    exptDate = '21515';
+    exptIndices = {'003','009','012'};
+end
+nExpts = length(exptIndices);
 
-
-tPreStim = 0.2;
-tPostStim = 0.5;
-%timeSpans = 4.9*60; %time in seconds (min*60) to group responses into
-
-indexLabels = {'Baseline','LTP','LTD'}; % these correspond to each stimset we load below
-
-% % % % =========  load data in this block  ========= % % % %
-% exptDate = '21513';
-% exptIndex = '003';
-exptDate = '21513';
-exptIndex = '003';
-%evokedData = struct();
-%[stimSet(1),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
-[evokedData(1),dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
-
-% exptDate = '21513';
-% exptIndex = '005';
-exptDate = '21515';
-exptIndex = '009';
-%[stimSet(2),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
-[evokedData(2),dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
-
-% exptDate = '21513';
-% exptIndex = '007';
-exptDate = '21515';
-exptIndex = '012';
-%[stimSet(3),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
-[evokedData(3),dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
-recDelay(1) = 0;
-recDelay(2) = 0; %synapseTimeSubtraction(stimSet(2).timeOfDayStart,stimSet(1).timeOfDayStop);
-recDelay(3) = 0; %synapseTimeSubtraction(stimSet(3).timeOfDayStart,stimSet(2).timeOfDayStop);
-
-
-
-% % % % ============ plot peak amplitude time series ============= % % % %
-iChan = 1; % loop through this?
-%dTRec = evokedData.dT;
-plotTimeArray = -tPreStim:dTRec:tPostStim;
-beginTimeWindow = .005; %this is start of time window
-endTimeWindow = .02; %this is end of time window
-searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow;
-
-
-allCorrectedPeaks = []; % cat peaks for all hours
-allStimTimes = []; % cat event times for all hours
-timeElapsed = 0;
-for iSet = 1:size(evokedData,2)
-% peak min
-% searchWindow = plotTimeArray>beginTimeWindow&plotTimeArray<endTimeWindow
-startIndex = find(plotTimeArray>beginTimeWindow,1,'First');
-
-%tracePeaks = zeros(1,size(evokedData(iSet).sub,2));
-for iIndex = 1:size(evokedData(iSet).sub,2)
-    [~,Imin] = min(evokedData(iSet).sub(1,iIndex,searchWindow)); % this finds the lowest point within a range
-    minPeakIndex = startIndex+Imin;
-    indexRange = minPeakIndex-4:minPeakIndex+4;
-    tracePeaks(iIndex) = mean(evokedData(iSet).sub(1,iIndex,indexRange),3);
+outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndices{1} '\'];
+if ~exist(outPath,'dir')
+    mkdir(outPath);
 end
 
-traceBaseline = mean(evokedData(iSet).sub(1,:,1:100),3);
-allCorrectedPeaks = cat(2,allCorrectedPeaks,tracePeaks-traceBaseline);
+tPreStim = 0.02;
+tPostStim = 0.2;
+% Start searching for peaks and troughs of responses after this time
+artifactDur = 2.e-3; %sec;
+% Average over this window to get estimate of peak value
+avgWinTime = 1.e-3; %sec; 
+% Time window re stim time to calculate baseline value that is subtracted from peak values
+baseWin = [-5,-0.5]*1.e-3; %sec; 
+% pkAvgWin = 8; % Average over this window to estimate peak
+exptIndexLabels = {'Baseline','postLTP','postLTD'}; % these correspond to each stimset we load below
+smFac = 15; %smoothing window for time series plots
 
-timeElapsed = timeElapsed+recDelay(iSet);
-allStimTimes = cat(2,allStimTimes,(evokedData(iSet).stimOnset'+timeElapsed));
-timeElapsed = timeElapsed+evokedData(iSet).stimOnset(end);
-npoints(iSet) = size(evokedData(iSet).sub,2);
-clear tracePeaks
+%% =========  load data in this block  ========= % % % %
+if exist('evDataSet','var')
+    clear evDataSet
+end
+nTrials = zeros(1,nExpts);
+for iExpt = 1:nExpts
+    exptIndex = exptIndices{iExpt};
+    [dataTemp,dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
+    evDataSet(iExpt) = dataTemp;
+    nTrials(iExpt) = size(evDataSet(iExpt).sub,2);
+end
+nTotalTrials = sum(nTrials);
+[nROIs,nDataPts] = size(evDataSet(1).subMean);
+preStimIndex = floor(tPreStim/dTRec);
+postStimIndex = ceil(tPostStim/dTRec);
+
+% Get gaps between data files in seconds
+recDelay = zeros(1,nExpts);
+for iExpt = 2:nExpts
+    t2 = evDataSet(iExpt).info.utcStartTime;
+    t1 = evDataSet(iExpt-1).info.utcStopTime;
+    recDelay(iExpt) = synapseTimeSubtraction(t2,t1);
+end
+
+%%
+relevantROIs = {'PFC','CA1','Hipp'}; % labels in database can be any of these
+animalName = getAnimalByDateIndex(exptDate,exptIndices{1});
+electrodeLocs = getElectrodeLocationFromDateIndex(exptDate,exptIndices{1});
+%%%%NOTE: The following assumes that channels are arranged in pairs and
+%%%%that the channels are ordered in Synapse as they are in eNotebook
+ROILabels = electrodeLocs(contains(electrodeLocs,relevantROIs,'IgnoreCase',true));
+ROILabels = unique(ROILabels,'stable');
+
+%% Ugly kludge alert!
+% Need to account for delay between stim times as saved by Synapse and stim
+% times as they appear in data. Do this by averaging across stimuli and
+% finding first peak after t=0 (i.e. after what Synapse thinks is the stim
+% time).
+pkThresh = 5.e-6;
+tempData = zeros(size(evDataSet(1).subMean));
+for iExpt = 1:nExpts
+    tempData = tempData+evDataSet(iExpt).subMean/nExpts;
+end
+% figure()
+saveIndex = zeros(1,nROIs);
+for iROI = 1:nROIs
+%     subplot(1,nROIs,iROI);
+%     plot(abs(tempData(iROI,:)));
+%     [tempPks,tempIndex] = findpeaks(abs(tempData(iROI,preStimIndex:end)),'Threshold',pkThresh);
+%     if isempty(tempIndex)
+%         tempIndex(1) = 0;
+%         tempPks(1) = 0;
+%     end
+%     saveIndex(iROI) = tempIndex(1);
+%     hold on
+%     plot(tempIndex(1)+preStimIndex,tempPks(1),'+');
+    [~,tempIndex] = findpeaks(abs(tempData(iROI,preStimIndex:end)),'Threshold',pkThresh);
+    if isempty(tempIndex)
+        tempIndex(1) = 0;
+    end
+    saveIndex(iROI) = tempIndex(1);
+end
+if sum(saveIndex) == 0
+    actualStimIndex = preStimIndex;
+else
+    indexAdjust = floor(mean(saveIndex(saveIndex>0)));
+    actualStimIndex = preStimIndex + indexAdjust;
+end
+%% Plot out averaged traces
+% Start searching for peaks and troughs of responses after this time
+startSearchIndex = actualStimIndex+ceil(artifactDur/dTRec); %Start search for plot min and max after artifact
+
+plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
+figureName = ['Avg responses - ' animalName '_' exptDate];
+thisFigure = figure('Name',figureName);
+for iROI = 1:nROIs
+    plotMax(iROI) = -1.e10;
+    plotMin(iROI) = 1.e10;
+    for iExpt = 1:nExpts
+        plotMax(iROI) = max([plotMax(iROI),prctile(evDataSet(iExpt).subMean(iROI,startSearchIndex:end),99)]);
+        plotMin(iROI) = min([plotMin(iROI),prctile(evDataSet(iExpt).subMean(iROI,startSearchIndex:end),1)]);
+    end
+    % Plot avg traces
+    subPlt(iROI) = subplot(1,nROIs,iROI);
+    hold on
+    for iExpt = 1:nExpts
+        plot(plotTimeArray,evDataSet(iExpt).subMean(iROI,:));
+    end
+    ax = gca;
+    ax.XLim = [-tPreStim,tPostStim];
+    ax.YLim = [1.05*plotMin(iROI),1.05*plotMax(iROI)];
+    ax.XLabel.String = 'time(sec)';
+    if iROI == 1
+        ax.YLabel.String = 'avg dataSub (V)';
+    end
+    ax.Title.String = ROILabels{iROI};
+    if iROI == nROIs
+        legLabs = cell(1,nExpts);
+        for iExpt = 1:nExpts
+            legLabs{iExpt} = [exptIndices{iExpt} '-' exptIndexLabels{iExpt}];
+        end
+        legend(legLabs);
+    end
+end
+saveas(thisFigure,[outPath figureName]);
+
+%% Have user click on peaks in each subplot to inform peak search windows
+msgFig = msgbox({'Click once in each subplot to indicate approximate location of peak.';...
+    'Proceed from left to right. '});
+uiwait(msgFig);
+figure(thisFigure);
+opts.Default = 'Yes'; % Can just hit enter to proceed
+opts.Interpreter = 'Tex'; % Apparently it is necessary to set this option
+if exist('pkSearchData','var')
+    clear pkSearchData;
+end
+for iROI = 1:nROIs
+    subplot(subPlt(iROI));
+    proceed = 0;
+    while ~proceed
+        [temp_tPk,temp_yPk] = ginput(1); % Gets single click input
+        hand = plot(temp_tPk,temp_yPk,'+r','MarkerSize',12);
+        answer = questdlg(['Accept pk for ' ROILabels{iROI} ' ?'], ...
+        [ROILabels{iROI} 'peak estimate'], ...
+        'Yes','No',opts);
+        % Handle response
+        switch answer
+            case 'Yes'
+                pkSearchData(iROI).tPk = temp_tPk;
+                pkSearchData(iROI).pkSign = sign(temp_yPk);
+                proceed = 1;
+            case 'No'
+                delete(hand); % Removes erroneous peak marker
+                proceed = 0;
+        end
+    end
+end
+
+%% Measure response magnitude of single trial via peak amplitude
+
+avgWinIndex = floor(avgWinTime/dTRec);
+baseWinIndex = floor(baseWin/dTRec);
+allAdjPeaks = zeros(nROIs,nTotalTrials); % contains peaks for all recorded trials
+allStimTimes = zeros(nROIs,nTotalTrials); % contains stim times for all recorded trials
+for iROI = 1:nROIs
+    timeElapsed = 0;
+    lastTrial = 0;
+    %Start and stop indices of time window re stim time to search for peak minimum resp
+    this_tPk = pkSearchData(iROI).tPk;
+    pkSearchIndices = ceil([this_tPk - this_tPk/2,this_tPk + this_tPk/2]/dTRec);
+    % Account for mystery delay in Synapse by adding on the actual stim
+    % indices here, i.e. shift the time origin just for estimating the peak.
+    tempIndA = actualStimIndex+pkSearchIndices;
+
+    for iExpt = 1:nExpts
+        for iTrial = 1:nTrials(iExpt)
+            tempData = squeeze(evDataSet(iExpt).sub(iROI,iTrial,:));
+            if pkSearchData(iROI).pkSign<0
+                % If it's a negative-going peak, find the minimum
+                [~,pkIndex] = min(tempData(tempIndA(1):tempIndA(2))); 
+            else
+                % If it's a postitive-going peak, find the maximum
+                [~,pkIndex] = max(tempData(tempIndA(1):tempIndA(2))); 
+            end
+            baseVal = ...
+                mean(tempData(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
+            tempIndB(1) = actualStimIndex+pkSearchIndices(1)+pkIndex-avgWinIndex;
+            tempIndB(2) = actualStimIndex+pkSearchIndices(1)+pkIndex+avgWinIndex;
+            % Multiply by sign of peak so that all data are magnitudes.
+            % Also correct for baseline.
+            tracePeaks(iTrial) = ...
+                pkSearchData(iROI).pkSign*mean(tempData(tempIndB(1):tempIndB(2))) - baseVal;
+        end
+        % concatenate the data from each experiment to get one long time
+        % series covering the whole recording session.
+        allAdjPeaks(iROI,lastTrial+1:lastTrial+nTrials(iExpt)) = tracePeaks;
+        timeElapsed = timeElapsed+recDelay(iExpt);
+        allStimTimes(iROI,lastTrial+1:lastTrial+nTrials(iExpt)) = evDataSet(iExpt).stimTimes'+timeElapsed;
+        timeElapsed = timeElapsed+evDataSet(iExpt).stimTimes(end);
+        lastTrial = lastTrial+nTrials(iExpt);
+        clear tracePeaks
+    end
+end
+
+%% Measure response magnitude of single trial via inner product of single 
+% trials with average trace from baseline condition
+
+avgWinIndex = floor(avgWinTime/dTRec);
+baseWinIndex = floor(baseWin/dTRec);
+allAdjIPAmpls = zeros(nROIs,nTotalTrials); % contains peaks for all recorded trials
+for iROI = 1:nROIs
+    timeElapsed = 0;
+    lastTrial = 0;
+    %Start and stop indices of time window re stim time to search for peak minimum resp
+    this_tPk = pkSearchData(iROI).tPk;
+    pkSearchIndices = ceil([this_tPk - this_tPk/2,this_tPk + this_tPk/2]/dTRec);
+    % Account for mystery delay in Synapse by adding on the actual stim
+    % indices here, i.e. shift the time origin just for estimating the peak.
+    tempIndA = actualStimIndex+pkSearchIndices;
+    thisMn = squeeze(evDataSet(1).subMean(iROI,:));
+
+    for iExpt = 1:nExpts
+        traceIPAmpl = zeros(1,nTrials(iExpt));
+        for iTrial = 1:nTrials(iExpt)
+            tempData = squeeze(evDataSet(iExpt).sub(iROI,iTrial,:))';
+            baseVal = ...
+                mean(tempData(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
+            tempData = tempData-baseVal;
+            % Also correct for baseline.
+            traceIPAmpl(iTrial) = dot(tempData(tempIndA(1):tempIndA(2)),thisMn(tempIndA(1):tempIndA(2)))...
+                /norm(thisMn(tempIndA(1):tempIndA(2)));
+        end
+        % concatenate the data from each experiment to get one long time
+        % series covering the whole recording session.
+        allAdjIPAmpls(iROI,lastTrial+1:lastTrial+nTrials(iExpt)) = traceIPAmpl;
+        lastTrial = lastTrial+nTrials(iExpt);
+    end
 end
 
 
-%This will plot out time series of every averaged peak
-
-
-
-
-plotColor = {'or','ob','ok'};
-figure();
-
-allStimTimes = allStimTimes/60;
-
-plot(allStimTimes(1:npoints(1)),allCorrectedPeaks(1:npoints(1)),'o'); %This step corrects for the baseline and also plots the time series
-hold on
-plot(allStimTimes(npoints(1)+1:npoints(1)+npoints(2)),allCorrectedPeaks(npoints(1)+1:npoints(1)+npoints(2)),'o');
-plot(allStimTimes(npoints(1)+npoints(2)+1:end),allCorrectedPeaks(npoints(1)+npoints(2)+1:end),'o');
-xlabel('Time')
-ylabel('Adjusted min amplitude')
-
-% minY = 0;
-% maxY = 0;
-
-
-
-
-
-
-
-%compute baseline for each trace and subtract from peak
-
-%index that corresponds to time before stim
-
-traceBaseline = mean(evokedData.sub(1,:,1:100),3);
-
-figure()
-plot(minPeaks-traceBaseline,'o');
-
-%can add the data from baseline LTP and LTD
-
-
-
-
-
-
-
-
-
-
-
-
-% Plot
-% plotTimeArrayRec = -tPreStim:dTRec:tPostStim;
-% 
-% 
-% figure()
-% plot(plotTimeArrayRec,evokedData.dataMean(1,1:end-1))
-% 
-% 
-% 
-% 
-% figure()
-% plot(timeArrayRec,data.streams.LFP1.data(3,:))
-% 
-% figure()
-% plot(plotTimeArrayRec,squeeze(evokedData.sub(1,3:359,:)))
-% plot(plotTimeArrayRec,squeeze(mean(evokedData.sub(1,1:359,:),2)),'LineWidth',3)
-% 
-% figure()
-% plot(squeeze(evokedData.sub(1,1,:)))
-% 
-% plot(plotTimeArrayRec,squeeze(evokedData.sub(1,1,:)))
+%% Plot out time series of peak amplitudes
+figureName = ['Plasticity peaks time series - ' animalName '_' exptDate];
+thisFigure = figure('Name',figureName);
+for iROI = 1:nROIs
+    plotColor = {'or','ob','ok'};
+    subplot(nROIs,1,iROI);
+    hold on
+    allStimTimes = allStimTimes/60; %Convert seconds to minutes
+    plot(allStimTimes(iROI,1:nTrials(1)),allAdjPeaks(iROI,1:nTrials(1)),'o'); 
+    plot(allStimTimes(iROI,1:nTrials(1)),smooth(allAdjPeaks(iROI,1:nTrials(1)),smFac),'-k','LineWidth',2);
+    plot(allStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),allAdjPeaks(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
+    plot(allStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),...
+        smooth(allAdjPeaks(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),smFac),'-k','LineWidth',2);
+    plot(allStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),allAdjPeaks(iROI,nTrials(1)+nTrials(2)+1:end),'o');
+    plot(allStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),...
+        smooth(allAdjPeaks(iROI,nTrials(1)+nTrials(2)+1:end),smFac),'-k','LineWidth',2);
+    baseData = allAdjPeaks(iROI,1:nTrials(1));
+    baseData = baseData(baseData>prctile(baseData,1)&baseData<prctile(baseData,99));
+    baseMn = mean(baseData);
+    plot([allStimTimes(iROI,1),allStimTimes(iROI,end)],[baseMn,baseMn],'--');
+    ax = gca;
+    ax.YLim = [1.05*prctile(allAdjPeaks(iROI,:),1),1.05*prctile(allAdjPeaks(iROI,:),99)];
+    ax.Title.String = ROILabels{iROI};
+    if iROI == nROIs
+        ax.XLabel.String = 'Time (min)';
+        ax.YLabel.String = '|Pk ampl|';
+    end
+end
+saveas(thisFigure,[outPath figureName]);
+%% Plot out time series of inner products
+figureName = ['Plasticity IP time series - ' animalName '_' exptDate];
+thisFigure = figure('Name',figureName);
+for iROI = 1:nROIs
+    plotColor = {'or','ob','ok'};
+    subplot(nROIs,1,iROI);
+    hold on
+    allStimTimes = allStimTimes/60; %Convert seconds to minutes
+    plot(allStimTimes(iROI,1:nTrials(1)),allAdjIPAmpls(iROI,1:nTrials(1)),'o'); 
+    plot(allStimTimes(iROI,1:nTrials(1)),smooth(allAdjIPAmpls(iROI,1:nTrials(1)),smFac),'-k','LineWidth',2);
+    plot(allStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),allAdjIPAmpls(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
+    plot(allStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),...
+        smooth(allAdjIPAmpls(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),smFac),'-k','LineWidth',2);
+    plot(allStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),allAdjIPAmpls(iROI,nTrials(1)+nTrials(2)+1:end),'o');
+    plot(allStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),...
+        smooth(allAdjIPAmpls(iROI,nTrials(1)+nTrials(2)+1:end),smFac),'-k','LineWidth',2);
+    baseData = allAdjIPAmpls(iROI,1:nTrials(1));
+    baseData = baseData(baseData>prctile(baseData,1)&baseData<prctile(baseData,99));
+    baseMn = mean(baseData);
+    plot([allStimTimes(iROI,1),allStimTimes(iROI,end)],[baseMn,baseMn],'--');
+    ax = gca;
+    ax.YLim = [1.05*prctile(allAdjIPAmpls(iROI,:),1),1.05*prctile(allAdjIPAmpls(iROI,:),99)];
+    ax.Title.String = ROILabels{iROI};
+    if iROI == nROIs
+        ax.XLabel.String = 'Time (min)';
+        ax.YLabel.String = '|IP ampl|';
+    end
+end
+saveas(thisFigure,[outPath figureName]);

@@ -1,6 +1,6 @@
+function  HTRPlotEventsScript(treatment)
 
-
-clear all
+%clear all
 
 % 3. step through dates - use get treatmentInfo to get exact times of
 % treatment
@@ -9,12 +9,16 @@ clear all
 % Warning!  must be very accurate with the exact spelling of the treatment.
 %  Consider a pull-down menu or something
 
-%treatment = '6-FDET';
+%treatment = '6-FDET'; %     '6-FDET'
 %treatment = 'DOI_conc';
-%treatment = '5-MeO-MiPT';
-%treatment = 'Pyr-T';
-%treatment = '4-AcO-DMT';
-treatment = '5-MeO-pyrT';
+%treatment = '5-MeO-MiPT'; %  '5-MeO-MiPT'
+%treatment = 'Pyr-T'; %   'Pyr-T'
+%treatment = '4-AcO-DMT'; % '4-AcO-DMT'
+%treatment = '5-MeO-pyrT'; %'5-MeO-PyrT'
+%treatment = '5,6-DiMeO-MiPT';   %'5,6-DiMeO-MiPT'
+%treatment =   '5-MeO-DET';
+
+
 dateTable = getDateAnimalUniqueByTreatment(treatment);
 
 

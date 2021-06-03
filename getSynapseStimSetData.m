@@ -61,19 +61,20 @@ end
 % data.streams.EEGw.data(4,:)
 % 1. step through rec types (data.streams.LFP1,data.streams.EEGw)
 dTRec = 1/data.streams.(dataType).fs; % get sample rate and recording times
-timeArrayRec = (0:dTRec:length(data.streams.(dataType).data)*dTRec-dTRec);
+timeArrayRec = (0:length(data.streams.(dataType).data)-1)*dTRec;
 nChans = size(data.streams.(dataType).data,1);
 nROIs = floor(nChans/2); %Assuming twisted pair and local bipolar rereferencing
 nTrials = length(stimTimes); % we want to know how long the expected stim pattern lasts in case erroneous pulses (at end) are found.
-stimIndex = zeros(1,nTrials);
-for iTrial = 1:nTrials
-    stimIndex(iTrial) = find(timeArrayRec>stimTimes(iTrial),1,'first');
-end
+stimIndex = round(stimTimes/dTRec);
+% stimIndex = zeros(1,nTrials);
+% for iTrial = 1:nTrials
+%     stimIndex(iTrial) = find(timeArrayRec>stimTimes(iTrial),1,'first');
+% end
 preStimIndex = floor(tPreStim/dTRec);
 postStimIndex = ceil(tPostStim/dTRec);
 
 if nTrials ~= length(trialPattern)
-    disp(['WARNING! Number of stims in Synapse data file = ' num2str(nTrials)...
+    disp(['WARNING! Number of trials in Synapse data file = ' num2str(nTrials)...
         ' but length of trialPattern = ' num2str(length(trialPattern))]);
     if nTrials<length(trialPattern)
         disp('Truncating trialPattern to match nTrials...')
@@ -95,7 +96,8 @@ for iStim = 1:nStims %Loop over all stim levels. These are indexed as integers 1
         iStart = theseStim(iTrial)-preStimIndex;
         iStop = theseStim(iTrial)+postStimIndex;
         for iChan = 1:nChans
-            stimSet(iStim).data(iChan,iTrial,:) = data.streams.(dataType).data(iChan,iStart:iStop);
+            stimSet(iStim).data(iChan,iTrial,:) = ...
+                data.streams.(dataType).data(iChan,iStart:iStop);
         end
     end
     for iSub = 1:nROIs

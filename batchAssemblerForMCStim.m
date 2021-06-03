@@ -20,7 +20,8 @@ stimArray = [50,100,150,200,300,400,500,600];
 %IMPORTANT: fopen or Windows permissions to Matlab DO NOT like it when you
 %try to address this thorough the network.  If we ever run this on a remote
 %computer there will be trouble when switching to the format above.
-fileName = ['\\NESSUS\Users\LabRat\Documents\Multi Channel Systems\' date '-' index '.stb']; %BAD BAD BAD HARDCODING
+fileName = ['C:\Users\Ziyad Sultan\Documents\Multi Channel Systems\' date '-' index '.stb'];
+%fileName = ['\\NESSUS\Users\LabRat\Documents\Multi Channel Systems\' date '-' index '.stb']; %BAD BAD BAD HARDCODING
 trialPattern = createTrialPattern(length(stimArray),nTrialsPerStim);
 
 [fid errMsg]= fopen(fileName,'w');
@@ -33,7 +34,7 @@ fprintf(fid, '%s\n',['Batch Control File']);
 fprintf(fid, '%s\n',['Version 1.00']);
 
 for iTrial = 1:length(trialPattern)
-    fprintf(fid, '%s\n', ['C:\Users\LabRat\Documents\Multi Channel Systems\batchStimRespCurve\' num2str(stimArray(trialPattern(iTrial))) '.stm']);
+    fprintf(fid, '%s\n', ['C:\Users\Ziyad Sultan\Documents\Multi Channel Systems\batchStimRespCurve\' num2str(stimArray(trialPattern(iTrial))) '.stm']);
 end
 
 saveFileRoot = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
