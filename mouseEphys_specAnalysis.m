@@ -111,6 +111,7 @@ for iDate = 1:length(eDates)
                 catch
                     warning('failed to segment movement data, will now ignore movement analysis');
                     ignoreMovement = 1; % set equal to 1 to ignore movement analysis
+                    meanMovementPerWindow = [];
                 end
             end
             
@@ -173,6 +174,10 @@ for iDate = 1:length(eDates)
             clear tempSD tempMax
             theseTrials = 1:length(nonRejects_all);
             theseTrials = theseTrials(nonRejects_all == 1);
+                        
+            if ignoreMovement
+               meanMovementPerWindow = nan(size(theseTrials)); 
+            end
             
             % End of video is cut off or one extra ephys trial than video b/c of resolution, so manually cutting off
             % ephys trials with no associated video]
@@ -223,10 +228,6 @@ for iDate = 1:length(eDates)
             cfg.tapsmofrq = 2;
             cfg.keeptrials= 'no';
             
-            if ignoreMovement
-               meanMovementPerWindow = nan(size(theseTrials)); 
-            end
-            
             % Calculate average spectral power
             mouseEphys_out.(animalName).(thisDate).(thisExpt).spec = ...
                 ft_freqanalysis(cfg, data_MouseEphysDS);
@@ -236,7 +237,7 @@ for iDate = 1:length(eDates)
             
             mouseEphys_out.(animalName).(thisDate).(thisExpt).trialsKept = theseTrials'; % store theseTrials
             
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).windowTimeLims = windowTimeLims(theseTrials,:); % store movement time windows with only accepted trials
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).windowTimeLims = eParams.(thisDate).trialInfo.trialTimesRedef(theseTrials,:); % store movement time windows with only accepted trials
             
             clear windowTimeLims indexLength meanMovementPerWindow
             
