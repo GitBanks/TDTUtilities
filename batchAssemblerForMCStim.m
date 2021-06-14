@@ -8,10 +8,13 @@ function batchAssemblerForMCStim(date,index)
 % [date,index] = fixDateIndexToFiveForSynapse(date,index);
 % trialPattern = createTrialPattern(nStimTypes,nTrialsPerStim);
 
-%date = '21309';
-%index = '001';
-nTrialsPerStim = 20;
-stimArray = [50,100,150,200,300,400,500,600];
+%date = '21601';
+%index = '002';
+nTrialsPerStim = 30;
+stimArray = [200,300,400,500,600,700];
+%stimArray =  {'200-200','300-300','400-400','500-500','600-600'};
+%stimArray =  {'300-300'};
+
 %must make a stim in MC to correspond with the above stims
 %stimArray = [10,50,100,200,300,400,500,600,700,-10,-50,-100,-200,-300,-400,-500,-600,-700];
 [date,index] = fixDateIndexToFiveForSynapse(date,index);
@@ -34,7 +37,9 @@ fprintf(fid, '%s\n',['Batch Control File']);
 fprintf(fid, '%s\n',['Version 1.00']);
 
 for iTrial = 1:length(trialPattern)
-    fprintf(fid, '%s\n', ['C:\Users\Ziyad Sultan\Documents\Multi Channel Systems\batchStimRespCurve\' num2str(stimArray(trialPattern(iTrial))) '.stm']);
+    fprintf(fid, '%s\n', ['C:\Users\Ziyad Sultan\Documents\Multi Channel Systems\SINGLEpulseRange\' num2str(stimArray(trialPattern(iTrial))) '.stm']);
+    %fprintf(fid, '%s\n', ['C:\Users\Ziyad Sultan\Documents\Multi Channel Systems\DUALpulseRange\' stimArray{trialPattern(iTrial)} '.stm']);
+
 end
 
 saveFileRoot = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];

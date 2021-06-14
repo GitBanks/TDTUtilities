@@ -21,8 +21,8 @@ warning on all
 
 % Database Server
 %host = '144.92.237.181:3306'; %former 'Z'
-%host = '144.92.237.186:3306'; %Helmholtz
-host = '127.0.0.1:3306';
+host = '144.92.237.186:3306'; %Helmholtz
+%host = '127.0.0.1:3306';
 %host = '144.92.237.186'; 
 %host = 'localhost';
 
