@@ -33,15 +33,19 @@ batchParams = getBatchParamsByAnimal(animalName);
 % list of frequency bands
 batchParams.(animalName).bandInfo = mouseEEGFreqBands; % information for band power calculation
 bandNames = mouseEEGFreqBands.Names;
-foi = [0.5 1:80]; % frequencies for spectral calculation % NOTE: is this correct?
+foi = [2:80]; % frequencies for spectral calculation % NOTE: is this correct?
 eParams = batchParams.(animalName); % why are eParams and batchParams separate?
 
 % get list of experiments and dates
 exptList = getExperimentsByAnimal(animalName);
 dates = unique(cellfun(@(x) x(1:5), exptList(:,1), 'UniformOutput',false),'stable');
 
-% load saved batch params 
-tempParams = load(EEGUtils.specFile,'batchParams');
+% try loading existing batch params from saved analysis output
+try
+    tempParams = load(EEGUtils.specFile,'batchParams');
+catch
+    
+end
 
 % If forceReRun is false, then just narrow the list of dates that aren't already saved in specFile
 iCount = 1;
@@ -107,6 +111,7 @@ for iDate = 1:length(eDates)
                 catch
                     warning('failed to segment movement data, will now ignore movement analysis');
                     ignoreMovement = 1; % set equal to 1 to ignore movement analysis
+                    meanMovementPerWindow = [];
                 end
             end
             
@@ -169,6 +174,10 @@ for iDate = 1:length(eDates)
             clear tempSD tempMax
             theseTrials = 1:length(nonRejects_all);
             theseTrials = theseTrials(nonRejects_all == 1);
+                        
+            if ignoreMovement
+               meanMovementPerWindow = nan(size(theseTrials)); 
+            end
             
             % End of video is cut off or one extra ephys trial than video b/c of resolution, so manually cutting off
             % ephys trials with no associated video]
@@ -228,7 +237,7 @@ for iDate = 1:length(eDates)
             
             mouseEphys_out.(animalName).(thisDate).(thisExpt).trialsKept = theseTrials'; % store theseTrials
             
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).windowTimeLims = windowTimeLims(theseTrials,:); % store movement time windows with only accepted trials
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).windowTimeLims = eParams.(thisDate).trialInfo.trialTimesRedef(theseTrials,:); % store movement time windows with only accepted trials
             
             clear windowTimeLims indexLength meanMovementPerWindow
             
