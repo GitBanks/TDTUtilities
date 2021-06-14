@@ -30,7 +30,7 @@ if length(num2str(tempIndex)) < 2
 else
     tempIndex = ['0' num2str(tempIndex)];
 end
-blockLocation = [dirStrRawDataROOT '20' date(1:2) '\' date '-' tempIndex];
+blockLocation = [dirStrRawDataROOT '20' date(1:2) '\' date '-' tempIndex '\'];
 
 % first, make sure it exists
 if isempty(dirCheck)
@@ -45,15 +45,17 @@ if size(dirCheck,1)==2 || isempty(dir([dirStrRawData '*_Cam2*']))
         error('previous index doesn''t exist - something is wrong');
     end
     %dir([blockLocation '*_Cam*']);
-    tank_Cam2_name = [blockLocation '_Cam2.avi'];
+    vidFileDir = dir([blockLocation '*_Cam2*']);
+    vidFileName = vidFileDir.name;
+    tank_Cam2_name = [blockLocation vidFileName];
     if isfile(tank_Cam2_name)
-        copy_Cam2_name = [dirStrRawData '_Cam2.avi'];
+        copy_Cam2_name = [dirStrRawData vidFileName];
         copyfile(tank_Cam2_name,copy_Cam2_name); 
         disp([tank_Cam2_name ' copied to ' copy_Cam2_name]);
         tempCheckD = dir(copy_Cam2_name); %fileDest
         tempCheckS = dir(tank_Cam2_name); %fileSource
         if tempCheckS.bytes == tempCheckD.bytes
-            delete(fileSource); %maybe we don't want to delete? add toggle?
+            delete(tank_Cam2_name); %maybe we don't want to delete? add toggle?
         end
     end
 end
