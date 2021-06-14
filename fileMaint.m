@@ -37,8 +37,8 @@ manuallySetGlobalParamUI(animal);
 % check for connections here so that later attempts to connect don't fail
 dirStrAnalysisROOT = [mousePaths.M 'PassiveEphys\']; % 'M' drive
 %dirStrRecSourceAROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
-dirStrRecSourceAROOT = '\\144.92.237.183\Data\PassiveEphys\'; % FAKE THIS OUT SINCE IT"S NOT HANDLING BAD CONNECTIONS WELL
-dirStrRecSourceBROOT = '\\144.92.237.183\Data\PassiveEphys\'; %Gilgamesh
+dirStrRecSourceAROOT = '\\144.92.237.183\Data\PassiveEphys\'; %Gilgamesh
+dirStrRecSourceBROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
 dirStrRawDataROOT = [mousePaths.W 'PassiveEphys\']; %'W' drive
 dirStrServer = '\\144.92.237.186\Users\'; %Helmholz
 %dirStrServer = '\\HELMHOLTZ\'; %Helmholz another way
@@ -48,7 +48,12 @@ dirStrServer = '\\144.92.237.186\Users\'; %Helmholz
 % so later errors aren't confusing.  checkConnection is a local function.
 checkConnection(dirStrAnalysisROOT);
 checkConnection(dirStrRecSourceAROOT);
-checkConnection(dirStrRecSourceBROOT);
+try
+    checkConnection(dirStrRecSourceBROOT);
+catch
+    disp('Can''t find alt REC computer.  Reverting to primary REC.');
+    dirStrRecSourceBROOT = dirStrRecSourceAROOT;
+end
 checkConnection(dirStrRawDataROOT);
 checkConnection(dirStrServer);
 

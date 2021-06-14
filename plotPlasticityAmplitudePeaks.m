@@ -14,6 +14,12 @@ outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndices{1} '\
 if ~exist(outPath,'dir')
     mkdir(outPath);
 end
+animal = getAnimalByDateIndex(exptDate,exptIndices{1});
+outPath2 = ['M:\PassiveEphys\AnimalData\' animal '\'];
+if ~exist(outPath2,'dir')
+    mkdir(outPath2);
+end
+
 
 tPreStim = 0.02;
 tPostStim = 0.2;
@@ -133,7 +139,7 @@ for iROI = 1:nROIs
     end
 end
 saveas(thisFigure,[outPath figureName]);
-
+saveas(thisFigure,[outPath2 figureName]);
 %% Have user click on peaks in each subplot to inform peak search windows
 msgFig = msgbox({'Click once in each subplot to indicate approximate location of peak.';...
     'Proceed from left to right. '});
@@ -277,6 +283,7 @@ for iROI = 1:nROIs
     end
 end
 saveas(thisFigure,[outPath figureName]);
+saveas(thisFigure,[outPath2 figureName]);
 %% Plot out time series of inner products
 figureName = ['Plasticity IP time series - ' animalName '_' exptDate];
 thisFigure = figure('Name',figureName);
@@ -306,3 +313,8 @@ for iROI = 1:nROIs
     end
 end
 saveas(thisFigure,[outPath figureName]);
+saveas(thisFigure,[outPath2 figureName]);
+
+
+
+
