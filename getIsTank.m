@@ -62,7 +62,7 @@ if ~isempty(dir([dirStrRawData '*_Cam2*']))
     dateOut = date;
     indexOut = tempIndex;
 else
-    error('at this point something has gone wrong - we can''t find the tank file');
+    error(['at this point something has gone wrong - we can''t find the tank file for ' date '-' index ]);
 end
 
 
