@@ -98,7 +98,6 @@ for iList = 1:length(listOfAnimalExpts)
     
 end   
 
-
 % STEP 1 MOVE TDT TANK FILE TO W DRIVE
 operatingList = exptTable.DateIndex(exptTable.RECAEmpty == false);
 for iList = 1:length(operatingList)
