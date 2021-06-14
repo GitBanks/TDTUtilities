@@ -1,13 +1,29 @@
-function [stimSet,dTRec,stimArray] = getSynapseStimSetData(exptDate,exptIndex,tPreStim,tPostStim)
+function [stimSet,dTRec,stimArray] = getSynapseStimSetData(exptDate,tankIndex,tPreStim,tPostStim,noTank)
+
 
 dataType = 'LFP1';
+% the only difference in data analysis is if we should grab the first or
+% second LFP set
+if exist('noTank','var')
+    if noTank == true
+        dataType = 'LFP2';
+    end
+end
+
+
+
 
 % load saved trial pattern
-saveFileRoot = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
-load([saveFileRoot  'stimSet-' exptDate '-' exptIndex],'stimArray','trialPattern');
+saveFileRoot = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' tankIndex '\'];
+load([saveFileRoot  'stimSet-' exptDate '-' tankIndex],'stimArray','trialPattern');
 nStims = length(stimArray);
 
 data = TDTbin2mat(saveFileRoot); % TDT loads the raw data
+% throw an error if empty please
+if isempty(data)
+    error(['TDTbin2mat is unsuccessful - data not loaded from ' saveFileRoot]);
+end
+
 % TODO! % % % % % % % % % % %  4/27/21 note: above is the first choice we need to make - do we really
 % want to load in raw data here, or depend on the imported data?
 

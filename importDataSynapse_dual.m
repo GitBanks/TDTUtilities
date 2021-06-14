@@ -71,15 +71,6 @@ end
 
 % loading ephys data
 display('Loading in raw data.  This sometimes takes a while.');
-
-% check block location by comparing the block location vs exptDate & exptIndex
-if strcmp([exptDate '-' exptIndex],blockLocation)
-    streamToUse = 'EEG1'; % if blockLocation == exptDate-exptIndex, use the FIRST stream (left cage, chans 1-4, Cam1, etc)
-else
-    streamToUse = 'EEG2'; % if  blockLocation ~= exptDate-exptIndex, use the SECOND stream (right cage, chans 5-8, Cam2, etc)
-end
-
-
 data = TDTbin2mat(dirStrRawData); % this step may take a while depending on how long the recording is.  We can limit the length if necessary,
 % data = TDTbin2mat(dirStrRawData,'TYPE',{'epocs'}); consider this format with the limited 'TYPE' could be useful 
 display('Loading complete.');
@@ -89,13 +80,22 @@ display('Loading complete.');
 % already stored in the 'tank' file in Synapse, or are simply unneeded (the
 % channels are already 'mapped', in a mapping set by the Synapse software.
 
-
 % find which channels are EEG, LFP, etc. from database
 % obviously, will only work if this has been entered (will be empty
 % otherwise - add check?)
 % [channelMap] = getElectrodeLocationFromDateIndex(exptDate,exptIndex);
 streamList = fields(data.streams);
-streamList(~strcmp(streamList,streamToUse)) = []; % remove the irrelevant stream
+
+
+% check block location by comparing the block location vs exptDate & exptIndex
+% if blockLocation == exptDate-exptIndex, use the FIRST stream (left cage, chans 1-4, Cam1, etc)
+% if  blockLocation ~= exptDate-exptIndex, use the SECOND stream (right cage, chans 5-8, Cam2, etc)
+if strcmp([exptDate '-' exptIndex],blockLocation)
+    streamList = streamList(contains(streamList,'1'));
+else
+    streamList = streamList(contains(streamList,'2')); 
+end
+streamList = streamList(contains(streamList,signalTypes));
 
 % Warning! this approach assumes we're recording strictly with this latest
 % paradigm: 8 channels of twisted electrodes, and 4 EEGs.  This greatly
@@ -117,6 +117,7 @@ for iSignal = 1:length(signalTypes)
             nChans = size(data.streams.(streamList{iList}).data,1);
             % need to find the length of trials
             if size(trialList,2)>1
+                
                 stimName = fields(data.scalars);
                 stimDur = (data.scalars.(stimName{1}).data(3,1)-1)*data.scalars.(stimName{1}).data(4,1);
                 sampPreStim = ceil(preStim/tempdT/1000);

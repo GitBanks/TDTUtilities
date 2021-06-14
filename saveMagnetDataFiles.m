@@ -10,6 +10,9 @@ function saveMagnetDataFiles(exptDate,Animal1,Animal2)
 % exptDate = '21430'
 % Animal1 = 'Mag014'
 % Animal2 = 'Mag015'
+% exptDate='21524';
+% Animal1='Mag016';
+% Animal2='Mag019';
 
 if ~exist('Animal2','var')
     animals = {Animal1};

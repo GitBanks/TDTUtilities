@@ -20,17 +20,17 @@ function [] = synapseFrontEnd(animalName)
 % WIP: check code for % TODO % or % !!! TODO !!! % for different levels of
 % urgency to make the program better
 
-% WARNING! this is no longer suitable for regular EEG (1 hour) recordings
-% until we add 'spontaneous' wait time as a parameter
-
 % TODO % add 'config' file that allows parameters, file locations, and general lab changes to be centrally located.
 
 % ! TODO ! %  add a check to see if we can connect to recording computer path (sometimes network logs us out!) otherwise we can't guarantee importing will work consistantly
 % example path: \\144.92.237.187\c\Data\2018\
 S.enableMultiThread = 0; % for testing or using without parfor, set to 0
-S.recordingComputer = '144.92.237.183'; %'\\ANESBL2'; %
+%S.recordingComputer = '144.92.237.183'; % Gilgamesh
+S.recordingComputer = '144.92.237.187'; % Nessus
 S.recordingComputerSubfolder = '\Data\PassiveEphys\';%'\c\Data\';
 S.dbConn = dbConnect();
+
+[S.livingAnimals,S.livingAnimalsID] = getLivingAnimals;
 % TODO % animalName is presently a parameter, but a menu selection might be better?  or auto-populate with recent (living) animal? 
 S.animalName = animalName;
 % TODO % we may want to add nHoursPre to the GUI as a toggle or parameter
