@@ -193,22 +193,19 @@ updateDynamicDisplayBox('waiting for recording to complete');
 % spontaneous mode
 % TODO % may want to allow time adjustments
 if tempnStims == -1 % represents 'spontaneous' mode
-    %tic
-    pause(6)
-    synapseRECDisplay(sponTime)
-    waitingForUserToFinishRecording = false;
-%     while waitingForUserToFinishRecording
-%         elapsedTime = toc;
-%         
-%         %pause(sponTime); % this will wait 10 minutes before proceeding (for spon mode)
-%         % !!TODO!! % make this a parameter, setting, or something other than a
-%         % hard-coded number!!
-%         if (elapsedTime > sponTime) || (synapseObj.getMode ~= 3)
-%             waitingForUserToFinishRecording = false;
-%             synapseObj.setMode(0);
-%         end
-%         pause(1);
-%     end
+    tic
+    pause(1)
+%    synapseRECDisplay(sponTime) %disabling this for now - we need a
+%    % different figure and better timing / waiting
+    while waitingForUserToFinishRecording % lets hang out in this loop 
+        % until either the predefined time expires or the recording has been stopped 
+        elapsedTime = toc;
+        if (elapsedTime > sponTime) || (synapseObj.getMode ~= 3)
+            waitingForUserToFinishRecording = false;
+            synapseObj.setMode(0);
+        end
+        pause(1); 
+    end
 end
 % evoked / stimulation mode
 while waitingForUserToFinishRecording
