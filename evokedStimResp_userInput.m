@@ -1,10 +1,18 @@
-function evokedStimResp_userInput(exptDate,exptIndex)
+function evokedStimResp_userInput(exptDate,exptIndex,noTank)
 
 %%
 % User-defined parameters
+
 if ~exist('exptDate','var') || ~exist('exptIndex','var')
-    exptDate = '21520'; 
-    exptIndex = '005';
+    exptDate = '21601'; 
+    exptIndex = '009'; noTank = false;
+%     exptIndex = '008'; noTank = false;
+%	exptIndex = '004'; noTank = false;
+%     exptIndex = '005'; noTank = true;
+%     exptIndex = '006'; noTank = false;
+%    exptIndex = '007'; noTank = true;
+%     exptDate = '21520'; 
+%     exptIndex = '005';
 %     exptDate = '21510';
 %     exptIndex = '000';
 %     exptDate = '21513';
@@ -14,19 +22,7 @@ if ~exist('exptDate','var') || ~exist('exptIndex','var')
 %     exptDate = '21515';
 %     exptIndex = '002';
 end
-outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
-if ~exist(outPath,'dir')
-    mkdir(outPath);
-end
-
 relevantROIs = {'PFC','CA1','Hipp'}; % labels in database can be any of these
-animalName = getAnimalByDateIndex(exptDate,exptIndex);
-electrodeLocs = getElectrodeLocationFromDateIndex(exptDate,exptIndex);
-%%%%NOTE: The following assumes that channels are arranged in pairs and
-%%%%that the channels are ordered in Synapse as they are in eNotebook
-ROILabels = electrodeLocs(contains(electrodeLocs,relevantROIs,'IgnoreCase',true));
-ROILabels = unique(ROILabels,'stable');
-
 % Window for analysis and plotting, relative to stim time
 tPreStim = 0.02; %sec
 tPostStim = 0.2; %sec
@@ -36,13 +32,44 @@ artifactDur = 2.e-3; %sec;
 avgWinTime = 1.e-3; %sec; 
 % Time window re stim time to calculate baseline value that is subtracted from peak values
 baseWin = [-5,-0.5]*1.e-3; %sec; 
+%hardcoded location - not ideal, but this works for now
+outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+tankIndex = exptIndex; % there may now be a difference with dual recording
 
-%%
-[stimSet,dTRec,stimArray] = getSynapseStimSetData(exptDate,exptIndex,tPreStim,tPostStim);
+
+%% load data
+% will repeat this for the dual recordings to load in the parallel set
+
+if noTank
+    % assume the index immediately before is the tank index... TODO: find a better way to handle this
+    tankIndex = str2double(exptIndex)-1;
+    if length(num2str(tankIndex)) < 2
+        tankIndex = ['00' num2str(tankIndex)];
+    else
+        tankIndex = ['0' num2str(tankIndex)];
+    end
+end
+
+[stimSet,dTRec,stimArray] = getSynapseStimSetData(exptDate,tankIndex,tPreStim,tPostStim,noTank);
+
+
+
+
+%% commands to process some of these parameters
+if ~exist(outPath,'dir')
+    mkdir(outPath);
+end
+animalName = getAnimalByDateIndex(exptDate,exptIndex);
+electrodeLocs = getElectrodeLocationFromDateIndex(exptDate,exptIndex);
+%%%%NOTE: The following assumes that channels are arranged in pairs and
+%%%%that the channels are ordered in Synapse as they are in eNotebook
+ROILabels = electrodeLocs(contains(electrodeLocs,relevantROIs,'IgnoreCase',true));
+ROILabels = unique(ROILabels,'stable');
 nStims = length(stimSet);
 nROIs = size(stimSet(1).sub,1); %number of regions with recording electrodes
 preStimIndex = floor(tPreStim/dTRec);
 postStimIndex = ceil(tPostStim/dTRec);
+
 % 
 %% Ugly kludge alert!
 % Need to account for delay between stim times as saved by Synapse and stim
@@ -94,7 +121,14 @@ end
 %% Plot average traces
 ampLabel = [];
 for iStim = 1:nStims
-    ampLabel{iStim} = [num2str(stimArray(iStim)) '\mu' 'A'];
+    if iscell(stimArray)
+        %TODO use '-' as a delimiter to get each sides correct amplitude -
+        %use 'remain'
+        [token,remain] = strtok(stimArray{iStim},'-');
+        ampLabel{iStim} = [token '\mu' 'A'];
+    else 
+        ampLabel{iStim} = [num2str(stimArray(iStim)) '\mu' 'A'];
+    end
 end
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
 FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
@@ -162,6 +196,7 @@ for iROI = 1:nROIs
         this_tPk = pkSearchData(iROI).tPk(iPk);
         pkSearchIndices = ceil([this_tPk - this_tPk/2,this_tPk + this_tPk/2]/dTRec);
         tempIndA = actualStimIndex+pkSearchIndices;
+        tempIndA(2) = min(tempIndA(2),length(tempMn));  
         pkSign = pkSearchData(iROI).pkSign(iPk);
         for iStim = 1:nStims
             tempMn = stimSet(iStim).subMean(iROI,:);
@@ -186,7 +221,17 @@ FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
 thisFigure = figure('Name',FigName);
 ampLabel = [];
 for iStim = 1:nStims
-    ampLabel{iStim} = [num2str(stimArray(iStim)) '\mu' 'A'];
+    if iscell(stimArray)
+        %TODO use '-' as a delimiter to get each sides correct amplitude -
+        %use 'remain'
+        [token,remain] = strtok(stimArray{iStim},'-');
+        
+        ampLabel{iStim} = [token '\mu' 'A'];
+        stimArrayNumeric(iStim) = str2num(token);
+    else 
+        ampLabel{iStim} = [num2str(stimArray(iStim)) '\mu' 'A'];
+        stimArrayNumeric(iStim) = stimArray(iStim);
+    end
 end
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
 for iROI = 1:nROIs
@@ -218,7 +263,7 @@ for iROI = 1:nROIs
         legendLabs{iPk} = ['Pk ' num2str(iPk)];
     end
     for iPk = 1:nPks
-        plot(stimArray,pkSearchData(iROI).pkSign(iPk)*pkVals(iROI).data(iPk,:),'-o');
+        plot(stimArrayNumeric,pkSearchData(iROI).pkSign(iPk)*pkVals(iROI).data(iPk,:),'-o');
     end
     ax = gca;
     ax.XLabel.String = 'Stim intensity (\muA)';

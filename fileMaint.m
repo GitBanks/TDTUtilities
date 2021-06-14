@@ -13,7 +13,7 @@ function fileMaint(animal)
 % WARNING a few locations are hardcoded!
 
 % %test parameter
-%animal = 'ZZ05';
+%animal = 'ZZ06';
 
 %override parameters - used rarely
 forceReimport = 0;
@@ -30,7 +30,7 @@ manuallySetGlobalParamUI(animal);
 
 % verify the electrode information has been entered correctly.  This is a
 % local function within FileMaint, below
-[electrodeLocation] = checkElectrode(listOfAnimalExpts{1}(1:5),listOfAnimalExpts{1}(7:9));
+[electrodeLocation] = checkElectrode(listOfAnimalExpts{1}(1:5),listOfAnimalExpts{1}(7:9),animal);
 
 % establish a few parameters to keep the main loop clean.
 % We should improve root locations - REC could be different.  We could also
@@ -89,15 +89,8 @@ for iList = 1:length(listOfAnimalExpts)
         exptTable.Imported(iList) = false;
     end
     % is video analyzed (if it exists)?
-    if isempty(dir([dirStrRawData '*_Cam*']))
-        exptTable.videoDone(iList) = 'none';
-    else
-        if ~isempty(dir([dirStrAnalysis '*-movementBinary*' '.mat'])) 
-            exptTable.videoDone(iList) = 'true';
-        else
-            exptTable.videoDone(iList) = 'false';
-        end
-    end
+    [exptTable] = videoFileScan(dirStrRawData,dirStrAnalysis,exptTable,iList);
+    
 end   
 
 
@@ -108,7 +101,7 @@ for iList = 1:length(operatingList)
     index = operatingList{iList}(7:9);
     dirStrRecSource = [dirStrRecSourceAROOT '20' date(1:2) '\' date '-' index '\']; 
     dirStrRawData = [dirStrRawDataROOT '20' date(1:2) '\' date '-' index '\'];
-    disp(['Found REC data to move to W for ' date '-' index ]);
+    disp(['Found REC data to MOVE to W for ' date '-' index ]);
     try
         moveDataRecToRaw(dirStrRecSource,dirStrRawData);
     catch
@@ -122,7 +115,7 @@ for iList = 1:length(operatingList)
     index = operatingList{iList}(7:9);
     dirStrRecSource = [dirStrRecSourceBROOT '20' date(1:2) '\' date '-' index '\']; 
     dirStrRawData = [dirStrRawDataROOT '20' date(1:2) '\' date '-' index '\'];
-    disp(['Found REC data to move to W for ' date '-' index ]);
+    disp(['Found REC data to MOVE to W for ' date '-' index ]);
     try
         moveDataRecToRaw(dirStrRecSource,dirStrRawData);
     catch
@@ -135,10 +128,24 @@ operatingList = exptTable.DateIndex(exptTable.Imported == false);
 for iList = 1:length(operatingList)    
     date = operatingList{iList}(1:5);
     index = operatingList{iList}(7:9);
+    [tankDate,tankIndex] = getIsTank(date,index);
     dirStrAnalysis = [dirStrAnalysisROOT '20' date(1:2) '\' date '-' index '\'];
-    disp(['Found Raw data to import from W to mat format on M at ' date '-' index ]);
-    importDataSynapse(date,index); % may want to add a way to force it to re-import
+    disp(['Found Raw data to IMPORT from W to mat format on M at ' date '-' index ]);
+    importDataSynapse_dual(date,index,[tankDate '-' tankIndex]);
+%     importDataSynapse(date,index); % may want to add a way to force it to re-import
 end
+
+for iList = 1:length(listOfAnimalExpts)
+    %quick rescan for video files if we've moved some during import
+    [exptTable] = videoFileScan(dirStrRawData,dirStrAnalysis,exptTable,iList);
+end
+
+
+
+% % !!!!!!!!!!! need to process this!  (needs a rewrite)
+% saveMagnetDataFiles(exptDate,Animal1,Animal2);
+
+
 
 % % STEP 3: RUN MOVEMENT ANALYSIS
 % try
@@ -148,6 +155,11 @@ end
 % end
 
 
+% if this is working for all data types and animals, we can get rid of the following: 
+% fileMaint_Mag(exptDate,Animal1,Animal2)
+% fileMaint_dual(animal,hasTankIndices)
+% maybe saveMagnetDataFiles(exptDate,Animal1,Animal2);
+
 end
 
 
@@ -156,13 +168,23 @@ end
 
 
 
+function [exptTable] = videoFileScan(dirStrRawData,dirStrAnalysis,exptTable,iList)
+    if isempty(dir([dirStrRawData '*_Cam*']))
+        exptTable.videoDone(iList) = 'none';
+    else
+        if ~isempty(dir([dirStrAnalysis '*-movementBinary*' '.mat'])) 
+            exptTable.videoDone(iList) = 'true';
+        else
+            exptTable.videoDone(iList) = 'false';
+        end
+    end
+end
 
 
-
-function [electrodeLocation] = checkElectrode(date,index)
+function [electrodeLocation] = checkElectrode(date,index,animal)
 % check to see if probe has been entered, if not, copy existing template
 try
-    [electrodeLocation] = getElectrodeLocationFromDateIndex(date,index);
+    [electrodeLocation,~] = getElectrodeLocationFromDateIndex(date,index);
 catch
     disp('Probe information not found.  Using template.');
     disp('WARNING!!! if probe configuration has changed, stop now and correct in database!!!');
@@ -174,7 +196,9 @@ catch
         setElectrodeLocationFromAnimal('DREADD07',animal);
     elseif strcmp(animal(1:2),'ZZ')
         %setElectrodeLocationFromAnimal('DREADD07',animal);
-        error('please enter probe configuration for this animal')
+        error('please enter probe configuration for this animal');
+    elseif strcmp(animal(1:3),'Mag')
+        setElectrodeLocationFromAnimal('Mag003',animal);
     else
         error('Animal type not recognized.')
     end

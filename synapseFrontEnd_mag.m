@@ -24,11 +24,16 @@ function [] = synapseFrontEnd_mag
 % ! TODO ! %  add a check to see if we can connect to recording computer path (sometimes network logs us out!) otherwise we can't guarantee importing will work consistantly
 % example path: \\144.92.237.187\c\Data\2018\
 S.enableMultiThread = 0; % for testing or using without parfor, set to 0
-S.recordingComputer = '144.92.237.183'; %'\\ANESBL2'; %
+S.recordingComputer = '144.92.237.183'; % Gilgamesh
+%S.recordingComputer = '144.92.237.187'; % Nessus
 S.recordingComputerSubfolder = '\Data\PassiveEphys\';%'\c\Data\';
 S.dbConn = dbConnect();
 
-[S.livingAnimals,S.livingAnimalsID] = getLivingAnimals; % get list of living animals for user to select
+[S.livingAnimals,~] = getLivingAnimals; % get list of living animals for user to select
+S.livingAnimals = [ { '' }; S.livingAnimals ];
+
+
+
 
 % TODO % add nHoursPre to the GUI as a toggle or parameter
 %S.nHoursPre = 2; %1 % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
@@ -75,9 +80,13 @@ uicontrol('style','text',...
 updateDynamicDisplayBox('Starting Synapse');
 S = synapseConnectionProcess(S); % Start Synapse, connect to recording computer            
 S.Preselects = {
+    ''
+    'Stim alone'
+    'Saline'
+    'LPS'
+    'Psilocybin'
     'Saline'
     'Ketamine'
-    'Psilocybin'
     'Psilocybin + LPS'
     'Ketanserin'
     'Psilocybin + Ketanserin'
@@ -114,7 +123,7 @@ S.pp(2) = uicontrol('style','pop',...
     'string',S.Preselects); 
 
 % allow number of hours pre and post to be edited here
-S.nHoursSelect = {'1','2','3','4','5','6','7','8','9','10','25'};
+S.nHoursSelect = {'10','1','2','3','4','5','6','7','8','9','25'};
 uicontrol('style','text',...
     'units','pix',...
     'position',[50 670 70 20],...
@@ -180,7 +189,9 @@ if isempty(S.ExperimentsRemaining(1).exptDescriptionText) %does it matter if I h
     return;   %stop user from running nothing.
 end
 userListSelection(1) = get(S.ls_left,'Value'); % Get the user's choice for the left cage.
-userListSelection(2) = get(S.ls_right,'Value'); % Get the user's choice for the right cage.
+if size(S.Experiment,2) == 2
+    userListSelection(2) = get(S.ls_right,'Value'); % Get the user's choice for the right cage.
+end
 S.nExptsRecordedToday = S.nExptsRecordedToday+1;
 
 for iList = 1:length(userListSelection)
@@ -496,20 +507,30 @@ function [S] = setupExpt(varargin)
 [S] = varargin{3};
 S.nHoursPre = get(S.nHourPrepp,'Value');
 S.nHoursPost = get(S.nHourPostpp,'Value');
-
 for iAnimal = 1:length(S.pp)
     S.experimentDrugManipulation(iAnimal) = get(S.pp(iAnimal),'Value'); % Get the user's choice.
     S.experimentDrugName{iAnimal} = S.Preselects{S.experimentDrugManipulation(iAnimal)};
-    disp(['Setting up ' S.experimentDrugName{iAnimal} ' experiment.']);
-    
     S.animalNumber(iAnimal) = get(S.aa(iAnimal),'Value'); % Get the user's choice.
     S.animalName{iAnimal} = S.aa(iAnimal).String{S.animalNumber(iAnimal)};
-    disp(['Setting up '  S.animalName{iAnimal} ' experiment.']);
-    
-    %synapseExptSetup sets up all the indices
-    S.Experiment(iAnimal) = synapseExptSetup(S.animalName{iAnimal},S.experimentDrugName{iAnimal},S.nHoursPre,S.nHoursPost); 
-    S.ExperimentsRemaining(iAnimal) = S.Experiment(iAnimal);
+    disp(['Setting up ' S.experimentDrugName{iAnimal} ' experiment for ' S.animalName{iAnimal}]);
 end
+% new loop because we want to delete invalid selections
+for iAnimal = 1:size(S.animalName,2)
+    if ~isempty(S.experimentDrugName{iAnimal}) || ~isempty(S.animalName{iAnimal}) 
+        % check to be sure there's a valid selection
+        % synapseExptSetup sets up all the indices
+        S.Experiment(iAnimal) = synapseExptSetup(S.animalName{iAnimal},S.experimentDrugName{iAnimal},S.nHoursPre,S.nHoursPost); 
+        S.ExperimentsRemaining(iAnimal) = S.Experiment(iAnimal);
+    else
+        S.animalName(iAnimal) = [];
+        S.experimentDrugName(iAnimal) = [];
+    end
+    %since we're only populating valid selections, let's make sure to trim
+    %invalid animals S.Experiment will be 1xn structure, where n is valid mice
+end
+
+
+
 S = listOfAllExperiments(S);
 setupExptToBeRun(S);
 
@@ -517,18 +538,23 @@ function [S] = setupExptToBeRun(varargin)
 %setupExptToBeRun sets up experiment for the day based on selection from
 %list, then button press
 [S] = varargin{1}; % !can't call this as a callback!
+
 S.ls_left = uicontrol('style','list',...
     'units','pix',...
     'position',[50 235 200 300],...
     'string', S.Experiment(1).exptDescriptionText,...
     'fontsize',10);
 
+% we need to only populate sides with mice in them.  For now, just check to
+% see if there are two.  We'll need to change this if we add 4x recording
+if size(S.Experiment,2) == 2
 S.ls_right = uicontrol('style','list',...
     'units','pix',...
     'position',[275 235 200 300],...
     'string', S.Experiment(2).exptDescriptionText,...
     'fontsize',10);
-%NOTE: make sure to disable setupThisExpt!!!!!!
+end
+
 
 S.pb_index = uicontrol('style','push',...
     'units','pix',...
@@ -546,11 +572,15 @@ S.ls_left = uicontrol('style','list',...
     'position',[50 235 200 300],...
     'string', S.ExperimentsRemaining(1).exptDescriptionText,...
     'fontsize',10);
+
+if size(S.Experiment,2) == 2
 S.ls_right = uicontrol('style','list',...
     'units','pix',...
     'position',[275 235 200 300],...
     'string', S.ExperimentsRemaining(2).exptDescriptionText,...
     'fontsize',10);
+end
+
 S.pb_index = uicontrol('style','push',...
     'units','pix',...
     'posit',[49 205 120 20],... % we want to overwrite last button (to avoid repeating/changing a list) was% 'posit',[405 650 120 30],

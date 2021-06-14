@@ -4,7 +4,7 @@
 
 %% ==== file management =============================
 % % % % !!!!! IMPORTANT NOTE: DO NOT run fileMaint on an animal while data
-% are being collected for it.  This might more INCOMPLETE files with unexpected results,
+% are being collected for it.  This might move INCOMPLETE files with unexpected results,
 % including data corruption!!!
 
 % READ THE WARNING!
@@ -40,7 +40,9 @@ fileMaint('ZZ06');
 % exptDate = '21525';
 % exptIndex = '004';
 % evokedStimResp_userInput(exptDate,exptIndex); % test with magnet
-
+% exptDate = '21603';
+% exptIndex = '002';
+% evokedStimResp_userInput(exptDate,exptIndex,false); % test with magnet
 
 
 
@@ -63,29 +65,52 @@ fileMaint('ZZ06');
 % plotPlasticityAmplitudePeaks(exptDate,exptIndices)
 
 
-% ========== 4 AcO DMT ==============
-% pre injection (day7 of post saline)
-exptDate = '21519';
-exptIndices = {'002','004','006'};
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
-% day of injection 4 AcO DMT
-exptDate = '21520';
-exptIndices = {'010','012','015'}; 
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
-% 1 day post 4 AcO DMT
-exptDate = '21521';
-exptIndices = {'010','014','018'}; 
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
-% 5 days post injection 4 AcO DMT
-exptDate = '21525';
-exptIndices = {'005','007','009'}; 
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
-% 7 days post injection 4 AcO DMT
-exptDate = '21527';
-exptIndices = {'001','003','005'}; 
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% % ======== ZZ06 4-AcO-DMT ==============
+% % pre injection (day7 of post saline) 400uA
+% exptDate = '21519';
+% exptIndices = {'002','004','006'};
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% % 4 hours post injection 4 AcO DMT 400uA
+% exptDate = '21520';
+% exptIndices = {'010','012','015'}; 
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% % 1 day post 4 AcO DMT 200uA
+% exptDate = '21521';
+% exptIndices = {'010','014','018'}; 
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% % 5 days post injection 4 AcO DMT 300uA
+% exptDate = '21525';
+% exptIndices = {'005','007','009'}; 
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% % 7 days post injection 4 AcO DMT 400uA
+% exptDate = '21527';
+% exptIndices = {'001','003','005'}; 
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
 
 
+% % ======== ZZ06 DOI ==============
+% % Pre injection DOI 400uA
+% exptDate = '21527';
+% exptIndices = {'001','003','005'}; 
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% % 24 hours post injection DOI 400uA
+% exptDate = '21528';
+% exptIndices = {'002','004','006'}; 
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% % 24 hours post injection DOI 400uA
+% exptDate = '21530';
+% exptIndices = {'002','004','006'}; 
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+
+% exptDate = '21607';
+% exptIndices = {'002','004','006','009'}; 
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% exptDate = '21609';
+% exptIndices = {'005','007'}; 
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+exptDate = '21611';
+exptIndices = {'004','006','008'}; 
+plotPlasticityAmplitudePeaks(exptDate,exptIndices)
 
 
 
