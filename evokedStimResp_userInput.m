@@ -35,6 +35,12 @@ baseWin = [-5,-0.5]*1.e-3; %sec;
 %hardcoded location - not ideal, but this works for now
 outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
 tankIndex = exptIndex; % there may now be a difference with dual recording
+animal = getAnimalByDateIndex(exptDate,exptIndex);
+outPath2 = ['M:\PassiveEphys\AnimalData\' animal '\'];
+if ~exist(outPath2,'dir')
+    mkdir(outPath2);
+end
+
 
 
 %% load data
@@ -196,7 +202,7 @@ for iROI = 1:nROIs
         this_tPk = pkSearchData(iROI).tPk(iPk);
         pkSearchIndices = ceil([this_tPk - this_tPk/2,this_tPk + this_tPk/2]/dTRec);
         tempIndA = actualStimIndex+pkSearchIndices;
-        tempIndA(2) = min(tempIndA(2),length(tempMn));  
+        tempIndA(2) = min(tempIndA(2),length(stimSet(iStim).subMean(iROI,:)));  
         pkSign = pkSearchData(iROI).pkSign(iPk);
         for iStim = 1:nStims
             tempMn = stimSet(iStim).subMean(iROI,:);
@@ -273,4 +279,4 @@ for iROI = 1:nROIs
     legend(legendLabs,'Location','SouthEast');
 end
 saveas(thisFigure,[outPath FigName]);
-
+saveas(thisFigure,[outPath2 FigName]);

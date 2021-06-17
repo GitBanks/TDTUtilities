@@ -1,14 +1,18 @@
 function  HTRPlotEventsScript(treatment)
 
-%clear all
 
+
+%  before proceeding please check out MagnetAnalysisScript for the full
+%  workflow 
+
+
+
+%clear all
 % 3. step through dates - use get treatmentInfo to get exact times of
 % treatment
 % 4. plot each day (as before) but respect time
-
 % Warning!  must be very accurate with the exact spelling of the treatment.
 %  Consider a pull-down menu or something
-
 %treatment = '6-FDET'; %     '6-FDET'
 %treatment = 'DOI_conc';
 %treatment = '5-MeO-MiPT'; %  '5-MeO-MiPT'
@@ -24,7 +28,8 @@ dateTable = getDateAnimalUniqueByTreatment(treatment);
 
 excludeAnimal = 'ZZ05'; % there should really be a 'hasMagnet' flag in the database
 dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
-
+excludeAnimal = 'Dummy_Test';
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
 
 % for now just cycle through the drug combinations.  In the future we can
 % add a popup or menu or something more clever

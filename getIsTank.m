@@ -46,8 +46,8 @@ if size(dirCheck,1)==2 || isempty(dir([dirStrRawData '*_Cam2*']))
     end
     %dir([blockLocation '*_Cam*']);
     vidFileDir = dir([blockLocation '*_Cam2*']);
-    if isempty(vidFileDir) % if this is true, we've really derailed somewhere.  stop here.
-        error('previous index doesn''t contain 2nd index video file - incorrect directory');
+    if isempty(vidFileDir)
+        error(['If you''re reading this message, the _Cam2 video file is missing from ' blockLocation])
     end
     vidFileName = vidFileDir.name;
     tank_Cam2_name = [blockLocation vidFileName];

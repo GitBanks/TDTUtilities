@@ -1,12 +1,16 @@
-function plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+function plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
 % Function to plot out time series of evoked response amplitudes during
 % LTP/LTD expts. Allows user to choose time and sign of peaks from averqage
 % traces.
 % this is a rewrite of the PlasticityPlots script and should be broken into
 % discrete sections for readability and modularity reasons.
 if ~exist('exptDate','var') || ~exist('exptIndices','var') 
-    exptDate = '21527';
-    exptIndices = {'001','003','005'};
+%     exptDate = '21527';
+%     exptIndices = {'001','003','005'};
+    exptDate = '21616'; noTank = false;
+    exptIndices = {'009','017','021'};
+%     exptDate = '21616'; noTank = true;
+%     exptIndices = {'010','018','022'};
 end
 nExpts = length(exptIndices);
 
@@ -31,8 +35,14 @@ avgWinTime = 1.e-3; %sec;
 baseWin = [-5,-0.5]*1.e-3; %sec; 
 % pkAvgWin = 8; % Average over this window to estimate peak
 %exptIndexLabels = {'Baseline','postLTP','postLTD'}; % these correspond to each stimset we load below
-exptIndexLabels = {'Baseline','postLTD','postLTP','postLTD'};
+exptIndexLabels = {'Baseline','postLTP','postLTD'};
 smFac = 15; %smoothing window for time series plots
+
+%%
+
+
+
+
 
 %% =========  load data in this block  ========= % % % %
 if exist('evDataSet','var')
@@ -40,8 +50,17 @@ if exist('evDataSet','var')
 end
 nTrials = zeros(1,nExpts);
 for iExpt = 1:nExpts
-    exptIndex = exptIndices{iExpt};
-    [dataTemp,dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
+    if noTank
+        tankIndex = str2double(exptIndices{iExpt})-1;
+        if length(num2str(tankIndex)) < 2
+            tankIndex = ['00' num2str(tankIndex)];
+        else
+            tankIndex = ['0' num2str(tankIndex)];
+        end
+    else
+        tankIndex = exptIndices{iExpt};
+    end
+    [dataTemp,dTRec] = getSynapseSingleStimData(exptDate,tankIndex,tPreStim,tPostStim,noTank);
     evDataSet(iExpt) = dataTemp;
     nTrials(iExpt) = size(evDataSet(iExpt).sub,2);
 end
@@ -124,7 +143,7 @@ for iROI = 1:nROIs
     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [1.05*plotMin(iROI),1.05*plotMax(iROI)];
+    ax.YLim = [2*plotMin(iROI),3*plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
         ax.YLabel.String = 'avg dataSub (V)';

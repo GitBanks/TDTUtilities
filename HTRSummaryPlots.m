@@ -1,5 +1,10 @@
 function HTRSummaryPlots(treatment,selection,acceptedPermutations)
 
+
+%  before proceeding please check out MagnetAnalysisScript for the full
+%  workflow 
+
+
 % summary plots
 
 % (side project to make this better)
