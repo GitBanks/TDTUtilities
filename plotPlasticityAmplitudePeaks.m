@@ -303,6 +303,17 @@ for iROI = 1:nROIs
 end
 saveas(thisFigure,[outPath figureName]);
 saveas(thisFigure,[outPath2 figureName]);
+
+fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
+print('-painters',fileName,'-r300','-dpng');
+try
+    desc = figureName;
+    sendSlackFig(desc,[fileName '.png']);
+catch
+    disp(['failed to upload ' fileName ' to Slack']);
+end
+
+
 %% Plot out time series of inner products
 figureName = ['Plasticity IP time series - ' animalName '_' exptDate];
 thisFigure = figure('Name',figureName);
@@ -334,6 +345,12 @@ end
 saveas(thisFigure,[outPath figureName]);
 saveas(thisFigure,[outPath2 figureName]);
 
-
-
+fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
+print('-painters',fileName,'-r300','-dpng');
+try
+    desc = figureName;
+    sendSlackFig(desc,[fileName '.png']);
+catch
+    disp(['failed to upload ' fileName ' to Slack']);
+end
 
