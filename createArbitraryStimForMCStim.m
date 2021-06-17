@@ -1,4 +1,4 @@
-function createArbitraryStimForMCStim(date,index,frequency,nPulses,magnitude)
+function createArbitraryStimForMCStim(date,index,frequency,nPulses,magnitude,frequency2,nPulses2,magnitude2)
 % This creates a randomized sequence in the format accepted by Multi Channel Systems MC_Stimulus II, of  
 % stimArray number of stims and nTrialsPerStim number of trials per stim.  
 % e.g., with 5 unique stims and 100 presentations of each, it will create a 
@@ -17,7 +17,9 @@ function createArbitraryStimForMCStim(date,index,frequency,nPulses,magnitude)
 if ~ischar(magnitude)
     magnitude = num2str(magnitude);
 end
-
+if ~ischar(magnitude2)
+    magnitude2 = num2str(magnitude2);
+end
 %nTrialsPerStim = 20;
 %stimArray = [50,100,150,200,300,400,500,600];
 %must make a stim in MC to correspond with the above stims
@@ -48,7 +50,7 @@ fprintf(fid, '%s\n','output mode: current');
 fprintf(fid, '%s\n','');
 fprintf(fid, '%s\n','format: 4');
 fprintf(fid, '%s\n','');
-fprintf(fid, '%s\n','channel: 2');
+fprintf(fid, '%s\n','channel: 1');
 fprintf(fid, '%s\n','');
 fprintf(fid, '%s\n','value	time');
 
@@ -58,15 +60,31 @@ dT = num2str((1/frequency)*1000000-300);
 % ===This section is for the sequence===.
 %for iTrial = 2:length(trialPattern)+1
 fprintf(fid, '%s\n', '0  40');
-
 for ii = 1:nPulses
     fprintf(fid, '%s\n', [magnitude ' 100']);
     fprintf(fid, '%s\n', '0 100');
     fprintf(fid, '%s\n', ['-' magnitude ' 100']);
     fprintf(fid, '%s\n', ['0 ' dT]);
 end
-
 fprintf(fid, '%s\n', '0 40');
+
+
+
+if exist('frequency2','var')%,nPulses2,magnitude2
+    fprintf(fid, '%s\n','');
+    fprintf(fid, '%s\n','channel: 2');
+    fprintf(fid, '%s\n','');
+    fprintf(fid, '%s\n','value	time');
+    dT2 = num2str((1/frequency2)*1000000-300);
+    fprintf(fid, '%s\n', '0  40');
+    for ii = 1:nPulses2
+        fprintf(fid, '%s\n', [magnitude2 ' 100']);
+        fprintf(fid, '%s\n', '0 100');
+        fprintf(fid, '%s\n', ['-' magnitude2 ' 100']);
+        fprintf(fid, '%s\n', ['0 ' dT2]);
+    end
+    fprintf(fid, '%s\n', '0 40');
+end
 
 % fileName
 % saveFileRoot = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
