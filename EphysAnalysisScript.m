@@ -29,9 +29,14 @@ fileMaint('ZZ06');
 % exptIndex = '003';
 % evokedStimResp_userInput(exptDate,exptIndex);
 
-exptDate = '21611';
-exptIndex = '003';
-evokedStimResp_userInput(exptDate,exptIndex);
+%exptDate = '21611';
+%exptIndex = '003';
+%evokedStimResp_userInput(exptDate,exptIndex);
+
+exptDate = '21616';
+exptIndex = '024';
+noTank = false;
+evokedStimResp_userInput(exptDate,exptIndex,noTank);
 
 %% ==== whole day plasticity plots ==================
 
@@ -66,6 +71,11 @@ evokedStimResp_userInput(exptDate,exptIndex);
 % plotPlasticityAmplitudePeaks(exptDate,exptIndices)
 
 %LTD Protocol Test 3
-exptDate = '21611';
+%exptDate = '21611';
+%exptIndices = {'004','006','008'};
+%plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+
+%Pre-inj DOI 
+exptDate = '21615';
 exptIndices = {'004','006','008'};
 plotPlasticityAmplitudePeaks(exptDate,exptIndices)

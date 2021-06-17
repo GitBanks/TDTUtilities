@@ -46,7 +46,7 @@ display('Updating stim info.')
 try
     trialList = updateStimInfoSynapse(exptDate,exptIndex); %DEBUG
 catch
-    warning(['updateStimInfoSynapse failed to run on ' exptDate '-' exptIndex]);
+    % warning(['updateStimInfoSynapse failed to run on ' exptDate '-' exptIndex]);
     if strcmp([exptDate '-' exptIndex],blockLocation)
         error(['updateStimInfoSynapse appears to never have been run on ' exptDate ' ' exptIndex])
     else

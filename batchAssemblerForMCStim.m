@@ -12,7 +12,7 @@ function batchAssemblerForMCStim(date,index)
 %index = '002';
 nTrialsPerStim = 30;
 stimArray = [200,300,400,500,600,700];
-%stimArray =  {'200-200','300-300','400-400','500-500','600-600'};
+%stimArray =  {'50-50','100-100','150-150','200-200','300-300','400-400','500-500'};
 %stimArray =  {'300-300'};
 
 %must make a stim in MC to correspond with the above stims
@@ -39,7 +39,6 @@ fprintf(fid, '%s\n',['Version 1.00']);
 for iTrial = 1:length(trialPattern)
     fprintf(fid, '%s\n', ['C:\Users\Ziyad Sultan\Documents\Multi Channel Systems\SINGLEpulseRange\' num2str(stimArray(trialPattern(iTrial))) '.stm']);
     %fprintf(fid, '%s\n', ['C:\Users\Ziyad Sultan\Documents\Multi Channel Systems\DUALpulseRange\' stimArray{trialPattern(iTrial)} '.stm']);
-
 end
 
 saveFileRoot = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
