@@ -1,6 +1,12 @@
 
 function saveMagnetDataFiles(dirStrRawData,dirStrRawDataTank,dirStrAnalysis)
-
+if ~exist(dirStrAnalysis,'dir')
+    mkdir(dirStrAnalysis);
+end
+checkForSkip = dir([dirStrAnalysis '*skipMagnet*']);
+if ~isempty(checkForSkip)
+    return
+end
 tank = TDTbin2mat(dirStrRawDataTank);
 if contains(dirStrRawData,dirStrRawDataTank)
     streamNum = '1';
@@ -15,11 +21,10 @@ for ii=1:2
     end
 end
 if ~exist('magData','var')
-    disp('No magnet data found')
+    disp('No magnet data found. Will skip this check in the future.')
+    noMagnet = ' ';
+    save([dirStrAnalysis 'skipMagnet'],'noMagnet');
     return;
-end
-if ~exist(dirStrAnalysis)
-    mkdir(dirStrAnalysis)
 end
 filename = [dirStrRawData(end-9:end-1) '_magnetData'];
 save([dirStrAnalysis filename],'magData','magDT');

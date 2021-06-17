@@ -280,3 +280,16 @@ for iROI = 1:nROIs
 end
 saveas(thisFigure,[outPath FigName]);
 saveas(thisFigure,[outPath2 FigName]);
+
+fileName = ['M:\PassiveEphys\AnimalData\' animal '\' FigName];
+print('-painters',fileName,'-r300','-dpng');
+try
+    desc = FigName;
+    sendSlackFig(desc,[fileName '.png']);
+catch
+    disp(['failed to upload ' fileName ' to Slack']);
+end
+
+
+
+

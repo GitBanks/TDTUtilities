@@ -32,11 +32,11 @@ fileMaint('ZZ06');
 %exptDate = '21611';
 %exptIndex = '003';
 %evokedStimResp_userInput(exptDate,exptIndex);
-
-exptDate = '21616';
-exptIndex = '024';
-noTank = false;
-evokedStimResp_userInput(exptDate,exptIndex,noTank);
+% 
+% exptDate = '21616';
+% exptIndex = '024';
+% noTank = false;
+% evokedStimResp_userInput(exptDate,exptIndex,noTank);
 
 %% ==== whole day plasticity plots ==================
 
@@ -75,7 +75,21 @@ evokedStimResp_userInput(exptDate,exptIndex,noTank);
 %exptIndices = {'004','006','008'};
 %plotPlasticityAmplitudePeaks(exptDate,exptIndices)
 
-%Pre-inj DOI 
-exptDate = '21615';
-exptIndices = {'004','006','008'};
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% %Pre-inj DOI 
+% exptDate = '21615';
+% exptIndices = {'004','006','008'};
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
+
+% exptDate = '21617';
+% exptIndices = {'004','008','012'}; noTank = false;
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
+
+% exptDate = '21617';
+% exptIndices = {'005','009','013'}; noTank = true;
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
+
+
+exptDate = '21617';
+exptIndices = {'005','009','013'}; noTank = true;
+plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
+

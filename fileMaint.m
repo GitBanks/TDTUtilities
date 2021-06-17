@@ -19,6 +19,10 @@ function fileMaint(animal)
 forceReimport = 0;
 forceReimportTrials = 0;
 
+runMagnetDataSaving = 0;
+
+
+
 % establish a clean list of all experiments we're interested in
 listOfAnimalExpts = getExperimentsByAnimal(animal);
 descOfAnimalExpts = listOfAnimalExpts(:,2);
@@ -169,15 +173,16 @@ for iList = 1:length(listOfAnimalExpts)
 end
 
 
-% % STEP 3.5 RUN THE MAGNET EVENT VERIFIER, SAVE TO MEMORYBANKS
-% operatingList = exptTable.DateIndex(exptTable.Magnets == true);
-% for iList = 1:length(operatingList)
-%     date = operatingList{iList}(1:5);
-%     index = operatingList{iList}(7:9);
-%     plotEnable = false;
-%     [~] = HTRMagDetectionHandler([date '-' index],plotEnable);
-% end
-
+% STEP 3.5 RUN THE MAGNET EVENT VERIFIER, SAVE TO MEMORYBANKS\
+if runMagnetDataSaving
+operatingList = exptTable.DateIndex(exptTable.Magnets == true);
+for iList = 1:length(operatingList)
+    date = operatingList{iList}(1:5);
+    index = operatingList{iList}(7:9);
+    plotEnable = false;
+    [~] = HTRMagDetectionHandler([date '-' index],plotEnable);
+end
+end
 
 % STEP 4 RUN ANY WHOLE DAY ANALYSIS IF IT NEEDS TO BE RUN
 % 'Baseline / stim' 'Post LTP / stim' 'Post LTD / stim'
@@ -204,12 +209,30 @@ end
 
 
 
+summaryLocation = ['M:\PassiveEphys\AnimalData\' animal '\' ];
+if ~exist(summaryLocation,'dir')
+    mkdir(summaryLocation);
+end
+save([summaryLocation animal '-exptSummary'],'exptTable');
 
-save(['M:\PassiveEphys\AnimalData\' animal '\' animal '-exptSummary'],'exptTable');
+
+
+% 
+% plotType = 'timeseries';
+% fileName = ['M:\PassiveEphys\AnimalData\' animal '\' plotType];
+% print('-painters',fileName,'-r300','-dpng');
+% try
+%     desc = [animal ];
+%     sendSlackFig(desc,[fileName '.png']);
+% catch
+%     disp('failed to plot time series');
+% end
+% 
 
 
 
-
+% % TO DO LIST
+% Problem files: "21326-001""21326-000" "21408-000" "21408-001"      "21409-008" "21409-009";  
 % if this is working for all data types and animals, we can get rid of the following: 
 % fileMaint_Mag(exptDate,Animal1,Animal2)
 % fileMaint_dual(animal,hasTankIndices)
@@ -239,6 +262,9 @@ function [exptTable] = magnetFileScan(dirStrAnalysis,exptTable,iList)
     if ~isempty(dir([dirStrAnalysis '*_magnetData*']))
         exptTable.Magnets(iList) = true;
     else
+        exptTable.Magnets(iList) = false;
+    end
+    if ~isempty(dir([dirStrAnalysis '*skipMagnet*']))
         exptTable.Magnets(iList) = false;
     end
 end
