@@ -8,7 +8,7 @@
 % including data corruption!!!
 
 % READ THE WARNING!
-fileMaint('ZZ06'); 
+fileMaint('ZZ10'); 
 % READ THE WARNING!
 
 %% ==== Stim / response specific plots ==============
@@ -29,9 +29,21 @@ fileMaint('ZZ06');
 % exptIndex = '003';
 % evokedStimResp_userInput(exptDate,exptIndex);
 
-exptDate = '21611';
-exptIndex = '003';
-evokedStimResp_userInput(exptDate,exptIndex);
+% exptDate = '21615';
+% exptIndex = '003';
+% notank = false;
+% evokedStimResp_userInput(exptDate,exptIndex,notank);
+% 
+% exptDate = '21616';
+% exptIndex = '005';
+% notank = false;
+% evokedStimResp_userInput(exptDate,exptIndex,notank);
+% exptDate = '21616';
+% exptIndex = '006';
+% notank = true;
+% evokedStimResp_userInput(exptDate,exptIndex,notank);
+
+
 
 %% ==== whole day plasticity plots ==================
 
@@ -65,7 +77,19 @@ evokedStimResp_userInput(exptDate,exptIndex);
 % exptIndices = {'002','004','006'};
 % plotPlasticityAmplitudePeaks(exptDate,exptIndices)
 
-%LTD Protocol Test 3
-exptDate = '21611';
-exptIndices = {'004','006','008'};
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+%Baseline/LTP/LTD Protocol Test 3
+exptDate = '21616';
+exptIndices = {'009'};
+plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
+
+
+%Baseline/LTP/LTD Protocol Test 3
+noTank = false;
+exptDate = '21616';
+exptIndices = {'009','017','021'};
+plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
+
+noTank = true;
+exptDate = '21616';
+exptIndices = {'010','018','022'};
+plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
