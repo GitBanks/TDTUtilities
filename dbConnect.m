@@ -48,6 +48,7 @@ try
         success = isconnection(dbConn); %For backwards compatibility
     end
 catch
+    warning('Did not connect to database! whatever you''re doing will probably now crash.');
     dbConn = [];
     success = 0;
 end
