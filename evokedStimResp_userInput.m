@@ -155,7 +155,8 @@ for iROI = 1:nROIs
     end
     ax.Title.String = ROILabels{iROI};
     if iROI == nROIs
-        legend(ampLabel);
+        legend(ampLabel,'FontSize',6,'Location','NorthEast');
+        legend('boxoff');
     end
 end
 
@@ -183,6 +184,7 @@ for iROI = 1:nROIs
             case 'Yes'
                 pkSearchData(iROI).tPk = temp_tPk;
                 pkSearchData(iROI).pkSign = sign(temp_yPk);
+                pkSearchData(iROI).yPk = temp_yPk;
                 proceed = 1;
             case 'No'
                 delete(hand); % Removes erroneous peak marker
@@ -247,6 +249,9 @@ for iROI = 1:nROIs
     for iStim = 1:length(stimSet)
         plot(plotTimeArray,stimSet(iStim).subMean(iROI,:));
     end
+    for iUI = 1:length(pkSearchData(iROI).tPk)
+        plot(pkSearchData(iROI).tPk(iUI),pkSearchData(iROI).yPk(iUI),'+r','MarkerSize',12);
+    end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
     ax.YLim = [1.05*plotMin(iROI),1.05*plotMax(iROI)];
@@ -256,7 +261,8 @@ for iROI = 1:nROIs
     end
     ax.Title.String = ROILabels{iROI};
     if iROI == nROIs
-        legend(ampLabel);
+        %legend(ampLabel,'FontSize',6,'Location','NorthEast');
+        %legend('boxoff');
     end
 end
 
@@ -276,7 +282,8 @@ for iROI = 1:nROIs
     if iROI == 1
         ax.YLabel.String = 'Pk resp (V)';
     end
-    legend(legendLabs,'Location','SouthEast');
+    legend(legendLabs,'FontSize',6,'Location','NorthWest');
+    legend('boxoff');
 end
 saveas(thisFigure,[outPath FigName]);
 saveas(thisFigure,[outPath2 FigName]);
@@ -284,7 +291,7 @@ saveas(thisFigure,[outPath2 FigName]);
 fileName = ['M:\PassiveEphys\AnimalData\' animal '\' FigName];
 print('-painters',fileName,'-r300','-dpng');
 try
-    desc = FigName;
+    desc = [FigName '  @Zarmeen Zahid'];
     sendSlackFig(desc,[fileName '.png']);
 catch
     disp(['failed to upload ' fileName ' to Slack']);

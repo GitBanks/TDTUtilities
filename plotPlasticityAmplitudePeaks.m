@@ -143,7 +143,7 @@ for iROI = 1:nROIs
     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [2*plotMin(iROI),3*plotMax(iROI)];
+    ax.YLim = [3*plotMin(iROI),3*plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
         ax.YLabel.String = 'avg dataSub (V)';
@@ -157,8 +157,7 @@ for iROI = 1:nROIs
         legend(legLabs);
     end
 end
-saveas(thisFigure,[outPath figureName]);
-saveas(thisFigure,[outPath2 figureName]);
+
 %% Have user click on peaks in each subplot to inform peak search windows
 msgFig = msgbox({'Click once in each subplot to indicate approximate location of peak.';...
     'Proceed from left to right. '});
@@ -189,6 +188,19 @@ for iROI = 1:nROIs
                 proceed = 0;
         end
     end
+end
+
+
+saveas(thisFigure,[outPath figureName]);
+saveas(thisFigure,[outPath2 figureName]);
+
+fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
+print('-painters',fileName,'-r300','-dpng');
+try
+    desc = figureName;
+    sendSlackFig(desc,[fileName '.png']);
+catch
+    disp(['failed to upload ' fileName ' to Slack']);
 end
 
 %% Measure response magnitude of single trial via peak amplitude
