@@ -20,22 +20,22 @@ function [] = synapseFrontEnd(animalName)
 % WIP: check code for % TODO % or % !!! TODO !!! % for different levels of
 % urgency to make the program better
 
-% WARNING! this is no longer suitable for regular EEG (1 hour) recordings
-% until we add 'spontaneous' wait time as a parameter
-
 % TODO % add 'config' file that allows parameters, file locations, and general lab changes to be centrally located.
 
 % ! TODO ! %  add a check to see if we can connect to recording computer path (sometimes network logs us out!) otherwise we can't guarantee importing will work consistantly
 % example path: \\144.92.237.187\c\Data\2018\
-S.enableMultiThread = 1; % for testing or using without parfor, set to 0
-S.recordingComputer = '144.92.237.183'; %'\\ANESBL2'; %
+S.enableMultiThread = 0; % for testing or using without parfor, set to 0
+%S.recordingComputer = '144.92.237.183'; % Gilgamesh
+S.recordingComputer = '144.92.237.187'; % Nessus
 S.recordingComputerSubfolder = '\Data\PassiveEphys\';%'\c\Data\';
 S.dbConn = dbConnect();
+
+[S.livingAnimals,S.livingAnimalsID] = getLivingAnimals;
 % TODO % animalName is presently a parameter, but a menu selection might be better?  or auto-populate with recent (living) animal? 
 S.animalName = animalName;
 % TODO % we may want to add nHoursPre to the GUI as a toggle or parameter
 S.nHoursPre = 1; %1 % refers to number of hours pre time zero manipulation. We will set this to '2' if making two injections.
-S.nHoursPost = 4; % we've been doing 4, but consider adding it as a toggle in addition to nHoursPre
+S.nHoursPost = 11; % we've been doing 4, but consider adding it as a toggle in addition to nHoursPre
 
 % !! TODO !! % create parameter here to check for when inj is, and auto-next index stuff? urgent because this will allow us to streamline data collection
 
@@ -55,7 +55,9 @@ S.fh = figure('units','pixels',...
     'resize','off');  
 updateDynamicDisplayBox('Starting Synapse');
 S = synapseConnectionProcess(S); % Start Synapse, connect to recording computer            
-S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline','a5 Inverse Agonist','Piroxicam','Psilocybin','Psilocybin + LPS'};  %added Minocycline 2/12/2019 ZS % just add manipulations as needed for now.  if there's a funky setup, we need to edit synapseExptSetup to handle it (see how iso is handled)
+% S.Preselects = {'Saline','LPS','ISO','Ketamine','CNO','Minocycline','a5 Inverse Agonist','Piroxicam','Psilocybin','Psilocybin + LPS'};  %added Minocycline 2/12/2019 ZS % just add manipulations as needed for now.  if there's a funky setup, we need to edit synapseExptSetup to handle it (see how iso is handled)
+S.Preselects = {'Stim alone','Saline','LPS','Psilocybin','DOI'};  %added Minocycline 2/12/2019 ZS % just add manipulations as needed for now.  if there's a funky setup, we need to edit synapseExptSetup to handle it (see how iso is handled)
+
 uicontrol('style','text',...
     'units','pix',...
     'position',[10 650 120 30],...
@@ -147,7 +149,7 @@ elseif ~isempty(strfind(S.animalName,'EEG'))
     sponTime = 3610;
 else
     disp('I hope you didn''t plan to run any spontaneous recordings...')
-    sponTime = 610;
+    sponTime = 3610;
 end
 
 if S.enableMultiThread % this will make program unavailable until *both* 1 and 2 are finished completely.
@@ -192,16 +194,17 @@ updateDynamicDisplayBox('waiting for recording to complete');
 % TODO % may want to allow time adjustments
 if tempnStims == -1 % represents 'spontaneous' mode
     tic
-    while waitingForUserToFinishRecording
+    pause(1)
+%    synapseRECDisplay(sponTime) %disabling this for now - we need a
+%    % different figure and better timing / waiting
+    while waitingForUserToFinishRecording % lets hang out in this loop 
+        % until either the predefined time expires or the recording has been stopped 
         elapsedTime = toc;
-        %pause(sponTime); % this will wait 10 minutes before proceeding (for spon mode)
-        % !!TODO!! % make this a parameter, setting, or something other than a
-        % hard-coded number!!
         if (elapsedTime > sponTime) || (synapseObj.getMode ~= 3)
             waitingForUserToFinishRecording = false;
             synapseObj.setMode(0);
         end
-        pause(1);
+        pause(1); 
     end
 end
 % evoked / stimulation mode
@@ -282,7 +285,7 @@ while ~sequenceUpdated
     S.syn.setMode(3); % recording set to auto start (3 is rec).
     pause(2); % reduced this from 4 8/30/18
     
-    if ~isempty(strfind(S.animalName,'EEG'))
+    if ~isempty(strfind(S.animalName,'EEG')) || ~isempty(strfind(S.animalName,'ZZ'))
         result = 1;
     else
         seqList = S.syn.getParameterValues('ParSeq1','SequenceFileList');
@@ -341,7 +344,8 @@ while ~connected
     try
         if ~isempty(strfind({'Idle', 'Standby', 'Preview', 'Record'},S.syn.getModeStr()))
             S.syn.setMode(2); % switch between states to test connectivity
-            if S.syn.setMode(0);
+            pause(3);
+            if S.syn.setMode(0)
                 connected = true;
             end
         end
@@ -471,7 +475,8 @@ function [S] = setupExpt(varargin)
 S.experimentDrugManipulation = get(S.pp,'Value'); % Get the user's choice.
 disp(['Setting up ' S.Preselects{S.experimentDrugManipulation} ' experiment.']);
 %synapseExptSetup sets up all the indices
-S.Experiment = synapseExptSetup(S.animalName,S.Preselects{S.experimentDrugManipulation},S.nHoursPre,S.nHoursPost,S.forceStimPresentation);
+%S.Experiment = synapseExptSetup(S.animalName,S.Preselects{S.experimentDrugManipulation},S.nHoursPre,S.nHoursPost,S.forceStimPresentation);
+S.Experiment = synapseExptBlockSetup(S.animalName,S.Preselects{S.experimentDrugManipulation},S.nHoursPre,S.nHoursPost);
 S.ExperimentsRemaining = S.Experiment;
 setupExptToBeRun(S);
 

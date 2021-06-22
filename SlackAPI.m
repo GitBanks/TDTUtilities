@@ -118,7 +118,8 @@ classdef SlackAPI < handle
         end
         %%
         function [status, list] = GetChannelsList(obj)
-            www = 'https://slack.com/api/channels.list';
+            %www = 'https://slack.com/api/channels.list';
+            www = 'https://slack.com/api/conversations.list';
             resp = obj.JSON_request(www, nan);
             status = resp.ok;
             list = resp.channels;
@@ -139,7 +140,8 @@ classdef SlackAPI < handle
         end
         %%
         function id = channel2id(obj, channel)
-            www = 'https://slack.com/api/channels.list';
+            %www = 'https://slack.com/api/channels.list';
+            www = 'https://slack.com/api/conversations.list';
             resp = obj.JSON_request(www, nan);
             status = resp.ok;
             list = resp.channels;

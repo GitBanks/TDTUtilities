@@ -20,6 +20,8 @@ textA = 'Seq-1'; %will we have multiple sequences?  change if so.
 textB = 'Idx-';
 textC = 'Row-';
 %fileName = ['\\Anesbl2\C\TDT\Synapse\ParFiles\' date '-' index '.seq.csv'];
+% fileName = ['\\144.92.237.187\TDT\Synapse\ParFiles\' date '-' index '.seq.csv'];
+% fileName = ['C:\TDT\Synapse\ParFiles\' date '-' index '.seq.csv']; %BAD!!!! but this works.  Fix network ID very very soon!!!!!!!!!!!!!!!!!!!!!!!!!!!
 fileName = ['\\144.92.237.183\TDT\Synapse\ParFiles\' date '-' index '.seq.csv'];
 
 %sequenceCellArray = cell(nStimTypes*nTrialsPerStim+1,2);
@@ -27,6 +29,9 @@ trialPattern = createTrialPattern(nStimTypes,nTrialsPerStim);
 %sequenceCellArray{1,2} = textA;
 
 fid = fopen(fileName,'w');
+if fid == -1
+    error(['Error connecting to: ' fileName ' ...try sharing the file location']);   
+end
 fprintf(fid, '%s\n',[',' textA]);
 
 

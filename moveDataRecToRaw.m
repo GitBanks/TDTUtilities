@@ -29,3 +29,15 @@ for iFile = 1:length(recDataDir)
         end
     end
 end
+
+% only if the folder is empty, remove it so it's not counted in fileMaint
+s = dir(dirStrRecData);
+name = {s.name};
+isdir = [s.isdir] & ~strcmp(name,'.') & ~strcmp(name,'..');
+subfolder = fullfile(path, name(isdir));
+if sum([s(~isdir).bytes cellfun(@dirsize, subfolder)]) == 0
+    [~,msg] = rmdir(dirStrRecData);
+    disp([msg ' in ' dirStrRecData]);
+end
+
+
