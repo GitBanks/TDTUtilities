@@ -2,11 +2,11 @@ function [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis
 % Load behav data, divide into segments w/ overlap,calculate mean of each segment
 fileFound = 0;
 try
-    load(['\\144.92.218.131\Data\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj');
+    load([mousePaths.W fileNameStub],'finalMovementArray','frameTimeStampsAdj');
     fileFound = 1;
 catch
     try
-        load(['\\144.92.237.185\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj');
+        load([mousePaths.M fileNameStub],'finalMovementArray','frameTimeStampsAdj');
         fileFound = 1;
     catch
         warning('No movement data found. Continuing without.');

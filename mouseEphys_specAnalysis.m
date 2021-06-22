@@ -1,5 +1,5 @@
 function [batchParams, mouseEphys_out] = mouseEphys_specAnalysis(animalName,forceReRun)
-% Computes the power spectrum (and Lempel-Ziv complexity for Banks Lab
+% Computes the power spectrum and Lempel-Ziv complexity for Banks Lab
 % mouse ephys data.
 % Workflow is
 %   (a) get parameters for analysis using the function getBatchParamsByAnimal
@@ -10,15 +10,24 @@ function [batchParams, mouseEphys_out] = mouseEphys_specAnalysis(animalName,forc
 %   (f) run Lempel-Ziv complexity analysis, using runLZc_withRandom
 %   (f) compute power in specified bands also using ft_freqanalysis
 %   (g) perform a spectral analysis on the data using ft_freqanalysis
-%   (h) save mouseEphys_out and batchParams to output file
+%   (h) save mouseEphys_out and batchParams to pre-set output file
 
-% input parameters:
-% animalName as the animal ID character string, e.g., 'EEG170';
-% forceReRun is a boolean (true or false) 
+% inputs:
+%   animalName as the animal ID character string, e.g., 'EEG170';
+%   forceReRun is a boolean indicating 
 
-ignoreMovement = 0; % set equal to 1 to ignore movement analysis
-runICA = 0; % determines if the ICA denoising procedure is run, rarely have 
-% to set this to true (only if we see heartrate noise) 
+% outputs:
+%   batchParams is a structure containing the batch params created in this
+%   	script but will only contain the data from this current iteration
+%   	(e.g. if you ran this on EEG170, you will only see the params for EEG170)
+%   mouseEphys_out is a structure containing the band power, LZc, and spectral data 
+%       created in this script but will only contain the data from this current iteration
+%   	(e.g. if you ran this on EEG170, you will only see the data for EEG170)
+
+% other parameters
+ignoreMovement = 0; % ignore calculating the 4-sec movement values from the previously-analyzed movement data
+runICA = 0; % determines if the ICA denoising procedure is run. In the past we used ICA denoising to remove heart rate noise
+runLZc = true; % determines 
 
 switch nargin
     case 0
@@ -33,7 +42,7 @@ batchParams = getBatchParamsByAnimal(animalName);
 % list of frequency bands
 batchParams.(animalName).bandInfo = mouseEEGFreqBands; % information for band power calculation
 bandNames = mouseEEGFreqBands.Names;
-foi = [0.5 1:80]; % frequencies for spectral calculation % NOTE: is this correct?
+foi = [0.5 1:80]; % frequencies for spectral calculation
 eParams = batchParams.(animalName); % why are eParams and batchParams separate?
 
 % get list of experiments and dates
@@ -41,7 +50,12 @@ exptList = getExperimentsByAnimal(animalName);
 dates = unique(cellfun(@(x) x(1:5), exptList(:,1), 'UniformOutput',false),'stable');
 
 % load saved batch params 
-tempParams = load(EEGUtils.specFile,'batchParams');
+try
+    specFile = getLocalPath('bandPow');
+    tempParams = load(specFile,'batchParams');
+catch
+    warning('failed to load existing batch params. Make sure the saved file exists and that you can access it');
+end
 
 % If forceReRun is false, then just narrow the list of dates that aren't already saved in specFile
 iCount = 1;
@@ -86,10 +100,11 @@ eParams.windowOverlap = windowOverlap; % epoch fractional overlap
 for iDate = 1:length(eDates)
     thisDate = eDates{iDate};
     disp('------------------------');
-    disp(['Animal ' animalName ' - Date: ' thisDate]);
+    disp(['Animal: ' animalName ' - Date: ' thisDate]);
     disp('------------------------');
-    nExpts = length(eParams.(thisDate).exptIndex);
+    
     try
+        nExpts = length(eParams.(thisDate).exptIndex);
         % Expts correspond to the TDT recording files, i.e. 000, 001, etc
         for iExpt = 1:nExpts
             
@@ -103,7 +118,9 @@ for iDate = 1:length(eDates)
                 meanMovementPerWindow = nan(1204,1); % TODO: maybe rethink how the non-movement condition is handled
             else
                 try
-                    [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(thisDate,thisExpt,windowLength,windowOverlap);
+                    fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
+                    '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat'];
+                    [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(fileNameStub,windowLength,windowOverlap);
                 catch
                     warning('failed to segment movement data, will now ignore movement analysis');
                     ignoreMovement = 1; % set equal to 1 to ignore movement analysis
@@ -182,11 +199,15 @@ for iDate = 1:length(eDates)
             end
             
             % LEMPEL-ZIV COMPLEXITY ANALYSIS
-            [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
-            LZc = Cnorm(theseTrials,:);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = LZc;
-            surrogateAvg = mean(Cnormrand(theseTrials,:,:),3); % average across n (dimension 3) surrogate signals
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = LZc./surrogateAvg; %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
+            if runLZc
+                [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
+                LZc = Cnorm(theseTrials,:);
+                mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = LZc;
+                surrogateAvg = mean(Cnormrand(theseTrials,:,:),3); % average across n (dimension 3) surrogate signals
+                mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = LZc./surrogateAvg; %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
+            else
+                disp('LZc will not be calculated for this animal/date');
+            end
             
             % SPECTRAL ANALYSIS
             % First compute band power, keeping trials separate to generate a time series
@@ -219,7 +240,7 @@ for iDate = 1:length(eDates)
             cfg.tapsmofrq = 2;
             cfg.keeptrials= 'no';
             
-            % Calculate average spectral power
+            % Calculate average spectral power across the entire hour
             mouseEphys_out.(animalName).(thisDate).(thisExpt).spec = ...
                 ft_freqanalysis(cfg, data_MouseEphysDS);
             
