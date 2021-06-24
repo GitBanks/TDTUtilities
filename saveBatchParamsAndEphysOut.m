@@ -7,12 +7,12 @@ function saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out)
 
 specFile = EEGUtils.specFile;
 
-if ~exist(specFile,'file')
-    error([specFile ' does not exist! check path.'])
+if ~exist([specFile '.mat'],'file') % check if the .mat file exists
+    warning([specFile ' does not exist! check path.'])
 end
 
 try
-    load(specFile,'mouseEphys_out','batchParams');
+    load(specFile,'mouseEphys_out','batchParams'); % load file
 catch
     warning([specFile ' not found. Creating new save file']);
 end

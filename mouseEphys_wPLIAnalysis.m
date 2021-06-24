@@ -53,7 +53,8 @@ nChanCmbs = size(chanCmb,1);
 exptList = getExperimentsByAnimal(animalName);
 dates = unique(cellfun(@(x) x(1:5), exptList(:,1), 'UniformOutput',false),'stable');
 
-tempParams = load(EEGUtils.pliFile,'batchParams');
+pliFile = getLocalPath('wPLI');
+tempParams = load(pliFile,'batchParams');
 
 iCount = 1;
 % If forceReRun is false, then just run analysis on dates which don't
@@ -116,6 +117,7 @@ for iDate = 1:length(dates)
             meanMovementPerWindow = nan(240,1); % TODO: maybe rethink how the non-movement condition is handled
         else
             try
+                [f] = getFilenameFromIndex(dateIndex);
                 [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(thisDate,thisExpt,windowLength,windowOverlap);
             catch
                 warning('failed to segment movement data, will now ignore movement analysis');

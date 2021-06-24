@@ -50,10 +50,6 @@ end
 %Downsampled Fs
 dsFs = 200; % Hz
 
-%For calculating spectra based on highest and lowest movement
-highMovtPercentile = 75;
-lowMovtPercentile = 25;
-
 %Trial rejection criteria
 maxSDCriterion = 0.5;
 minSDCriterion = 0.2;
