@@ -4,11 +4,11 @@
 
 %% ==== file management =============================
 % % % % !!!!! IMPORTANT NOTE: DO NOT run fileMaint on an animal while data
-% are being collected for it.  This might more INCOMPLETE files with unexpected results,
+% are being collected for it.  This might move INCOMPLETE files with unexpected results,
 % including data corruption!!!
 
 % READ THE WARNING!
-fileMaint('ZZ06'); 
+fileMaint('ZZ10'); 
 % READ THE WARNING!
 
 %% ==== Stim / response specific plots ==============
@@ -37,6 +37,15 @@ fileMaint('ZZ06');
 % exptIndex = '024';
 % noTank = false;
 % evokedStimResp_userInput(exptDate,exptIndex,noTank);
+
+exptDate = '21621';
+exptIndex = '004';
+evokedStimResp_userInput(exptDate,exptIndex);
+
+exptDate = '21621';
+exptIndex = '005';
+evokedStimResp_userInput(exptDate,exptIndex);
+
 
 %% ==== whole day plasticity plots ==================
 
@@ -89,7 +98,22 @@ fileMaint('ZZ06');
 % plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
 
 
-exptDate = '21617';
-exptIndices = {'005','009','013'}; noTank = true;
-plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
+% exptDate = '21621';
+% exptIndices = {'006','010','014'}; noTank = false;
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
+% exptDate = '21621';
+% exptIndices = {'007','011','015'};
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+
+
+exptDate = '21623';
+exptIndices = {'014','018','022'};
+plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+
+exptDate = '21623';
+exptIndices = {'015','019','023'};
+plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+
+
+
 

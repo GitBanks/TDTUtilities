@@ -1,11 +1,11 @@
-function evokedStimResp_userInput(exptDate,exptIndex,noTank)
+function evokedStimResp_userInput(exptDate,exptIndex)
 
 %%
 % User-defined parameters
 
 if ~exist('exptDate','var') || ~exist('exptIndex','var')
     exptDate = '21601'; 
-    exptIndex = '009'; noTank = false;
+    exptIndex = '009';
 %     exptIndex = '008'; noTank = false;
 %	exptIndex = '004'; noTank = false;
 %     exptIndex = '005'; noTank = true;
@@ -34,7 +34,7 @@ avgWinTime = 1.e-3; %sec;
 baseWin = [-5,-0.5]*1.e-3; %sec; 
 %hardcoded location - not ideal, but this works for now
 outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
-tankIndex = exptIndex; % there may now be a difference with dual recording
+
 animal = getAnimalByDateIndex(exptDate,exptIndex);
 outPath2 = ['M:\PassiveEphys\AnimalData\' animal '\'];
 if ~exist(outPath2,'dir')
@@ -46,17 +46,8 @@ end
 %% load data
 % will repeat this for the dual recordings to load in the parallel set
 
-if noTank
-    % assume the index immediately before is the tank index... TODO: find a better way to handle this
-    tankIndex = str2double(exptIndex)-1;
-    if length(num2str(tankIndex)) < 2
-        tankIndex = ['00' num2str(tankIndex)];
-    else
-        tankIndex = ['0' num2str(tankIndex)];
-    end
-end
-
-[stimSet,dTRec,stimArray] = getSynapseStimSetData(exptDate,tankIndex,tPreStim,tPostStim,noTank);
+[~,indexOut,isTank] = getIsTank(exptDate,exptIndex);
+[stimSet,dTRec,stimArray] = getSynapseStimSetData(exptDate,indexOut,tPreStim,tPostStim,isTank);
 
 
 

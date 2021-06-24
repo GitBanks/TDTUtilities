@@ -1,13 +1,14 @@
-function plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
+function plotPlasticityAmplitudePeaks(exptDate,exptIndices)
 % Function to plot out time series of evoked response amplitudes during
 % LTP/LTD expts. Allows user to choose time and sign of peaks from averqage
 % traces.
 % this is a rewrite of the PlasticityPlots script and should be broken into
 % discrete sections for readability and modularity reasons.
+
 if ~exist('exptDate','var') || ~exist('exptIndices','var') 
 %     exptDate = '21527';
 %     exptIndices = {'001','003','005'};
-    exptDate = '21616'; noTank = false;
+    exptDate = '21616'; 
     exptIndices = {'009','017','021'};
 %     exptDate = '21616'; noTank = true;
 %     exptIndices = {'010','018','022'};
@@ -50,20 +51,15 @@ if exist('evDataSet','var')
 end
 nTrials = zeros(1,nExpts);
 for iExpt = 1:nExpts
-    if noTank
-        tankIndex = str2double(exptIndices{iExpt})-1;
-        if length(num2str(tankIndex)) < 2
-            tankIndex = ['00' num2str(tankIndex)];
-        else
-            tankIndex = ['0' num2str(tankIndex)];
-        end
-    else
-        tankIndex = exptIndices{iExpt};
-    end
-    [dataTemp,dTRec] = getSynapseSingleStimData(exptDate,tankIndex,tPreStim,tPostStim,noTank);
+    [~,indexOut,isTank] = getIsTank(exptDate,exptIndices{iExpt});
+    [dataTemp,dTRec] = getSynapseSingleStimData(exptDate,indexOut,tPreStim,tPostStim,isTank);
     evDataSet(iExpt) = dataTemp;
     nTrials(iExpt) = size(evDataSet(iExpt).sub,2);
 end
+
+
+
+
 nTotalTrials = sum(nTrials);
 [nROIs,nDataPts] = size(evDataSet(1).subMean);
 preStimIndex = floor(tPreStim/dTRec);

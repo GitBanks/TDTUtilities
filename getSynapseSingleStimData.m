@@ -1,15 +1,15 @@
-function [evData,dTRec] = getSynapseSingleStimData(exptDate,tankIndex,tPreStim,tPostStim,noTank)
+function [evData,dTRec] = getSynapseSingleStimData(exptDate,tankIndex,tPreStim,tPostStim,isTank)
 %Returns stimulus-related data from TDT software organized according to
 %channel and snipped into segments of length tPreStim_tPostStim
 
-dataType = 'LFP1';
-% the only difference in data analysis is if we should grab the first or
-% second LFP set
-if exist('noTank','var')
-    if noTank == true
-        dataType = 'LFP2';
-    end
+
+% the only difference in data analysis is if we should grab the first or second LFP set
+if isTank
+    dataType = 'LFP1';
+else
+    dataType = 'LFP2';
 end
+
 
 % load saved trial pattern
 dataPath = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' tankIndex '\'];

@@ -1,4 +1,4 @@
-function [dateOut,indexOut] = getIsTank(date,index)
+function [dateOut,indexOut,isTank] = getIsTank(date,index)
 % this will let us know if we need to take the previous index in a dual
 % recording prep
 % A few assumptions:
@@ -15,6 +15,7 @@ function [dateOut,indexOut] = getIsTank(date,index)
 dirStrRawDataROOT = [mousePaths.W 'PassiveEphys\']; %'W' drive
 dirStrRawData = [dirStrRawDataROOT '20' date(1:2) '\' date '-' index '\'];
 dirCheck = dir(dirStrRawData);
+isTank = true; %default should assume the tank is the index
 
 %spare us from effort if it's already the correct directory
 if ~isempty(dir([dirStrRawData '*_Cam1*']))
@@ -68,6 +69,11 @@ if ~isempty(dir([dirStrRawData '*_Cam2*']))
     indexOut = tempIndex;
 else
     error(['at this point something has gone wrong - we can''t find the tank file for ' date '-' index ]);
+end
+
+
+if ~contains(index,indexOut)
+    isTank = false;
 end
 
 

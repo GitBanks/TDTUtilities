@@ -1,16 +1,12 @@
-function [stimSet,dTRec,stimArray] = getSynapseStimSetData(exptDate,tankIndex,tPreStim,tPostStim,noTank)
+function [stimSet,dTRec,stimArray] = getSynapseStimSetData(exptDate,tankIndex,tPreStim,tPostStim,isTank)
 
 
-dataType = 'LFP1';
-% the only difference in data analysis is if we should grab the first or
-% second LFP set
-if exist('noTank','var')
-    if noTank == true
-        dataType = 'LFP2';
-    end
+% the only difference in data analysis is if we should grab the first or second LFP set
+if isTank
+    dataType = 'LFP1';
+else
+    dataType = 'LFP2';
 end
-
-
 
 
 % load saved trial pattern

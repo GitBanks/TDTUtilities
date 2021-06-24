@@ -148,12 +148,12 @@ operatingList = exptTable.DateIndex(exptTable.needStimResp == true);
 for iList = 1:length(operatingList)    
     date = operatingList{iList}(1:5);
     index = operatingList{iList}(7:9);
-    [~,tankIndex] = getIsTank(date,index);
-    notank = false; %default should assume the tank is the index
-    if ~contains(index,tankIndex)
-        notank = true;
-    end
-    evokedStimResp_userInput(date,index,notank);
+%     [~,tankIndex,isTank] = getIsTank(date,index);
+%     notank = false; %default should assume the tank is the index
+%     if ~contains(index,tankIndex)
+%         notank = true;
+%     end
+    evokedStimResp_userInput(date,index);
 end
 
 % STEP 3 CHECK FOR MAGNET DATA, SAVE TO MEMORYBANKS
