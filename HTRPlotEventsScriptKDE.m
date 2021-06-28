@@ -1,4 +1,8 @@
-function  HTRPlotEventsScript(treatment)
+function  HTRPlotEventsScriptKDE(treatment,gaussLength)
+
+
+% gaussLength = 20 % too tiny
+%gaussLength = 60; % just about right
 
 
 
@@ -43,6 +47,8 @@ end
 dateTable(logical(removeRows),:) = [];
 
 
+
+
 % for now just cycle through the drug combinations.  In the future we can
 % add a popup or menu or something more clever
 plotsToMake = unique(dateTable.DrugList);
@@ -75,15 +81,30 @@ for iCond = 1:size(plotsToMake,1)
             previousIndexTimeElapsed = previousIndexTimeElapsed+timeArray(end);
             timeSteps(idx) = previousIndexTimeElapsed;
         end
-
-      
-        % start plotting.  
+        
         figure(HTRevents);
         subtightplot(size(subTable,1),1,iList);
-        plot(fullTimeArray,envelope(abs(fullMagStream)));
-        drawnow;
+        
+        pdEvents = fitdist(fullEventTimes','Kernel','BandWidth',gaussLength);
+%         x = 0:.1:45;
+        yEvents = pdf(pdEvents,fullTimeArray);
+        plot(fullTimeArray,yEvents,'k-','LineWidth',1)
+
+        % Plot each individual pdf and scale its appearance on the plot
         hold on
-       
+%         for iiii=1:length(fullEventTimes)
+%             pd = makedist('Normal','mu',fullEventTimes(iiii),'sigma',4);
+%             y = pdf(pd,fullTimeArray);
+%             y = y/length(fullEventTimes)*3;
+%             plot(fullTimeArray,y,'b:')
+%         end
+        rootFolder = ['M:\PassiveEphys\AnimalData\' subTable.AnimalName{iList}];
+        if exist(rootFolder,'dir') ~=7
+            mkdir(rootFolder)
+        end
+        fileName = ['M:\PassiveEphys\AnimalData\' subTable.AnimalName{iList} '\pdfHTRevents-' num2str(gaussLength) '-' treatment];
+        save(fileName,'yEvents','fullTimeArray');
+        
         %OK, we're going to assume that the treatment variable is the reference
         %point, so will adjust all our times according to it
         treatments = getTreatmentInfo(subTable.AnimalName{iList},subTable.Date{iList});
@@ -105,21 +126,25 @@ for iCond = 1:size(plotsToMake,1)
                 xline(timeGiven,'.',treatmentText,'DisplayName',treatmentText,'LineWidth',4);
             end
         end
-        
+        drawnow;
+        hold off
         % TODO adjust these relative to treatment time.  may need to do
         % this, then plot afterwards, scale the x axis
 %         fullEventTimes
 %         fullTimeArray
 
-
+% 
         for iPlot = 1:length(fullEventTimes)
-           xline(fullEventTimes(iPlot),'r');
+           xline(fullEventTimes(iPlot),'b:');
         end
-%         if iList == 1
-%             title(plotsToMake(iList));
-%         end
-        hold off
+% %         if iList == 1
+% %             title(plotsToMake(iList));
+% %         end
+%         hold off
         ylabel(subTable.AnimalName{iList});
+        if iList == 1
+            title(treatment);
+        end
         
         
 
@@ -134,8 +159,30 @@ for iCond = 1:size(plotsToMake,1)
     for iList = 1:size(subTable,1)
         subtightplot(size(subTable,1),1,iList);
         xlim([0,maxTime]);
-        ylim([5,17]);
+        %ylim([5,17]);
         drawnow
     end
+    
+    
+    fileName = ['M:\PassiveEphys\AnimalData\pdfHTRevents-' num2str(gaussLength)];
+%     saveas(HTRevents,fileName);
+    
+    
+    
+   
+    print('-painters',fileName,'-r300','-dpng');
+    try
+        desc = ['pdf HTR events width:' num2str(gaussLength) ' drug: ' treatment];
+        sendSlackFig(desc,[fileName '.png']);
+    catch
+        disp(['failed to upload ' fileName ' to Slack']);
+    end
+
+    
+    
+    
+    
+    
+    
 end
 
