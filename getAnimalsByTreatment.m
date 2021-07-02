@@ -6,9 +6,9 @@ query = ['SELECT * FROM `global_stimparams` WHERE `paramfield` LIKE ' '''' treat
 masterResult = fetchAdjust(dbConn,query);
 exptIDlist = masterResult(:,2);
 
-sz = [length(exptIDlist) 4];
-varTypes = {'string','string','string','string'};
-varNames = {'AnimalName','Date','Index','Druglist'};
+sz = [length(exptIDlist) 5];
+varTypes = {'string','string','string','string','string'};
+varNames = {'AnimalName','Date','Index','Druglist','Desc'};
 exptTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 
 for iExptList = 1:length(exptIDlist)
@@ -26,6 +26,8 @@ for iExptList = 1:length(exptIDlist)
         drugList = [drugList paramResult{iParam,1} '; '];
     end
     exptTable.Druglist(iExptList) = drugList;
+    query5 = ['SELECT notebookDesc FROM masterexpt WHERE exptID =''' num2str(exptIDlist{iExptList}) ''''];
+    exptTable.Desc(iExptList) = fetchAdjust(dbConn,query5);
 end
 
 close(dbConn);

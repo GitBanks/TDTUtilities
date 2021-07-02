@@ -1,22 +1,20 @@
 function dateTable = getDateAnimalUniqueByTreatment(treatment)
-
 %treatment = 'DOI_conc';
-
 %Given a treatment
 % 1. load table of expts with getAnimalsByTreatment
 % 2. sort table by date (then animal)
 
-
+% purge ignored animals
 [exptTable] = getAnimalsByTreatment(treatment);
+ignoreThese = ((contains(exptTable.Desc,'ignore')| contains(exptTable.Desc,'Ignore') | contains(exptTable.Desc,'test') | contains(exptTable.Desc,'Test')));
+exptTable(ignoreThese,:) = [];
+
 exptTable = sortrows(exptTable,'Date');
-
 dateList = unique(exptTable.Date);
-
 sz = [1 3];
 varTypes = {'string','string','string'};
 varNames = {'AnimalName','Date','DrugList'};
 dateTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
-
 indexer = 1;
 warning('off');
 for iDate = 1:length(dateList)
@@ -33,9 +31,5 @@ for iDate = 1:length(dateList)
     clear animalsToday
 end
 warning('on');
-
-
-
-
 
 
