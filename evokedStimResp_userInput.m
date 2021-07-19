@@ -6,6 +6,8 @@ function evokedStimResp_userInput(exptDate,exptIndex)
 if ~exist('exptDate','var') || ~exist('exptIndex','var')
     exptDate = '21601'; 
     exptIndex = '009';
+    
+    
 %     exptIndex = '008'; noTank = false;
 %	exptIndex = '004'; noTank = false;
 %     exptIndex = '005'; noTank = true;
