@@ -42,9 +42,9 @@ manuallySetGlobalParamUI(animal);
 path.dirStrAnalysisROOT = [mousePaths.M 'PassiveEphys\']; % 'M' drive
 
 %dirStrRecSourceAROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
-path.dirStrRecSourceAROOT = '\\144.92.237.183\Data\PassiveEphys\'; %Gilgamesh
-path.dirStrRecSourceBROOT = '\\144.92.237.183\Data\PassiveEphys\'; 
-%path.dirStrRecSourceBROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
+%path.dirStrRecSourceAROOT = '\\144.92.237.183\Data\PassiveEphys\'; %Gilgamesh
+path.dirStrRecSourceAROOT = '\\144.92.237.187\Data\PassiveEphys\'; % fake Gilgamesh (21708, it's broken today)
+path.dirStrRecSourceBROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
 
 path.dirStrRawDataROOT = [mousePaths.W 'PassiveEphys\']; %'W' drive
 path.dirStrServer = '\\144.92.237.186\Users\'; %Helmholz
@@ -237,6 +237,19 @@ save([summaryLocation animal '-exptSummary'],'exptTable');
 % fileMaint_Mag(exptDate,Animal1,Animal2)
 % fileMaint_dual(animal,hasTankIndices)
 % maybe saveMagnetDataFiles(exptDate,Animal1,Animal2);
+
+
+% TODO 7/7/21 ZS SG
+% incorporate spontaneous analyses
+    % Approach #1
+        % (both of the following functions are in TDTUtilities)
+        % add mouseEphys_specAnalysis to compute band power & power spectra (AND Lempel-Ziv analysis) 
+        % add mouseEphys_wPLIAnalysis to compute connectivity data
+    % Approach #2
+        % finish rewrite of mouseEphys_spontAnalyses (in TDTUtilities),
+        % i.e. a version without field trip functions/streamlined code in
+        % the style of the runAnalysis in the ECoG repo
+
 end
 
 

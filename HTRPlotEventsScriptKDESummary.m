@@ -4,16 +4,16 @@
 
 clear all
 reportPlot = false;
-gaussLength = 100;
+gaussLength = 120;
 treatments = {
 % 'Anlg_5_MeO_DET';
 % 'Anlg_Pyr_T'; 
 % 'Anlg_6_FDET'; 
-% 'Anlg_5_MeO_MiPT'; 
+ 'Anlg_5_MeO_MiPT'; 
 % 'Anlg_4_AcO_DMT'; 
-% 'Anlg_5_MeO_pyrT';
-% 'Anlg_5_6_DiMeO_MiPT';
-'DOI_conc'
+ 'Anlg_5_MeO_pyrT';
+ 'Anlg_5_6_DiMeO_MiPT';
+%  'DOI_conc'
 'psilocybin';
 };
 
@@ -48,8 +48,11 @@ HTRPlotEventsScriptKDE(treatment,gaussLength)
 
 
 
-try
+
+
 dateTable = getDateAnimalUniqueByTreatment(treatment);
+
+% ================== data curating =====================
 excludeAnimal = 'ZZ05'; % there should really be a 'hasMagnet' flag in the database
 dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
 excludeAnimal = 'Dummy_Test';
@@ -60,7 +63,32 @@ excludeAnimal = 'ZZ06';
 dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
 excludeAnimal = 'ZZ08';
 dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+excludeAnimal = 'EEG112'; % excluded for a variety of reasons: initial recording parameters; incorrect entries; no video; etc.
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+excludeAnimal = 'EEG113'; % excluded for a variety of reasons: initial recording parameters; incorrect entries; no video; etc.
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+excludeAnimal = 'EEG116'; % excluded for a variety of reasons: initial recording parameters; incorrect entries; no video; etc.
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+excludeAnimal = 'EEG117'; % excluded for a variety of reasons: initial recording parameters; incorrect entries; no video; etc.
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+excludeAnimal = 'EEG118'; % excluded for a variety of reasons: initial recording parameters; incorrect entries; no video; etc.
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+excludeAnimal = 'EEG119'; % excluded for a variety of reasons: initial recording parameters; incorrect entries; no video; etc.
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
 
+% for now just cycle through the drug combinations.  In the future we can
+% add a popup or menu or something more clever
+plotsToMake = unique(dateTable.DrugList);
+% For now, we're going to remove the multiple treatments
+a = strfind(plotsToMake,';');
+for iCombo = 1:size(plotsToMake,1)
+    if iscell(a)
+    if size(a{iCombo},2)>1
+        dateTable = dateTable(plotsToMake(iCombo)~=dateTable.DrugList,:);
+    end
+    end
+end
+% we now only have DOI alone data
 
 removeRows = zeros(size(dateTable,1),1);
 for iList = 1:size(dateTable,1)
@@ -71,14 +99,21 @@ for iList = 1:size(dateTable,1)
     if ~isempty(dir([dirStrAnalysis '*skipMagnet*']))
         removeRows(iList) = true;
     end 
+     % display(listToCheck{1,2});
+    if contains(listToCheck{1,2},'25a')
+        removeRows(iList) = true;
+    end 
 end
 dateTable(logical(removeRows),:) = [];
+% just for DOI where we ran 30 min expts.  in the future, we should store
+% the time length of each index so we can make a better decision
+if contains(treatment,'DOI_conc')
+    dateTable(1:6,:) = [];
+end
+% ================== end data curating =====================
 
 
 
-
-
-% gaussLength = 60;
 subTable = dateTable;
 for iList = 1:size(subTable,1)
     
@@ -97,20 +132,39 @@ end
 lowest = size(pdfStruct(iList).pdfArray,2);
 for iList = 2:size(pdfStruct,2)
     lowest = min(size(pdfStruct(iList).pdfArray,2),lowest);
+   % lowest = max(size(pdfStruct(iList).timeArray,2),lowest);
 end
-
-
-HTRevents = figure();
-
 
 eventArray = zeros(size(subTable,1),lowest);
 for iList = 1:size(pdfStruct,2)
     eventArray(iList,:) = pdfStruct(iList).pdfArray(1:lowest);
-    %plot(pdfStruct(iList).pdfArray)
 end
 
+
+
+% jackknife / error estimate here
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+HTRevents = figure();
 meanPdf = mean(eventArray,1);
-fullTimeArray = pdfStruct(iList).timeArray(1:lowest);
+ fullTimeArray = pdfStruct(iList).timeArray(1:lowest);
+%fullTimeArray = pdfStruct(iList).timeArray(1:end);
 minuteTimeArray = fullTimeArray/60;
 plot(minuteTimeArray,meanPdf);
 hold on
@@ -141,8 +195,5 @@ save(fileName,'meanPdf','minuteTimeArray');
 
 
 
-catch
-    display(['failed to run ' treatmentDisplay]);
-end
 end
 

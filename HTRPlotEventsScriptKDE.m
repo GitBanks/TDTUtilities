@@ -1,7 +1,15 @@
 function  HTRPlotEventsScriptKDE(treatment,gaussLength)
+% gaussLength is 'sigma' in seconds
+
 
 % test params
 % treatment = 'Anlg_5_MeO_DET';
+% gaussLength = 100;
+% treatment = 'psilocybin';
+% gaussLength = 100;
+% treatment = 'DOI_conc';
+% gaussLength = 100;
+% treatment = 'saline0p9_vol';
 % gaussLength = 100;
 
 % stop spamming datachecks
@@ -17,35 +25,49 @@ overWrite = true; % % save over existing save
 % 4. plot each day (as before) but respect time
 % Warning!  must be very accurate with the exact spelling of the treatment.
 %  Consider a pull-down menu or something
-
-%treatment = 'Anlg_6_FDET'; 
-%treatment = 'DOI_conc';
-%treatment = 'Anlg_5_MeO_MiPT'; 
-%treatment = 'Anlg_Pyr_T'; 
-%treatment = 'Anlg_4_AcO_DMT'; 
-%treatment = 'Anlg_5_MeO_pyrT';
-%treatment = 'Anlg_5_6_DiMeO_MiPT';
+% 
+% treatment = 'Anlg_6_FDET'; 
+% treatment = 'DOI_conc';
+% treatment = 'Anlg_5_MeO_MiPT'; 
+% treatment = 'Anlg_Pyr_T'; 
+% treatment = 'Anlg_4_AcO_DMT'; 
+% treatment = 'Anlg_5_MeO_pyrT';
+% treatment = 'Anlg_5_6_DiMeO_MiPT';
 % treatment = 'Anlg_5_MeO_DET';
 
+% ================== data curating =====================
 dateTable = getDateAnimalUniqueByTreatment(treatment);
-excludeAnimal = 'ZZ05'; % there should really be a 'hasMagnet' flag in the database
+excludeAnimal = 'EEG112'; % excluded for a variety of reasons: initial recording parameters; incorrect entries; no video; etc.
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+excludeAnimal = 'EEG113'; % excluded for a variety of reasons: initial recording parameters; incorrect entries; no video; etc.
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+excludeAnimal = 'EEG116'; % excluded for a variety of reasons: initial recording parameters; incorrect entries; no video; etc.
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+excludeAnimal = 'EEG117'; % excluded for a variety of reasons: initial recording parameters; incorrect entries; no video; etc.
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+excludeAnimal = 'EEG118'; % excluded for a variety of reasons: initial recording parameters; incorrect entries; no video; etc.
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+excludeAnimal = 'EEG119'; % excluded for a variety of reasons: initial recording parameters; incorrect entries; no video; etc.
 dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
 excludeAnimal = 'Dummy_Test';
 dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
-
-
-% % % % TODO!!!! need to add a way to exclude non-magnet mice here 
-% ASAP / NEXT STEP!
-
-
-
-
-
-
-
-
-
-
+excludeAnimal = 'ZZ05';
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+excludeAnimal = 'ZZ06';
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+% for now just cycle through the drug combinations.  In the future we can
+% add a popup or menu or something more clever
+plotsToMake = unique(dateTable.DrugList);
+% optionally remove the multiple treatments
+a = strfind(plotsToMake,';');
+for iCombo = 1:size(plotsToMake,1)
+    if iscell(a)
+    if size(a{iCombo},2)>1
+        dateTable = dateTable(plotsToMake(iCombo)~=dateTable.DrugList,:);
+    end
+    end
+end
+% % a way to exclude non-magnet mice here 
 removeRows = zeros(size(dateTable,1),1);
 for iList = 1:size(dateTable,1)
     listToCheck = getExperimentsByAnimalAndDate(dateTable.AnimalName{iList},dateTable.Date{iList});
@@ -55,18 +77,18 @@ for iList = 1:size(dateTable,1)
     if ~isempty(dir([dirStrAnalysis '*skipMagnet*']))
         removeRows(iList) = true;
     end 
+    % display(listToCheck{1,2});
+    if contains(listToCheck{1,2},'25a')
+        removeRows(iList) = true;
+    end 
 end
 dateTable(logical(removeRows),:) = [];
-
-
-
-
-
-
-
-% for now just cycle through the drug combinations.  In the future we can
-% add a popup or menu or something more clever
+%redo this list, since we've pruned it so severely
 plotsToMake = unique(dateTable.DrugList);
+% ================== end data curating =====================
+
+
+
 for iCond = 1:size(plotsToMake,1)
     subTable = dateTable(plotsToMake(iCond)==dateTable.DrugList,:);
     % we need a way to sort away treatments that aren't related (DOI +
@@ -84,7 +106,11 @@ for iCond = 1:size(plotsToMake,1)
         timeSteps = zeros(1,size(outputList,1));
         previousIndexTimeElapsed = 0;
         for idx = 1:size(outputList,1)
-            [magData,magDT] = HTRMagLoadData(outputList{idx,1});
+            try
+                [magData,magDT] = HTRMagLoadData(outputList{idx,1});
+            catch
+                fileMaint(subTable.AnimalName{iList});
+            end
             plotEnable = false;
             [htrEventTimes] = HTRMagDetectionHandler(outputList{idx,1},plotEnable);% get HTR times 
             timeArray = 0:magDT:length(magData)*magDT;
@@ -137,10 +163,14 @@ for iCond = 1:size(plotsToMake,1)
             for iTrial = 1:size(fullEventTimes,2)
                 yEvents(find(fullTimeArray>fullEventTimes(iTrial),1,'first')) = 1;
             end
-            %samplesPerSecond = round(1/magDT_DS);
-            gaussFilt = normpdf([-240:magDT_DS:240],1,60);
+            
+            
+            % numbers are seconds, so 8 minutes wide, with a sigma of
+            % gaussLength (seconds)
+            gaussFilt = normpdf([-240:magDT_DS:240],1,gaussLength);
             yEvents = conv(yEvents,gaussFilt,'same');
 
+            
             save(fileName,'yEvents','fullTimeArray','fullMagStream');
         else
             load(fileName,'yEvents','fullTimeArray','fullMagStream');
