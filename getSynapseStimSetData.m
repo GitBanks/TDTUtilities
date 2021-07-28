@@ -1,4 +1,4 @@
-function [stimSet,dTRec,stimArray] = getSynapseStimSetData(exptDate,tankIndex,tPreStim,tPostStim,isTank)
+function [stimSet,dTRec,stimArray,stimTimes] = getSynapseStimSetData(exptDate,tankIndex,tPreStim,tPostStim,isTank)
 
 
 % the only difference in data analysis is if we should grab the first or second LFP set
@@ -7,6 +7,8 @@ if isTank
 else
     dataType = 'LFP2';
 end
+
+%this will be a index by stimsPerIndex
 
 
 % load saved trial pattern

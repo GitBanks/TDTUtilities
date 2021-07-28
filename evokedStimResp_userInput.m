@@ -49,7 +49,7 @@ end
 % will repeat this for the dual recordings to load in the parallel set
 
 [~,indexOut,isTank] = getIsTank(exptDate,exptIndex);
-[stimSet,dTRec,stimArray] = getSynapseStimSetData(exptDate,indexOut,tPreStim,tPostStim,isTank);
+[stimSet,dTRec,stimArray,stimTimes] = getSynapseStimSetData(exptDate,indexOut,tPreStim,tPostStim,isTank);
 
 
 
@@ -217,7 +217,8 @@ for iROI = 1:nROIs
     end
 end
 
-%% Plot avg traces and stim-resp curves
+
+%% Plot avg traces and stim-resp curves (start plotting)
 FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
 thisFigure = figure('Name',FigName);
 ampLabel = [];
@@ -235,6 +236,28 @@ for iStim = 1:nStims
     end
 end
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
+
+
+%%
+% we will save 
+% Time of peak re stim time
+% Response magnitude (pk, inner product)
+% Time of stim relative to start of file
+peakData = struct;
+peakData.pkSearchData = pkSearchData; % user selected Time of peak re stim time
+peakData.ROILabels = ROILabels; %corresponding labels
+peakData.stimArrayNumeric = stimArrayNumeric;
+peakData.pkVals = pkVals; % Response magnitude 
+peakData.stimTimes = stimTimes; % Time of stim relative to start of file
+
+save([outPath exptDate '-' exptIndex '_peakData'],'peakData');
+
+
+
+
+
+%%
+% continue plotting
 for iROI = 1:nROIs
     % Plot avg traces
     subPlt(iROI) = subplot(2,nROIs,iROI);
