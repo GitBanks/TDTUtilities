@@ -45,8 +45,9 @@ for iList = 1:nStimResp
     for iROI = 1:size(peakData.ROILabels,1)
 %         iPeak = 1;
 %         iStim = 1;
-        [~,I] = max(max(peakData.pkVals(iROI).data(:,:)));
-        plotMatrix(iList,iROI) = peakData.stimArrayNumeric(I);
+        [V,I] = max(max(peakData.pkVals(iROI).data(:,:)));
+%         plotMatrix(iList,iROI) = peakData.stimArrayNumeric(I);
+        plotMatrix(iList,iROI) = V;
     end
 end
 
@@ -59,7 +60,7 @@ for iROI = 1:nROI
         title([animal ' stim/resp peak value over time']);
     end
     ylabel([peakData.ROILabels(iROI)]);
-    ylim([0,900]);
+    %ylim([0,900]);
     xlim([0,nStimResp+1]);
     xticks(1:nStimResp);
     if iROI == 3
