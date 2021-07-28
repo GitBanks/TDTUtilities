@@ -12,7 +12,7 @@ function batchAssemblerForMCStim(date,index)
 %index = '002';
 nTrialsPerStim = 30;
 %stimArray = [200,300,400,500,600,700];
-stimArray =  {'50-50','100-100','150-150','200-200','300-300','400-400','500-500'};
+stimArray =  {'1-1','3-3','10-10','30-30','100-100','300-300','500-500','700-700','800-800'};
 %stimArray =  {'300-300'};
 
 %must make a stim in MC to correspond with the above stims
@@ -24,7 +24,8 @@ stimArray =  {'50-50','100-100','150-150','200-200','300-300','400-400','500-500
 %try to address this thorough the network.  If we ever run this on a remote
 %computer there will be trouble when switching to the format above.
 %fileName = ['C:\Users\Ziyad Sultan\Documents\Multi Channel Systems\' date '-' index '.stb'];
-fileName = ['\\NESSUS\Users\LabRat\Documents\Multi Channel Systems\' date '-' index '.stb']; %BAD BAD BAD HARDCODING
+%fileName = ['\\NESSUS\Users\LabRat\Documents\Multi Channel Systems\' date '-' index '.stb']; %BAD BAD BAD HARDCODING
+fileName = ['C:\Users\banksadmin\Documents\Multi Channel Systems\' date '-' index '.stb']; 
 trialPattern = createTrialPattern(length(stimArray),nTrialsPerStim);
 
 [fid errMsg]= fopen(fileName,'w');
@@ -38,7 +39,7 @@ fprintf(fid, '%s\n',['Version 1.00']);
 
 for iTrial = 1:length(trialPattern)
     %fprintf(fid, '%s\n', ['C:\Users\Ziyad Sultan\Documents\Multi Channel Systems\SINGLEpulseRange\' num2str(stimArray(trialPattern(iTrial))) '.stm']);
-    fprintf(fid, '%s\n', ['C:\Users\Ziyad Sultan\Documents\Multi Channel Systems\DUALpulseRange\' stimArray{trialPattern(iTrial)} '.stm']);
+    fprintf(fid, '%s\n', ['C:\Users\banksadmin\Documents\Multi Channel Systems\DUALpulseRange\' stimArray{trialPattern(iTrial)} '.stm']);
 end
 
 saveFileRoot = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];

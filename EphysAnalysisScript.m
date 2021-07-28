@@ -42,7 +42,7 @@ exptDate = '21621';
 exptIndex = '004';
 evokedStimResp_userInput(exptDate,exptIndex);
 
-exptDate = '21717';
+exptDate = '21727';
 exptIndex = '003';
 evokedStimResp_userInput(exptDate,exptIndex);
 
