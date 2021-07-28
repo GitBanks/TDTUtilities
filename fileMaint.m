@@ -1,76 +1,53 @@
 function fileMaint(animal)
-% A utility  to run that replicates the import data pathway in
-% synapseFrontEnd
-% 1. move files
-% 2. import data
-% 3. move downsampled to W (renamed EEG channels) sorry, this is expected in an analysis.  I'll change once I get to that one...
-% 4. Turn movie into a grid file
-% 5. This is also set to run the video analysis program at end of day
-% (needs all finished video files)
-% notes
-% absolutely do not run on anything except synapse data!!!!
-% WARNING this is only operating upon EEGdata files for now!!!
-% WARNING a few locations are hardcoded!
+% A utility to run that replicates the import data pathway in synapseFrontEnd
+% NOTE: this will just run through all applicable analyses.  If notebook
+% description information is incorrect (stim/resp listed when there is none) 
+% it will very likely fail.
 
-% %test parameter
-%animal = 'ZZ06';
+% === test parameters
+% animal = 'ZZ06';
 
-%override parameters - used rarely
+% === override and analysis toggle parameters - change rarely
 forceReimport = 0;
 forceReimportTrials = 0;
+runMagnetDataSaving = 1;
 
-runMagnetDataSaving = 0;
-
-
-
-% establish a clean list of all experiments we're interested in
+% === establish a clean list of all experiments we're interested in
 listOfAnimalExpts = getExperimentsByAnimal(animal);
 descOfAnimalExpts = listOfAnimalExpts(:,2);
 listOfAnimalExpts = listOfAnimalExpts(:,1);
 
-% before full automation, we can use this to set drug or eStim parameters 
+% === before full automation, we can use this to set drug or eStim parameters 
 % in the DB
 manuallySetGlobalParamUI(animal); 
 
-% verify the electrode information has been entered correctly.  This is a
+% === verify the electrode information has been entered correctly.  This is a
 % local function within FileMaint, below
 [electrodeLocation] = checkElectrode(listOfAnimalExpts{1}(1:5),listOfAnimalExpts{1}(7:9),animal);
 
-% establish a few parameters to keep the main loop clean.
-% We should improve root locations - REC could be different.  We could also
-% check for connections here so that later attempts to connect don't fail
+% === Set paths
 path.dirStrAnalysisROOT = [mousePaths.M 'PassiveEphys\']; % 'M' drive
-
 %dirStrRecSourceAROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
 %path.dirStrRecSourceAROOT = '\\144.92.237.183\Data\PassiveEphys\'; %Gilgamesh
-path.dirStrRecSourceAROOT = '\\144.92.237.183\Data\PassiveEphys\'; %  Gilgamesh (21708, it's broken today)
-path.dirStrRecSourceBROOT = '\\144.92.237.183\Data\PassiveEphys\'; %Fake Nessus
-% path.dirStrRecSourceBROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
-
+path.dirStrRecSourceAROOT = '\\144.92.237.187\Data\PassiveEphys\'; % fake Gilgamesh (21708, it's broken today)
+path.dirStrRecSourceBROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
 path.dirStrRawDataROOT = [mousePaths.W 'PassiveEphys\']; %'W' drive
 path.dirStrServer = '\\144.92.237.186\Users\'; %Helmholz
-%dirStrServer = '\\HELMHOLTZ\'; %Helmholz another way
-% dirStrServer = '\\Server1\data\';
 
+% === check network connections
 % we often have network connection issues.  Handle that verification here,
 % so later errors aren't confusing.  checkConnection is a local function.
 checkConnection(path.dirStrAnalysisROOT);
 checkConnection(path.dirStrRecSourceAROOT);
-try
-    checkConnection(path.dirStrRecSourceBROOT);
-catch
-    disp('Can''t find alt REC computer.  Reverting to primary REC.');
-    path.dirStrRecSourceBROOT = path.dirStrRecSourceAROOT;
-end
+checkConnection(path.dirStrRecSourceBROOT); % we used to use a try/catch for if one computer isn't hooked up, but it will just stall out in any case...  either add some reasonable timeout checks, or just accept the error it will throw here.  
 checkConnection(path.dirStrRawDataROOT);
 checkConnection(path.dirStrServer);
 
-% check all recorded files first?
+% === create a list of what needs to be done
+% the idea of this table is that if tasks are 'done', the logical should
+% evaluate 'true'.  The exception is video files - sometimes there's no video
 sz = [length(listOfAnimalExpts) 8];
 varTypes = {'string','string','logical','logical','string','logical','logical','logical'};
-% the idea of this table is that if tasks are 'done', the logical should
-% evaluate 'true'.  The exception is video files - sometimes there's no
-% video
 varNames = {'DateIndex','Description','Imported','Magnets','videoDone','RECAEmpty','RECBEmpty','needStimResp'};
 exptTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 for iList = 1:length(listOfAnimalExpts)
@@ -79,34 +56,32 @@ for iList = 1:length(listOfAnimalExpts)
     index = listOfAnimalExpts{iList}(7:9);
     [dirStrAnalysis,dirStrRawData,dirStrRecSourceA,dirStrRecSourceB] = getPaths(path,date,index);
     exptTable.DateIndex(iList) = [date '-' index];
+    % === are the raw data moved yet?
     if isempty(dir(dirStrRecSourceA))
         exptTable.RECAEmpty(iList) = true;
     end
     if isempty(dir(dirStrRecSourceB))
         exptTable.RECBEmpty(iList) = true;
     end
-    
-    % are data imported?
+    % === are data imported?
     if ~isempty(dir([dirStrAnalysis '*data*']))
         exptTable.Imported(iList) = true;
     else
         exptTable.Imported(iList) = false;
     end
-    
-    % do we need to run a stim response curve
-    if contains(exptTable.Description(iList),'stim/resp') && isempty(dir([dirStrAnalysis '*Stim-Resp*']))
+    % === do we need to run a stim response curve?
+    if contains(exptTable.Description(iList),'stim/resp') && isempty(dir([dirStrAnalysis '*_peakData*']))
         exptTable.needStimResp(iList) = true;
     else
         exptTable.needStimResp(iList) = false;
     end
-    
-    % are magnet data imported?
-    [exptTable] = magnetFileScan(dirStrAnalysis,exptTable,iList);
-    % is video analyzed (if it exists)?
-    [exptTable] = videoFileScan(dirStrRawData,dirStrAnalysis,exptTable,iList);
+    % === are magnet data imported? 
+    [exptTable] = magnetFileScan(dirStrAnalysis,exptTable,iList); % local function below
+    % === is video analyzed (if it exists)?
+    [exptTable] = videoFileScan(dirStrRawData,dirStrAnalysis,exptTable,iList); % local function below
 end   
 
-% STEP 1 MOVE TDT TANK FILE TO W DRIVE
+% === MOVE TDT TANK FILE TO W DRIVE
 operatingList = exptTable.DateIndex(exptTable.RECAEmpty == false);
 for iList = 1:length(operatingList)
     date = operatingList{iList}(1:5);
@@ -119,7 +94,6 @@ for iList = 1:length(operatingList)
         disp('moveDataRecToRaw failed.');
     end
 end
-
 operatingList = exptTable.DateIndex(exptTable.RECBEmpty == false);
 for iList = 1:length(operatingList)    
     date = operatingList{iList}(1:5);
@@ -133,7 +107,7 @@ for iList = 1:length(operatingList)
     end
 end
 
-% STEP 2 CONVERT FROM TDT TANK FILE TO MATLAB FORMAT, SAVE TO MEMORYBANKS
+% === CONVERT FROM TDT TANK FILE TO MATLAB FORMAT, SAVE TO MEMORYBANKS
 operatingList = exptTable.DateIndex(exptTable.Imported == false);
 for iList = 1:length(operatingList)    
     date = operatingList{iList}(1:5);
@@ -141,23 +115,17 @@ for iList = 1:length(operatingList)
     [tankDate,tankIndex] = getIsTank(date,index);
     disp(['Found Raw data to IMPORT from W to mat format on M at ' date '-' index ]);
     importDataSynapse_dual(date,index,[tankDate '-' tankIndex]);
-%     importDataSynapse(date,index); % may want to add a way to force it to re-import
 end
 
-% STEP 2.5 CHECK IF WE NEED TO RUN A STIM RESP CURVE AND DO SO
+% === CHECK IF WE NEED TO RUN A STIM RESP CURVE AND DO SO
 operatingList = exptTable.DateIndex(exptTable.needStimResp == true);
 for iList = 1:length(operatingList)    
     date = operatingList{iList}(1:5);
     index = operatingList{iList}(7:9);
-%     [~,tankIndex,isTank] = getIsTank(date,index);
-%     notank = false; %default should assume the tank is the index
-%     if ~contains(index,tankIndex)
-%         notank = true;
-%     end
     evokedStimResp_userInput(date,index);
 end
 
-% STEP 3 CHECK FOR MAGNET DATA, SAVE TO MEMORYBANKS
+% === CHECK FOR MAGNET DATA, SAVE TO MEMORYBANKS
 operatingList = exptTable.DateIndex(exptTable.Magnets == false);
 for iList = 1:length(operatingList)
     date = operatingList{iList}(1:5);
@@ -173,8 +141,7 @@ for iList = 1:length(listOfAnimalExpts)
     [exptTable] = magnetFileScan(dirStrAnalysis,exptTable,iList);
 end
 
-
-% STEP 3.5 RUN THE MAGNET EVENT VERIFIER, SAVE TO MEMORYBANKS\
+% === RUN THE MAGNET EVENT VERIFIER, SAVE TO MEMORYBANKS\
 if runMagnetDataSaving
 operatingList = exptTable.DateIndex(exptTable.Magnets == true);
 for iList = 1:length(operatingList)
@@ -185,31 +152,7 @@ for iList = 1:length(operatingList)
 end
 end
 
-% STEP 4 RUN ANY WHOLE DAY ANALYSIS IF IT NEEDS TO BE RUN
-% 'Baseline / stim' 'Post LTP / stim' 'Post LTD / stim'
-
-
-
-
-
-% since we may have moved and analyzed a few things we can re-establish our list
-for iList = 1:length(listOfAnimalExpts)
-    [dirStrAnalysis,dirStrRawData,~,~] = getPaths(path,date,index);
-    [exptTable] = videoFileScan(dirStrRawData,dirStrAnalysis,exptTable,iList);
-end
-% % STEP 3: RUN MOVEMENT ANALYSIS
-% try
-%     runBatchROIAnalysis(animal) % ADDED 5/13/2019
-% catch
-%     warning('failed to run movement analysis');
-% end
-
-
-% consider running EphysAnalysisScript if applicable
-
-
-
-
+% === SAVE AN UPDATED SUMMARY FILE FOR THIS ANIMAL
 summaryLocation = ['M:\PassiveEphys\AnimalData\' animal '\' ];
 if ~exist(summaryLocation,'dir')
     mkdir(summaryLocation);
@@ -217,28 +160,14 @@ end
 save([summaryLocation animal '-exptSummary'],'exptTable');
 
 
-
-% 
-% plotType = 'timeseries';
-% fileName = ['M:\PassiveEphys\AnimalData\' animal '\' plotType];
-% print('-painters',fileName,'-r300','-dpng');
-% try
-%     desc = [animal ];
-%     sendSlackFig(desc,[fileName '.png']);
-% catch
-%     disp('failed to plot time series');
-% end
-% 
-
-
-
 % % TO DO LIST
-% Problem files: "21326-001""21326-000" "21408-000" "21408-001"      "21409-008" "21409-009";  
-% if this is working for all data types and animals, we can get rid of the following: 
-% fileMaint_Mag(exptDate,Animal1,Animal2)
-% fileMaint_dual(animal,hasTankIndices)
-% maybe saveMagnetDataFiles(exptDate,Animal1,Animal2);
-
+% 1. if this is working for all data types and animals, we can get rid of the following: 
+%    fileMaint_Mag(exptDate,Animal1,Animal2)
+%    fileMaint_dual(animal,hasTankIndices)
+%    maybe saveMagnetDataFiles(exptDate,Animal1,Animal2);
+% 2. incorporate WHOLE DAY ANALYSIS below?
+% 3. incorporate MOVEMENT ANALYSIS below?
+% 4. incorporate spontaneous analysis from Ziyad below?
 
 % TODO 7/7/21 ZS SG
 % incorporate spontaneous analyses
@@ -251,19 +180,27 @@ save([summaryLocation animal '-exptSummary'],'exptTable');
         % i.e. a version without field trip functions/streamlined code in
         % the style of the runAnalysis in the ECoG repo
 
+% === RUN ANY WHOLE DAY ANALYSIS IF IT NEEDS TO BE RUN
+% work in progress. we need a way to confirm indecies are appropriately grouped
+% 'Baseline / stim' 'Post LTP / stim' 'Post LTD / stim'
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+
+% === RUN MOVEMENT ANALYSIS
+% since we may have moved and analyzed a few things we can re-establish our list
+% for iList = 1:length(listOfAnimalExpts)
+%     [dirStrAnalysis,dirStrRawData,~,~] = getPaths(path,date,index);
+%     [exptTable] = videoFileScan(dirStrRawData,dirStrAnalysis,exptTable,iList);
+% end
+% try
+%     runBatchROIAnalysis(animal) % ADDED 5/13/2019
+% catch
+%     warning('failed to run movement analysis');
+% end
+
 end
 
 
-
-
-
-
-
-
-
-
-
-
+% === BEGIN LOCAL FUNCTIONS
 
 function [dirStrAnalysis,dirStrRawData,dirStrRecSourceA,dirStrRecSourceB] = getPaths(path,date,index)
     dirStrAnalysis = [path.dirStrAnalysisROOT '20' date(1:2) '\' date '-' index '\'];
@@ -309,8 +246,7 @@ catch
     elseif strcmp(animal(1:3),'DRE')
         setElectrodeLocationFromAnimal('DREADD07',animal);
     elseif strcmp(animal(1:2),'ZZ')
-        %setElectrodeLocationFromAnimal('DREADD07',animal);
-        error('please enter probe configuration for this animal');
+        error('please enter probe configuration for this animal'); % ZZ animals tend to be unique
     elseif strcmp(animal(1:3),'Mag')
         setElectrodeLocationFromAnimal('Mag003',animal);
     else
@@ -328,7 +264,7 @@ end
 
 
 
-
+% old filemaint steps. likely will not use these, but handy references
 
 %     % %% MUA CHECK %% might want to fix up 'artifact rejection' option - some need it, some don't
 %     if ~isempty(strfind(descOfAnimalExpts{iList}{:},'Stim'))
@@ -344,7 +280,6 @@ end
 %         end
 %     end
 
-% 
 % % STEP 4: RUN SPEC ANALYSIS
 % try
 %     disp('starting spec analysis') ; 
@@ -376,5 +311,12 @@ end
 % saveBatchParamsAndEphysConn(gBatchParams,gMouseEphys_conn);
 % toc
 
-
-
+% plotType = 'timeseries';
+% fileName = ['M:\PassiveEphys\AnimalData\' animal '\' plotType];
+% print('-painters',fileName,'-r300','-dpng');
+% try
+%     desc = [animal ];
+%     sendSlackFig(desc,[fileName '.png']);
+% catch
+%     disp('failed to plot time series');
+% end

@@ -1,11 +1,11 @@
-function [electrodeLocation,map] = getElectrodeLocationFromDateIndex(exptDate,exptIndex)
+function [electrodeLocation,map,stmInfo] = getElectrodeLocationFromDateIndex(exptDate,exptIndex)
 % return the channel map DESCRIPTIONS (DON'T confuse with channel ordering
 % function getChannelMap()) as a cell array (18 cells long), with a 
 % specific cell describing, e.g., 'EEG R front' or 'LFP L V2'.  Array will
 % be 18 long: 16 channels (in 1:16 order) and Ground and Reference location
 % as 17 and 18
-%exptDate = '21602'
-%exptIndex = '001'
+%exptDate = '21727'
+%exptIndex = '002'
 if iscell(exptDate)
     exptDate = exptDate{1};
 end
@@ -23,11 +23,14 @@ if isempty(probeRequestText)
     error('enter probe information please')
 end
 channelDesc = probeRequestText{3};
+stmInfo = probeRequestText{7};
 delimPoints = strfind(channelDesc, ','); % can't use splitstr() because some ',' might be empty (tied to ground)
 delimPoints = [0 delimPoints length(channelDesc)+1];
 for iDelim = 1:length(delimPoints)-1 % -1 because we added an extra point above
     electrodeLocation{iDelim,:} = channelDesc(delimPoints(iDelim)+1:delimPoints(iDelim+1)-1);
 end
+
+
 
 query2 = ['SELECT animalName FROM `animals` WHERE `animalID` = ' ''''  num2str(animalID) ''''];
 animal = fetchAdjust(dbConn,query2);

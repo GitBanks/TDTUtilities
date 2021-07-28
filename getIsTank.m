@@ -43,7 +43,7 @@ end
 if size(dirCheck,1)==2 || isempty(dir([dirStrRawData '*_Cam2*']))
     prevIndexDirCheck = dir(blockLocation);
     if isempty(prevIndexDirCheck) % if this is true, we've really derailed somewhere.  stop here.
-        error('previous index doesn''t exist - something is wrong');
+        error(['previous index ' blockLocation ' doesn''t exist - something is wrong.  Was video recorded?' ]);
     end
     %dir([blockLocation '*_Cam*']);
     vidFileDir = dir([blockLocation '*_Cam2*']);

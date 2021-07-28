@@ -55,6 +55,8 @@ for iExpt = 1:nExpts
     [dataTemp,dTRec] = getSynapseSingleStimData(exptDate,indexOut,tPreStim,tPostStim,isTank);
     evDataSet(iExpt) = dataTemp;
     nTrials(iExpt) = size(evDataSet(iExpt).sub,2);
+    
+    movementsPreStim(iExpt).events = plotStimAndMovement(exptDate,exptIndices{iExpt});
 end
 
 
@@ -285,6 +287,9 @@ end
 figureName = ['Plasticity peaks time series - ' animalName '_' exptDate];
 thisFigure = figure('Name',figureName);
 plotStimTimes = allStimTimes/60; %Convert seconds to minutes
+
+movementsPreStim(iExpt).events
+
 for iROI = 1:nROIs
     plotColor = {'or','ob','ok'};
     subplot(nROIs,1,iROI);
@@ -361,4 +366,19 @@ try
 catch
     disp(['failed to upload ' fileName ' to Slack']);
 end
+%%
+
+iROI = 1;
+movement = [movementsPreStim(1).events movementsPreStim(2).events movementsPreStim(3).events];
+oneROI = allAdjIPAmpls(iROI,:);
+figure;
+scatter(movement,oneROI);
+ylabel('response peak');
+xlabel('movement/magnet magnitude');
+
+
+
+
+
+
 
