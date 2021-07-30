@@ -40,11 +40,16 @@ function [S] = listOfDates(varargin)
 S.existingList = getExperimentsByAnimal(S.animalName);
 for i = 1:size(S.existingList,1)
     justDates(i,1) = {S.existingList{i,1}(1:5)};
+    description(i,1) = S.existingList{i,2};
 end
-S.uniqueExptDates = unique(justDates);
+[S.justDates,ia,ic] = unique(justDates);
+description = description(ia);
+for i = 1:size(S.justDates,1)
+    S.uniqueExptDates{i,:} = [S.justDates{i} ': ' description{i}(1:10) '; n=' num2str(sum(ic==i))];
+end
 S.ls = uicontrol('style','list',...
     'units','pix',...
-    'position',[10 10 150 610],...
+    'position',[10 10 290 610],...
     'string', S.uniqueExptDates,...
     'fontsize',10);
 S.pb = uicontrol('style','push',...
@@ -64,8 +69,8 @@ S.pb = uicontrol('style','push',...
 function [S] = addGlobal(varargin)
 [S] = varargin{3};
 S.userDateSelection = get(S.ls,'Value');
-display(['Loading ' S.uniqueExptDates{S.userDateSelection}])
-S.exptByDateList = getExperimentsByAnimalAndDate(S.animalName,S.uniqueExptDates{S.userDateSelection});
+display(['Loading ' S.justDates{S.userDateSelection}])
+S.exptByDateList = getExperimentsByAnimalAndDate(S.animalName,S.justDates{S.userDateSelection});
 S.indexRange = 1:size(S.exptByDateList,1);
 [S] = updateDisplayList(S);
 
@@ -95,7 +100,7 @@ stimValSelection = num2str(get(S.ep,'String'));
 for iList = 1:length(userIndexSelection)
     newDisplayVal = [S.uniqueExptDates{S.userDateSelection} ' . ' S.exptIndex{userIndexSelection(iList)} ' . ' S.Preselects{stimParamSelection} ' . ' stimValSelection];
     display(newDisplayVal);
-    setGlobalStimParams(S.uniqueExptDates{S.userDateSelection},S.exptIndex{userIndexSelection(iList)},S.Preselects{stimParamSelection},stimValSelection);
+    setGlobalStimParams(S.justDates{S.userDateSelection},S.exptIndex{userIndexSelection(iList)},S.Preselects{stimParamSelection},stimValSelection);
 end
 S.indexRange = userIndexSelection;
 [S] = updateDisplayList(S);
@@ -119,7 +124,7 @@ for i = S.indexRange % if called from addParam, should just be one value.
     S.exptDesc(i) = S.exptByDateList{i,2};
     S.exptIndex{i,:} = S.exptByDateList{i,1}(7:9);
     
-    [nGlobalPars,globalParNames,globalParVals] = getGlobalStimParams(S.uniqueExptDates{S.userDateSelection},S.exptIndex{i}); 
+    [nGlobalPars,globalParNames,globalParVals] = getGlobalStimParams(S.justDates{S.userDateSelection},S.exptIndex{i}); 
     
     
     S.nGlobalPars{i,:} = nGlobalPars;
@@ -146,7 +151,7 @@ end
 S.lsX = uicontrol('style','list',...
     'units','pix',...
     'max',20,'min',1,...
-    'position',[160 10 470 610],...
+    'position',[301 10 470 610],...
     'string', S.listDisplayDetails,...
     'fontsize',10);
 

@@ -1,4 +1,4 @@
-function stimRespPeakAnalysisAcrossDays(animal)
+function [plotH] = stimRespPeakAnalysisAcrossDays(animal,subset)
 % test params
 % animal = 'ZZ10';
 
@@ -30,6 +30,33 @@ end
 % let's prune our list to just the stim/resp expts
 stimRespExptTable = exptTable(exptTable.StimRespData == 1,:);
 
+%here's a way to prune further: a subset of experiments from a user input
+% subset={
+% '21716'
+% '21717'
+% '21718'
+% '21719'
+% '21720'
+% '21721'
+% '21722'
+% '21723'
+% };
+if exist('subset','var') % if we're working with a subset, we can get some specifics
+    stimRespExptTable = stimRespExptTable(contains(stimRespExptTable.DateIndex,subset),:);
+
+
+
+    for iDay = 1:size(subset,1)
+        treats = getTreatmentInfo(S.animalName,subset{iDay});
+        if sum(treats.injIndex) == 1
+            listQ = getExperimentsByAnimalAndDate(S.animalName,subset{iDay});
+            injectionIndex = listQ{treats.injIndex};
+        end
+    end
+
+
+end
+
 % step through the new list
 nStimResp = size(stimRespExptTable,1);
 nROI = 3;
@@ -52,10 +79,10 @@ for iList = 1:nStimResp
 end
 
 
-figure();
+plotH = figure();
 for iROI = 1:nROI
     subtightplot(4,1,iROI);
-    plot(plotMatrix(:,iROI));
+    plot(plotMatrix(:,iROI),'x-');
     if iROI == 1
         title([animal ' stim/resp peak value over time']);
     end
