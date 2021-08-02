@@ -43,46 +43,64 @@ stimRespExptTable = exptTable(exptTable.StimRespData == 1,:);
 % };
 if exist('subset','var') % if we're working with a subset, we can get some specifics
     stimRespExptTable = stimRespExptTable(contains(stimRespExptTable.DateIndex,subset),:);
-
-
-
+    % check each day for drug/injection information
+    disp('Loading drug information for selected experiments.');
+    tic;
     for iDay = 1:size(subset,1)
-        treats = getTreatmentInfo(S.animalName,subset{iDay});
+        treats = getTreatmentInfo(animal,subset{iDay});
         if sum(treats.injIndex) == 1
-            listQ = getExperimentsByAnimalAndDate(S.animalName,subset{iDay});
+            listQ = getExperimentsByAnimalAndDate(animal,subset{iDay});
             injectionIndex = listQ{treats.injIndex};
+            drugInj = treats.pars{treats.injIndex};
         end
+        msg = toc;
+        display(['loaded ' subset{iDay} ' with ' num2str(msg) ' seconds elapsed.']);
     end
-
-
+%     % Matt suggested index alone may be sufficient.  Here's how we could
+%     % grab exact times, though
+%     [drugIndexDur,drugTimeOfDay] = getTimeAndDurationFromIndex(injectionIndex(1:5),injectionIndex(7:9));
+%     [indexDur,timeOfDay] = getTimeAndDurationFromIndex(thisDate,thisIndex);
+    exptList = stimRespExptTable.DateIndex;
+    exptList(end+1) = injectionIndex;
+    exptList = sort(exptList);
+    
 end
 
 % step through the new list
-nStimResp = size(stimRespExptTable,1);
+nStimResp = size(exptList,1);
 nROI = 3;
 plotMatrix = zeros(nStimResp,nROI);
-
-exptList = stimRespExptTable.DateIndex;
+if ~exist('exptList','var')
+    exptList = stimRespExptTable.DateIndex;
+end
 for iList = 1:nStimResp
     exptDate = exptList{iList}(1:5);
     exptIndex = exptList{iList}(7:9);
     dirStrAnalysis = [root exptDate(1:2) '\' exptDate '-' exptIndex '\'];
     %[exptInfo] = getMetadata(exptDate,exptIndex);  % we're not doing anything?
-    load([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData');
-    for iROI = 1:size(peakData.ROILabels,1)
-%         iPeak = 1;
-%         iStim = 1;
-        [V,I] = max(max(peakData.pkVals(iROI).data(:,:)));
-%         plotMatrix(iList,iROI) = peakData.stimArrayNumeric(I);
-        plotMatrix(iList,iROI) = V;
+    try 
+        load([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData');
+        for iROI = 1:size(peakData.ROILabels,1)
+            [V,~] = max(max(peakData.pkVals(iROI).data(:,:)));
+            plotMatrix(iList,iROI) = V;
+        end
+    catch
+        for iROI = 1:nROI
+            plotMatrix(iList,iROI) = NaN;
+        end
     end
 end
 
 
+injectionsHere = isnan(plotMatrix);
+injIndex = find((injectionsHere(:,1)==true));
 plotH = figure();
 for iROI = 1:nROI
     subtightplot(4,1,iROI);
     plot(plotMatrix(:,iROI),'x-');
+    xl = xline(injIndex,'.',drugInj,'DisplayName',drugInj,'LineWidth',6,'Interpreter', 'none');
+    xl.LabelVerticalAlignment = 'middle';
+    
     if iROI == 1
         title([animal ' stim/resp peak value over time']);
     end
