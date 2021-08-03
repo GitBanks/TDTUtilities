@@ -65,12 +65,12 @@ function [S] = plotPeaksNow(varargin)
 [S] = varargin{3};
 S.userDateSelection = get(S.ls,'Value');
 subset = S.justDates(S.userDateSelection);
-plotH = stimRespPeakAnalysisAcrossDays(S.animalName,subset);
+stimRespPeakAnalysisAcrossDaysplotH = stimRespPeakAnalysisAcrossDays(S.animalName,subset);
 % figure(plotH);
 % title('display Test')
 
 
-
+% hi!
 
 
 

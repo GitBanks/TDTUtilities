@@ -27,6 +27,7 @@ for iList = 1:length(listOfAnimalExpts)
         exptTable.StimRespData(iList) = false;
     end
 end
+
 % let's prune our list to just the stim/resp expts
 stimRespExptTable = exptTable(exptTable.StimRespData == 1,:);
 
@@ -63,16 +64,16 @@ if exist('subset','var') % if we're working with a subset, we can get some speci
     exptList = stimRespExptTable.DateIndex;
     exptList(end+1) = injectionIndex;
     exptList = sort(exptList);
-    
 end
+if ~exist('exptList','var') % this will run if we didn't already define 
+    exptList = stimRespExptTable.DateIndex;
+end
+
 
 % step through the new list
 nStimResp = size(exptList,1);
 nROI = 3;
 plotMatrix = zeros(nStimResp,nROI);
-if ~exist('exptList','var')
-    exptList = stimRespExptTable.DateIndex;
-end
 for iList = 1:nStimResp
     exptDate = exptList{iList}(1:5);
     exptIndex = exptList{iList}(7:9);
@@ -82,7 +83,11 @@ for iList = 1:nStimResp
         load([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData');
         for iROI = 1:size(peakData.ROILabels,1)
             [V,~] = max(max(peakData.pkVals(iROI).data(:,:)));
-            plotMatrix(iList,iROI) = V;
+            if isempty(V) % if someone didn't select a peak
+                plotMatrix(iList,iROI) = 0;
+            else
+                plotMatrix(iList,iROI) = V;
+            end
         end
     catch
         for iROI = 1:nROI
@@ -109,7 +114,7 @@ for iROI = 1:nROI
     xlim([0,nStimResp+1]);
     xticks(1:nStimResp);
     if iROI == 3
-        set(gca,'xticklabel',stimRespExptTable.DateIndex);
+        set(gca,'xticklabel',exptList);
         xtickangle( 45 );
     end
 end
