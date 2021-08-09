@@ -4,9 +4,10 @@ function evokedStimResp_userInput(exptDate,exptIndex)
 % User-defined parameters
 
 if ~exist('exptDate','var') || ~exist('exptIndex','var')
-    exptDate = '21601'; 
-    exptIndex = '009';
-    
+%     exptDate = '21601'; 
+%     exptIndex = '009';
+    exptDate = '21716'; 
+    exptIndex = '003';
     
 %     exptIndex = '008'; noTank = false;
 %	exptIndex = '004'; noTank = false;
@@ -35,7 +36,8 @@ avgWinTime = 1.e-3; %sec;
 % Time window re stim time to calculate baseline value that is subtracted from peak values
 baseWin = [-5,-0.5]*1.e-3; %sec; 
 %hardcoded location - not ideal, but this works for now
-outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+fileString = [exptDate '-' exptIndex];
+outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' fileString '\'];
 
 animal = getAnimalByDateIndex(exptDate,exptIndex);
 outPath2 = ['M:\PassiveEphys\AnimalData\' animal '\'];
@@ -117,6 +119,27 @@ for iROI = 1:nROIs
         plotMin(iROI) = min([plotMin(iROI),prctile(stimSet(iStim).subMean(iROI,startSearchIndex:end),1)]);
     end
 end
+%%
+% try loading previously saved data
+if isfile([outPath2 animal '_peakDataOverTime.mat'])
+    load([outPath2 animal '_peakDataOverTime'],'peakDataOverTime');
+    structureList = fields(peakDataOverTime);
+    p = struct;
+    for iROI = 1:nROIs
+        tPkList = [];
+        yPkList = [];
+        for iii = 1:length(structureList)
+            tPkList = vertcat(tPkList,peakDataOverTime.(structureList{iii}).peakData.pkSearchData(iROI).tPk);
+            yPkList = vertcat(yPkList,peakDataOverTime.(structureList{iii}).peakData.pkSearchData(iROI).yPk);
+        end
+        p(iROI).tPkList = tPkList;
+        p(iROI).yPkList = yPkList;
+    end
+end
+
+
+
+
 %% Plot average traces
 ampLabel = [];
 for iStim = 1:nStims
@@ -139,6 +162,9 @@ for iROI = 1:nROIs
     for iStim = 1:length(stimSet)
         plot(plotTimeArray,stimSet(iStim).subMean(iROI,:));
     end
+    if exist('tPkList','var')
+        plot(p(iROI).tPkList,p(iROI).yPkList,'*b','MarkerSize',8);
+    end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
     ax.YLim = [1.05*plotMin(iROI),1.05*plotMax(iROI)];
@@ -152,6 +178,14 @@ for iROI = 1:nROIs
         legend('boxoff');
     end
 end
+
+% do we want to load in peaks from other experiments here?
+
+
+
+
+
+
 
 %% Have user click on peaks in each subplot to inform peak search windows
 msgFig = msgbox({'Click once in each subplot to indicate approximate location of peaks.';...
@@ -206,21 +240,20 @@ for iROI = 1:nROIs
             else
                 [~, pkIndex] = min(tempMn(tempIndA(1):tempIndA(2)));
             end
-%             plot(tempMn(tempIndA(1):tempIndA(2)));
-%             plot(pkIndex,yVal,'+');
-            baseVal = ...
-                mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
+            baseVal = mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2))); % this is the baseline pre stim 
             tempIndB(1) = actualStimIndex+pkSearchIndices(1)+pkIndex-avgWinIndex;
             tempIndB(2) = actualStimIndex+pkSearchIndices(1)+pkIndex+avgWinIndex;
             pkVals(iROI).data(iPk,iStim) = mean(tempMn(tempIndB(1):tempIndB(2))) - baseVal;
+            pkVals(iROI).peakTimeCalc(iPk,iStim) = (pkIndex+tempIndA(1))*dTRec-tPreStim;
+            pkVals(iROI).baseVal(iPk,iStim) = baseVal;
         end
     end
 end
 
 
-%% Plot avg traces and stim-resp curves (start plotting)
-FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
-thisFigure = figure('Name',FigName);
+%% 
+% set up a few more labels and configurations for the plot
+
 ampLabel = [];
 for iStim = 1:nStims
     if iscell(stimArray)
@@ -249,70 +282,95 @@ peakData.ROILabels = ROILabels; %corresponding labels
 peakData.stimArrayNumeric = stimArrayNumeric;
 peakData.pkVals = pkVals; % Response magnitude 
 peakData.stimTimes = stimTimes; % Time of stim relative to start of file
+peakData.plotMin = plotMin;
+peakData.plotMax = plotMax;
+    
+for iStim = 1:length(stimSet)
+    avgTraces(iStim).stimSet = stimSet(iStim).subMean;
+    avgTraces(iStim).stimArrayNumeric = stimArrayNumeric(iStim);
+    avgTraces(iStim).ampLabel = ampLabel{iStim};
 
-save([outPath exptDate '-' exptIndex '_peakData'],'peakData');
-
-
-
-
-
-%%
-% continue plotting
-for iROI = 1:nROIs
-    % Plot avg traces
-    subPlt(iROI) = subplot(2,nROIs,iROI);
-    hold on
-    for iStim = 1:length(stimSet)
-        plot(plotTimeArray,stimSet(iStim).subMean(iROI,:));
-    end
-    for iUI = 1:length(pkSearchData(iROI).tPk)
-        plot(pkSearchData(iROI).tPk(iUI),pkSearchData(iROI).yPk(iUI),'+r','MarkerSize',12);
-    end
-    ax = gca;
-    ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [1.05*plotMin(iROI),1.05*plotMax(iROI)];
-    ax.XLabel.String = 'time(sec)';
-    if iROI == 1
-        ax.YLabel.String = 'avg dataSub (V)';
-    end
-    ax.Title.String = ROILabels{iROI};
-    if iROI == nROIs
-        %legend(ampLabel,'FontSize',6,'Location','NorthEast');
-        %legend('boxoff');
-    end
 end
+save([outPath fileString '_peakData'],'peakData','plotTimeArray','avgTraces');
 
-for iROI = 1:nROIs
-    subplot(2,nROIs,nROIs+iROI)
-    hold on
-    legendLabs = [];
-    nPks = size(pkVals(iROI).data,1);
-    for iPk = 1:nPks
-        legendLabs{iPk} = ['Pk ' num2str(iPk)];
-    end
-    for iPk = 1:nPks
-        plot(stimArrayNumeric,pkSearchData(iROI).pkSign(iPk)*pkVals(iROI).data(iPk,:),'-o');
-    end
-    ax = gca;
-    ax.XLabel.String = 'Stim intensity (\muA)';
-    if iROI == 1
-        ax.YLabel.String = 'Pk resp (V)';
-    end
-    legend(legendLabs,'FontSize',6,'Location','NorthWest');
-    legend('boxoff');
+
+% also save long term data
+% 
+if ~exist('peakDataOverTime','var')
+    peakDataOverTime = struct;
 end
-saveas(thisFigure,[outPath FigName]);
-saveas(thisFigure,[outPath2 FigName]);
-
-fileName = ['M:\PassiveEphys\AnimalData\' animal '\' FigName];
-print('-painters',fileName,'-r300','-dpng');
-try
-    desc = [FigName '  @Zarmeen Zahid'];
-    sendSlackFig(desc,[fileName '.png']);
-catch
-    disp(['failed to upload ' fileName ' to Slack']);
-end
+peakDataOverTime.(['expt' strrep(fileString,'-','')]).peakData = peakData;
+save([outPath2 animal '_peakDataOverTime'],'peakDataOverTime');
 
 
 
+
+
+%% 
+% plotting now contained here (so we can call it from other programs)
+sendToSlack = true;
+plotCalculatedPeaks = false;
+plotStimRespByDateIndex(exptDate,exptIndex,sendToSlack,plotCalculatedPeaks)
+
+% %
+% % plotting
+% FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
+% thisFigure = figure('Name',FigName);
+% for iROI = 1:nROIs
+%     % Plot avg traces
+%     subPlt(iROI) = subplot(2,nROIs,iROI);
+%     hold on
+%     for iStim = 1:length(stimSet)
+%         plot(plotTimeArray,stimSet(iStim).subMean(iROI,:));
+%     end
+%     for iUI = 1:length(pkSearchData(iROI).tPk)
+%         plot(pkSearchData(iROI).tPk(iUI),pkSearchData(iROI).yPk(iUI),'+r','MarkerSize',12);
+%         for iStim = 1:length(stimSet)
+%             plot(pkSearchData(iROI).peakTimeCalc(iUI,iStim),pkVals(iROI).data(iUI,iStim),'+b','MarkerSize',8);
+%         end
+%     end
+%     ax = gca;
+%     ax.XLim = [-tPreStim,tPostStim];
+%     ax.YLim = [1.05*plotMin(iROI),1.05*plotMax(iROI)];
+%     ax.XLabel.String = 'time(sec)';
+%     if iROI == 1
+%         ax.YLabel.String = 'avg dataSub (V)';
+%     end
+%     ax.Title.String = peakData.ROILabels{iROI};
+%     if iROI == nROIs
+%         %legend(ampLabel,'FontSize',6,'Location','NorthEast');
+%         %legend('boxoff');
+%     end
+% end
+% 
+% for iROI = 1:nROIs
+%     subplot(2,nROIs,nROIs+iROI)
+%     hold on
+%     legendLabs = [];
+%     nPks = size(pkVals(iROI).data,1);
+%     for iPk = 1:nPks
+%         legendLabs{iPk} = ['Pk ' num2str(iPk)];
+%     end
+%     for iPk = 1:nPks
+%         plot(stimArrayNumeric,pkSearchData(iROI).pkSign(iPk)*pkVals(iROI).data(iPk,:),'-o');
+%     end
+%     ax = gca;
+%     ax.XLabel.String = 'Stim intensity (\muA)';
+%     if iROI == 1
+%         ax.YLabel.String = 'Pk resp (V)';
+%     end
+%     legend(legendLabs,'FontSize',6,'Location','NorthWest');
+%     legend('boxoff');
+% end
+% saveas(thisFigure,[outPath FigName]);
+% saveas(thisFigure,[outPath2 FigName]);
+% 
+% fileName = ['M:\PassiveEphys\AnimalData\' animal '\' FigName];
+% print('-painters',fileName,'-r300','-dpng');
+% try
+%     desc = [FigName '  @Zarmeen Zahid'];
+%     sendSlackFig(desc,[fileName '.png']);
+% catch
+%     disp(['failed to upload ' fileName ' to Slack']);
+% end
 
