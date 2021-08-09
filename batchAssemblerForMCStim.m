@@ -12,7 +12,7 @@ function batchAssemblerForMCStim(date,index)
 %index = '002';
 nTrialsPerStim = 30;
 %stimArray = [200,300,400,500,600,700];
-stimArray =  {'1-1','3-3','10-10','30-30','100-100','300-300','500-500','700-700','800-800'};
+stimArray =  {'1-1','3-3','10-10','30-30','100-100','300-300','500-500','700-700','800-800','850-850','900-900'};
 %stimArray =  {'300-300'};
 
 %must make a stim in MC to correspond with the above stims
