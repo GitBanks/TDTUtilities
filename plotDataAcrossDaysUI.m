@@ -1,8 +1,6 @@
 function plotDataAcrossDaysUI(animalName)
 
 % animalName = 'EEG53';
-
-
 dbConn = dbConnect();
 S.Preselects = unique(fetchAdjust(dbConn,'SELECT paramfield FROM global_stimparams')); 
 S.animalName = animalName;
@@ -26,10 +24,8 @@ uicontrol('style','text',...
     'fontweight','bold',...
     'string','list of expts');
 S = listOfDates(S);
-
 uiwait(S.fh);
 close(dbConn);
-
 
 function [S] = listOfDates(varargin)
 %setupExptToBeRun sets up experiment for the day based on selection from
@@ -54,11 +50,21 @@ S.ls = uicontrol('style','list',...
 S.pb = uicontrol('style','push',...
     'units','pix',...
     'posit',[100 650 80 30],... % we want to overwrite last button (to avoid repeating/changing a list) was% 'posit',[405 650 120 30],
-    'string', 'Plot peaks',...
+    'string', 'Plot Peaks',...
     'fontsize',10,...
     'callback',{@plotPeaksNow,S});
-
-
+S.pc = uicontrol('style','push',...
+    'units','pix',...
+    'posit',[180 650 80 30],... % we want to overwrite last button (to avoid repeating/changing a list) was% 'posit',[405 650 120 30],
+    'string', 'Rerun Day',...
+    'fontsize',10,...
+    'callback',{@rerunPeak,S});
+S.pd = uicontrol('style','push',...
+    'units','pix',...
+    'posit',[260 650 80 30],... % we want to overwrite last button (to avoid repeating/changing a list) was% 'posit',[405 650 120 30],
+    'string', 'Plot Day',...
+    'fontsize',10,...
+    'callback',{@plotSingleDay,S});
 
 
 function [S] = plotPeaksNow(varargin)
@@ -66,11 +72,28 @@ function [S] = plotPeaksNow(varargin)
 S.userDateSelection = get(S.ls,'Value');
 subset = S.justDates(S.userDateSelection);
 stimRespPeakAnalysisAcrossDaysplotH = stimRespPeakAnalysisAcrossDays(S.animalName,subset);
-% figure(plotH);
-% title('display Test')
 
 
-% hi!
+function [S] = rerunPeak(varargin)
+[S] = varargin{3};
+S.userDateSelection = get(S.ls,'Value');
+workingList = getExperimentsByAnimalAndDate(S.animalName,S.justDates{S.userDateSelection},'stim/resp');
+for iList = 1:size(workingList,1)
+    evokedStimResp_userInput(workingList{iList,1}(1:5),workingList{iList,1}(7:9));
+end
+
+function [S] = plotSingleDay(varargin)
+[S] = varargin{3};
+S.userDateSelection = get(S.ls,'Value');
+workingList = getExperimentsByAnimalAndDate(S.animalName,S.justDates{S.userDateSelection},'stim/resp');
+for iList = 1:size(workingList,1)
+    plotStimRespByDateIndex(workingList{iList,1}(1:5),workingList{iList,1}(7:9));
+end
+
+
+
+% M:\PassiveEphys\AnimalData\ZZ10\PeakRespOverTime
+
 
 
 

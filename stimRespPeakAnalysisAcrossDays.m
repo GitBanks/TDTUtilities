@@ -1,6 +1,16 @@
 function [plotH] = stimRespPeakAnalysisAcrossDays(animal,subset)
 % test params
-% animal = 'ZZ10';
+animal = 'ZZ10';
+subset={
+'21716'
+'21717'
+'21718'
+'21719'
+'21720'
+'21721'
+'21722'
+'21723'
+};
 
 % First set up our list. 
 % Note: This is nearly the same as fileMaint, so consider combining
@@ -31,17 +41,8 @@ end
 % let's prune our list to just the stim/resp expts
 stimRespExptTable = exptTable(exptTable.StimRespData == 1,:);
 
-%here's a way to prune further: a subset of experiments from a user input
-% subset={
-% '21716'
-% '21717'
-% '21718'
-% '21719'
-% '21720'
-% '21721'
-% '21722'
-% '21723'
-% };
+% This block is to find which of the expts is the injection index
+% here's a way to prune further: a subset of experiments from a user input
 if exist('subset','var') % if we're working with a subset, we can get some specifics
     stimRespExptTable = stimRespExptTable(contains(stimRespExptTable.DateIndex,subset),:);
     % check each day for drug/injection information
@@ -49,7 +50,7 @@ if exist('subset','var') % if we're working with a subset, we can get some speci
     tic;
     for iDay = 1:size(subset,1)
         treats = getTreatmentInfo(animal,subset{iDay});
-        if sum(treats.injIndex) == 1
+        if sum(treats.injIndex) == 1 %warning! this assumes 1 drug manipulation
             listQ = getExperimentsByAnimalAndDate(animal,subset{iDay});
             injectionIndex = listQ{treats.injIndex};
             drugInj = treats.pars{treats.injIndex};
@@ -57,47 +58,92 @@ if exist('subset','var') % if we're working with a subset, we can get some speci
         msg = toc;
         display(['loaded ' subset{iDay} ' with ' num2str(msg) ' seconds elapsed.']);
     end
-%     % Matt suggested index alone may be sufficient.  Here's how we could
-%     % grab exact times, though
-%     [drugIndexDur,drugTimeOfDay] = getTimeAndDurationFromIndex(injectionIndex(1:5),injectionIndex(7:9));
-%     [indexDur,timeOfDay] = getTimeAndDurationFromIndex(thisDate,thisIndex);
-    exptList = stimRespExptTable.DateIndex;
-    exptList(end+1) = injectionIndex;
-    exptList = sort(exptList);
-end
-if ~exist('exptList','var') % this will run if we didn't already define 
-    exptList = stimRespExptTable.DateIndex;
-end
-
+    
+end   
+exptList = stimRespExptTable.DateIndex;
 
 % step through the new list
-nStimResp = size(exptList,1);
+nIndex = size(exptList,1);
 nROI = 3;
-plotMatrix = zeros(nStimResp,nROI);
-for iList = 1:nStimResp
+%plotMatrix = zeros(nStimResp,nROI);
+data = struct();
+for iList = 1:nIndex
     exptDate = exptList{iList}(1:5);
     exptIndex = exptList{iList}(7:9);
     dirStrAnalysis = [root exptDate(1:2) '\' exptDate '-' exptIndex '\'];
-    %[exptInfo] = getMetadata(exptDate,exptIndex);  % we're not doing anything?
+    data(iList).index = exptList{iList};  
     try 
         load([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData');
         for iROI = 1:size(peakData.ROILabels,1)
-            [V,~] = max(max(peakData.pkVals(iROI).data(:,:)));
-            if isempty(V) % if someone didn't select a peak
-                plotMatrix(iList,iROI) = 0;
-            else
-                plotMatrix(iList,iROI) = V;
+            [data(iList).ROI(iROI).maxPeaks,~] = max(peakData.pkVals(iROI).data,[],2);
+            
+            
+            
+            data(iList).ROI(iROI).peakTimes = peakData.pkSearchData(iROI).tPk; % this will change
+            
+            
+            
+            if isempty(data(iList).ROI(iROI).maxPeaks) % if someone didn't select a peak
+                data(iList).ROI(iROI).maxPeaks = 0;
             end
         end
     catch
         for iROI = 1:nROI
-            plotMatrix(iList,iROI) = NaN;
+            data(iList).ROI(iROI).maxPeaks = NaN;
+            data(iList).ROI(iROI).peakTimes = NaN;
         end
     end
 end
 
 
+
+for iROI = 1:nROI
+    % we need to account for the number - if an inconsistant number of
+    % peaks were selected
+    for iList = 1:nIndex
+        sizeCheck(iList) = size(data(iList).ROI(iROI).peakTimes,1);
+    end
+    wrongSize = (sizeCheck ~= round(mean(sizeCheck)));
+    for iStep = 1:sum(wrongSize)
+        % we need to decide if we want to rerun the original program (to
+        % select the correct number of peaks), or if we want the program to
+        % use the 'common' times to find the peaks on the suspect day.
+        
+        
+        
+        evokedStimResp_userInput(exptDate,exptIndex)
+        
+        
+        
+        
+    end
+    
+    for iList = 1:nIndex
+        data(iList).ROI(iROI).peakTimes
+%     % Matt suggested index alone may be sufficient.  Here's how we could
+%     % grab exact times, though
+%     [drugIndexDur,drugTimeOfDay] = getTimeAndDurationFromIndex(injectionIndex(1:5),injectionIndex(7:9));
+%     [indexDur,timeOfDay] = getTimeAndDurationFromIndex(thisDate,thisIndex);
+%     [exptInfo] = getMetadata(exptDate,exptIndex);  % we're not doing anything?
+    end
+end
+
+
+% if there's an injection index, include it here
+if ~exist('injectionIndex','var') % this will run if we didn't already define 
+    exptList(end+1) = injectionIndex;
+    exptList = sort(exptList);
+end
+
+
+
+
+
+
+% this block will no longer work - need to update plotMatrix to structure 'data'
 injectionsHere = isnan(plotMatrix);
+
+
 injIndex = find((injectionsHere(:,1)==true));
 plotH = figure();
 for iROI = 1:nROI
@@ -111,8 +157,8 @@ for iROI = 1:nROI
     end
     ylabel([peakData.ROILabels(iROI)]);
     %ylim([0,900]);
-    xlim([0,nStimResp+1]);
-    xticks(1:nStimResp);
+    xlim([0,nIndex+1]);
+    xticks(1:nIndex);
     if iROI == 3
         set(gca,'xticklabel',exptList);
         xtickangle( 45 );
