@@ -310,7 +310,9 @@ save([outPath2 animal '_peakDataOverTime'],'peakDataOverTime');
 % plotting now contained here (so we can call it from other programs)
 sendToSlack = true;
 plotCalculatedPeaks = false;
-plotStimRespByDateIndex(exptDate,exptIndex,sendToSlack,plotCalculatedPeaks)
+plotLog = false;
+plotStimRespByDateIndex(exptDate,exptIndex,sendToSlack,plotCalculatedPeaks,plotLog)
+
 
 % %
 % % plotting

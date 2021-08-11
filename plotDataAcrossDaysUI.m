@@ -85,9 +85,12 @@ end
 function [S] = plotSingleDay(varargin)
 [S] = varargin{3};
 S.userDateSelection = get(S.ls,'Value');
+sendToSlack = false; 
+plotCalculatedPeaks = false; 
+plotLog = false; 
 workingList = getExperimentsByAnimalAndDate(S.animalName,S.justDates{S.userDateSelection},'stim/resp');
 for iList = 1:size(workingList,1)
-    plotStimRespByDateIndex(workingList{iList,1}(1:5),workingList{iList,1}(7:9));
+    plotStimRespByDateIndex(workingList{iList,1}(1:5),workingList{iList,1}(7:9),sendToSlack,plotCalculatedPeaks,plotLog);
 end
 
 
