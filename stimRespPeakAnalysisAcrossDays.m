@@ -1,18 +1,19 @@
 function [plotH] = stimRespPeakAnalysisAcrossDays(animal,subset)
-% test params
-animal = 'ZZ10';
-subset={
-'21716'
-'21717'
-'21718'
-'21719'
-'21720'
-'21721'
-'21722'
-'21723'
-};
+% % test params
+% animal = 'ZZ10';
+% subset={
+% '21716'
+% '21717'
+% '21718'
+% '21719'
+% '21720'
+% '21721'
+% '21722'
+% '21723'
+% };
 
-% First set up our list. 
+
+% % ========= Set up the list of animals to run ===============
 % Note: This is nearly the same as fileMaint, so consider combining
 % these. e.g., have this program instead take a list of expts from
 % fileMaint and just plot the stim/resp peaks
@@ -37,10 +38,8 @@ for iList = 1:length(listOfAnimalExpts)
         exptTable.StimRespData(iList) = false;
     end
 end
-
 % let's prune our list to just the stim/resp expts
 stimRespExptTable = exptTable(exptTable.StimRespData == 1,:);
-
 % This block is to find which of the expts is the injection index
 % here's a way to prune further: a subset of experiments from a user input
 if exist('subset','var') % if we're working with a subset, we can get some specifics
@@ -56,16 +55,15 @@ if exist('subset','var') % if we're working with a subset, we can get some speci
             drugInj = treats.pars{treats.injIndex};
         end
         msg = toc;
-        display(['loaded ' subset{iDay} ' with ' num2str(msg) ' seconds elapsed.']);
+        disp(['loaded ' subset{iDay} ' with ' num2str(msg) ' seconds elapsed.']);
     end
-    
 end   
 exptList = stimRespExptTable.DateIndex;
 
-% step through the new list
+
+% % % ========= step through the new list and perform calculations ========
 nIndex = size(exptList,1);
 nROI = 3;
-%plotMatrix = zeros(nStimResp,nROI);
 data = struct();
 for iList = 1:nIndex
     exptDate = exptList{iList}(1:5);
@@ -80,9 +78,6 @@ for iList = 1:nIndex
             
             
             data(iList).ROI(iROI).peakTimes = peakData.pkSearchData(iROI).tPk; % this will change
-            
-            
-            
             if isempty(data(iList).ROI(iROI).maxPeaks) % if someone didn't select a peak
                 data(iList).ROI(iROI).maxPeaks = 0;
             end
@@ -96,78 +91,86 @@ for iList = 1:nIndex
 end
 
 
-
+% % % ============= Here's a table of peaks and times =====================
+% this is necessary to be sure we're looking at the same peaks across days
+% we need to account for the number - if an inconsistant number of peaks
+% were selected we could be comparing incorrectly.  There was some previous
+% code that automatically reran the selection, but it's better to check
+% manually
+varTypes = {'string','string','double','double','double','double'};
+varNames = {'ROI','File','Peak1','Peak2','Peak3','Peak4'};
+sz = [length(exptList)*nROI length(varNames)];
+stimTimeTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 for iROI = 1:nROI
-    % we need to account for the number - if an inconsistant number of
-    % peaks were selected
     for iList = 1:nIndex
-        sizeCheck(iList) = size(data(iList).ROI(iROI).peakTimes,1);
-    end
-    wrongSize = (sizeCheck ~= round(mean(sizeCheck)));
-    for iStep = 1:sum(wrongSize)
-        % we need to decide if we want to rerun the original program (to
-        % select the correct number of peaks), or if we want the program to
-        % use the 'common' times to find the peaks on the suspect day.
-        
-        
-        
-        evokedStimResp_userInput(exptDate,exptIndex)
-        
-        
-        
-        
-    end
-    
-    for iList = 1:nIndex
-        data(iList).ROI(iROI).peakTimes
-%     % Matt suggested index alone may be sufficient.  Here's how we could
-%     % grab exact times, though
-%     [drugIndexDur,drugTimeOfDay] = getTimeAndDurationFromIndex(injectionIndex(1:5),injectionIndex(7:9));
-%     [indexDur,timeOfDay] = getTimeAndDurationFromIndex(thisDate,thisIndex);
-%     [exptInfo] = getMetadata(exptDate,exptIndex);  % we're not doing anything?
+        indexList = ((iROI-1)*nIndex)+iList;
+        stimTimeTable.ROI(indexList) = [peakData.ROILabels(iROI)];
+        stimTimeTable.File(indexList) = data(iList).index;
+        for iPeaks = 1:length(data(iList).ROI(iROI).peakTimes)
+            stimTimeTable.(['Peak' num2str(iPeaks)])(indexList) = data(iList).ROI(iROI).peakTimes(iPeaks);
+        end
     end
 end
+stimTimeTable
+disp('Please review this table and be sure the peak times and counts make sense.');
+pause(3);
 
 
+% ================== find the datetimes for recordings ====================
+% this section uses getTimeAndDurationFromIndex to get the exact datetime
+% of the index for the x axis. 
 % if there's an injection index, include it here
-if ~exist('injectionIndex','var') % this will run if we didn't already define 
-    exptList(end+1) = injectionIndex;
-    exptList = sort(exptList);
+if exist('injectionIndex','var') % this will run if we didn't already define 
+    strExpt = char(injectionIndex);
+    thisDate = strExpt(1:5);
+    thisIndex = strExpt(7:9);
+    dateExpt = houseConvertDateTo_dbForm(thisDate);
+    [~,timeOfDay] = getTimeAndDurationFromIndex(thisDate,thisIndex);
+    injMoment = datetime([dateExpt ' ' char(timeOfDay)]);
+end
+for ii = 1:length(exptList)
+    strExpt = char(exptList(ii));
+    thisDate = strExpt(1:5);
+    thisIndex = strExpt(7:9);
+    dateExpt = houseConvertDateTo_dbForm(thisDate);
+    [~,timeOfDay] = getTimeAndDurationFromIndex(thisDate,thisIndex);
+    exptSeq(ii) = datetime([dateExpt ' ' char(timeOfDay)]);
 end
 
 
-
-
-
-
-% this block will no longer work - need to update plotMatrix to structure 'data'
-injectionsHere = isnan(plotMatrix);
-
-
-injIndex = find((injectionsHere(:,1)==true));
+% ===================== finally we plot ===================================
 plotH = figure();
+manualPeakEntry = [2,1,1];
 for iROI = 1:nROI
-    subtightplot(4,1,iROI);
-    plot(plotMatrix(:,iROI),'x-');
-    xl = xline(injIndex,'.',drugInj,'DisplayName',drugInj,'LineWidth',6,'Interpreter', 'none');
+    subtightplot(3,1,iROI);
+    for ii = 1:length(data)
+        plotMatrix(ii,:) = data(ii).ROI(iROI).maxPeaks(manualPeakEntry(iROI));
+    end
+    plot(exptSeq,plotMatrix,'x-');
+    hold on
+    clear plotMatrix
+    xl = xline(injMoment,'.',drugInj,'DisplayName',drugInj,'LineWidth',1,'Interpreter', 'none');
     xl.LabelVerticalAlignment = 'middle';
-    
     if iROI == 1
         title([animal ' stim/resp peak value over time']);
     end
     ylabel([peakData.ROILabels(iROI)]);
     %ylim([0,900]);
-    xlim([0,nIndex+1]);
-    xticks(1:nIndex);
-    if iROI == 3
-        set(gca,'xticklabel',exptList);
-        xtickangle( 45 );
-    end
+    %xlim([0,nIndex+1]);
+    %xticks(1:nIndex);
+%     if iROI == 3
+%         set(gca,'xticklabel',exptList);
+%         xtickangle( 45 );
+%     end
 end
 
 
 
-
+% ======== stuff I really thought I'd need, but didn't ===========
+% keep this in case we do.  we've discussed a few features already 
+% [exptInfo] = getMetadata(exptDate,exptIndex);  % we're not doing anything with this?
+% outPath2 = ['M:\PassiveEphys\AnimalData\' animal '\'];
+% load([outPath2 animal '_peakDataOverTime'],'peakDataOverTime');
 
 
 
