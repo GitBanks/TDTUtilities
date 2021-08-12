@@ -1,4 +1,4 @@
-function [fname] = plotNewBandPowerTimeSeries_byDate(animalName,params,ephysData)
+function [fname] = plotNewBandPowerTimeSeries_byDate(animalName,params,ephysData,dateRange)
 % plot power time series of newly created animal (for use in fileMaint)
 % * animalName is the identifier for animal of interest (e.g. 'EEG118')
 % * gBatchParams is newly created batch params for animal (also works for the
@@ -11,7 +11,16 @@ function [fname] = plotNewBandPowerTimeSeries_byDate(animalName,params,ephysData
 
 chansNums = params.(animalName).ephysInfo.chanNums;
 chanLabels = params.(animalName).ephysInfo.chanLabels;
-dates = fieldnames(ephysData.(animalName));
+
+
+if ~exist('dateRange','var')
+    dates = fieldnames(ephysData.(animalName));
+else
+    for ii = 1:size(dateRange,1)
+        dates{ii} = ['date' dateRange{ii,:}];
+    end
+end
+
 bands = mouseEEGFreqBands.Names;
 outPath = 'M:\mouseEEG\Power\Individual Time Series\';
 
