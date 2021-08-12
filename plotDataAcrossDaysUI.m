@@ -5,7 +5,7 @@ dbConn = dbConnect();
 S.Preselects = unique(fetchAdjust(dbConn,'SELECT paramfield FROM global_stimparams')); 
 S.animalName = animalName;
 S.fh = figure('units','pixels',...
-    'position',[100 100 400 700],...
+    'position',[100 100 500 700],...
     'menubar','none',...
     'numbertitle','off',...
     'name','Create plots',...
@@ -65,6 +65,14 @@ S.pd = uicontrol('style','push',...
     'string', 'Plot Day',...
     'fontsize',10,...
     'callback',{@plotSingleDay,S});
+S.pe = uicontrol('style','push',...
+    'units','pix',...
+    'posit',[340 650 80 30],... % we want to overwrite last button (to avoid repeating/changing a list) was% 'posit',[405 650 120 30],
+    'string', 'bandPow',...
+    'fontsize',10,...
+    'callback',{@plotbandPow,S});
+
+
 
 
 function [S] = plotPeaksNow(varargin)
@@ -94,12 +102,24 @@ for iList = 1:size(workingList,1)
 end
 
 
+function [S] = plotbandPow(varargin)
+[S] = varargin{3};
+S.userDateSelection = get(S.ls,'Value');
+subset = S.justDates(S.userDateSelection);
+specFile = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\mouseEphys_out_LFP_psychedelics.mat';
+load(specFile,'mouseEphys_out','batchParams');
+plotNewBandPowerTimeSeries_byDate(S.animalName,batchParams,mouseEphys_out,subset);
+
+
+
+
+
+
+
+
+
 
 % M:\PassiveEphys\AnimalData\ZZ10\PeakRespOverTime
-
-
-
-
 
 % function [S] = addGlobal(varargin)
 % [S] = varargin{3};
