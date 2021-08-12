@@ -58,6 +58,7 @@ for iList = 1:length(listOfAnimalExpts)
 end
 % let's prune our list to just the stim/resp expts
 stimRespExptTable = exptTable(exptTable.StimRespData == 1,:);
+% =================== consider moving this to a standalone function =======
 % This block is to find which of the expts is the injection index
 % here's a way to prune further: a subset of experiments from a user input
 if exist('subset','var') % if we're working with a subset, we can get some specifics
@@ -75,7 +76,8 @@ if exist('subset','var') % if we're working with a subset, we can get some speci
         msg = toc;
         disp(['loaded ' subset{iDay} ' with ' num2str(msg) ' seconds elapsed.']);
     end
-end   
+end
+% =========================================================================
 exptList = stimRespExptTable.DateIndex;
 
 
