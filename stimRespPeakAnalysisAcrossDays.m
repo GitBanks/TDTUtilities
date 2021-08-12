@@ -7,7 +7,7 @@ if contains(animal,'ZZ10')
     manualPeakEntry = [2,1,1];
 end
 if contains(animal,'ZZ09')
-    manualPeakEntry = [1,1,1];
+    manualPeakEntry = [2,2,1];
 end
 if contains(animal,'ZZZZexample')
     manualPeakEntry = [1,1,1];
@@ -132,7 +132,6 @@ for iROI = 1:nROI
 end
 stimTimeTable
 disp('Please review this table and be sure the peak times and counts make sense.');
-pause(3);
 if ~exist('manualPeakEntry','var')
     error('Please set the peaks to use for this animal!')
 end
@@ -161,9 +160,54 @@ end
 
 
 % ===================== finally we plot ===================================
+% plotH = figure();
+% for iROI = 1:nROI
+%     subtightplot(3,1,iROI);
+%     for ii = 1:length(data)
+%         plotMatrix(ii,:) = data(ii).ROI(iROI).maxPeaks(manualPeakEntry(iROI));
+%     end
+%     plot(exptSeq,plotMatrix,'x-');
+%     hold on
+%     clear plotMatrix
+%     xl = xline(injMoment,'.',drugInj,'DisplayName',drugInj,'LineWidth',1,'Interpreter', 'none');
+%     xl.LabelVerticalAlignment = 'middle';
+%     if iROI == 1
+%         title([animal ' stim/resp peak value over time']);
+%     end
+%     ylabel([peakData.ROILabels(iROI)]);
+% end
+% 
+% figure();
+% for iROI = 1:nROI
+%     subtightplot(3,1,iROI);
+%     for ii = 1:length(data)
+%         plotTimeMatrix(ii,:) = data(ii).ROI(iROI).peakTimes(manualPeakEntry(iROI));
+%     end
+%     plot(exptSeq,plotTimeMatrix,'x-');
+%     hold on
+%     clear plotTimeMatrix
+%     xl = xline(injMoment,'.',drugInj,'DisplayName',drugInj,'LineWidth',1,'Interpreter', 'none');
+%     xl.LabelVerticalAlignment = 'middle';
+%     if iROI == 1
+%         title([animal ' stim/resp peak latency over time']);
+%     end
+%     ylabel([peakData.ROILabels(iROI)]);
+% end
+
+
+% optional display of one of the stim/resp peaks
+exptDate = exptList{1}(1:5);
+exptIndex = exptList{1}(7:9);
+outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+try
+    load([outPath exptDate '-' exptIndex '_peakData'],'peakData','plotTimeArray','avgTraces');
+catch
+    error(['Problem loading ' [outPath exptDate '-' exptIndex '_peakData']]);
+end
+
 plotH = figure();
 for iROI = 1:nROI
-    subtightplot(3,1,iROI);
+    subtightplot(3,10,(1:8)+10*(iROI-1));
     for ii = 1:length(data)
         plotMatrix(ii,:) = data(ii).ROI(iROI).maxPeaks(manualPeakEntry(iROI));
     end
@@ -176,24 +220,28 @@ for iROI = 1:nROI
         title([animal ' stim/resp peak value over time']);
     end
     ylabel([peakData.ROILabels(iROI)]);
+    
+    subtightplot(3,10,(9:10)+10*(iROI-1));
+    for iStim = 1:length(avgTraces)
+        plot(plotTimeArray,avgTraces(iStim).stimSet(iROI,:));
+        hold on;
+    end
+    ax = gca;
+    ax.XLim = [plotTimeArray(1),plotTimeArray(end)];
+    ax.YLim = [1.05*peakData.plotMin(iROI),1.05*peakData.plotMax(iROI)];
+    ax.XLabel.String = 'time(sec)';
+    if iROI == 1
+        %ax.YLabel.String = 'avg dataSub (V)';
+        title('example peaks Day 1');
+    end
 end
 
-figure();
-for iROI = 1:nROI
-    subtightplot(3,1,iROI);
-    for ii = 1:length(data)
-        plotTimeMatrix(ii,:) = data(ii).ROI(iROI).peakTimes(manualPeakEntry(iROI));
-    end
-    plot(exptSeq,plotTimeMatrix,'x-');
-    hold on
-    clear plotTimeMatrix
-    xl = xline(injMoment,'.',drugInj,'DisplayName',drugInj,'LineWidth',1,'Interpreter', 'none');
-    xl.LabelVerticalAlignment = 'middle';
-    if iROI == 1
-        title([animal ' stim/resp peak latency over time']);
-    end
-    ylabel([peakData.ROILabels(iROI)]);
-end
+
+
+
+
+
+
 
 
 
