@@ -1,4 +1,22 @@
 function [plotH] = stimRespPeakAnalysisAcrossDays(animal,subset)
+
+% ====== attention user: this needs to be set for each animal! ============
+% this sets which peak to plot in each ROI for an animal. If you haven't 
+% set it for the animal, this will error after the table is presented 
+if contains(animal,'ZZ10')
+    manualPeakEntry = [2,1,1];
+end
+if contains(animal,'ZZ09')
+    manualPeakEntry = [1,1,1];
+end
+if contains(animal,'ZZZZexample')
+    manualPeakEntry = [1,1,1];
+end
+if ~exist('manualPeakEntry','var')
+    warning('The peaks haven''t been set for this animal.');
+    warning('We''ll show you a table but then error out.')
+end
+
 % % test params
 % animal = 'ZZ10';
 % subset={
@@ -73,13 +91,14 @@ for iList = 1:nIndex
     try 
         load([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData');
         for iROI = 1:size(peakData.ROILabels,1)
-            [data(iList).ROI(iROI).maxPeaks,~] = max(peakData.pkVals(iROI).data,[],2);
-            
-            
-            
-            data(iList).ROI(iROI).peakTimes = peakData.pkSearchData(iROI).tPk; % this will change
+            % this is where we grab the calculated peaks.
+            [data(iList).ROI(iROI).maxPeaks,thisIndex] = max(peakData.pkVals(iROI).data,[],2);
+            for ii = 1:size(peakData.pkVals(iROI).peakTimeCalc,1)
+                data(iList).ROI(iROI).peakTimes(ii) = peakData.pkVals(iROI).peakTimeCalc(ii,thisIndex(ii));
+            end        
+%             data(iList).ROI(iROI).peakTimes = peakData.pkSearchData(iROI).tPk; % this will change
             if isempty(data(iList).ROI(iROI).maxPeaks) % if someone didn't select a peak
-                data(iList).ROI(iROI).maxPeaks = 0;
+                error('The program requires the number of peaks selected to be the same, every day, for an animal')
             end
         end
     catch
@@ -91,7 +110,7 @@ for iList = 1:nIndex
 end
 
 
-% % % ============= Here's a table of peaks and times =====================
+% % % ======= Here's a table of peaks and times relative to stim ==========
 % this is necessary to be sure we're looking at the same peaks across days
 % we need to account for the number - if an inconsistant number of peaks
 % were selected we could be comparing incorrectly.  There was some previous
@@ -114,6 +133,9 @@ end
 stimTimeTable
 disp('Please review this table and be sure the peak times and counts make sense.');
 pause(3);
+if ~exist('manualPeakEntry','var')
+    error('Please set the peaks to use for this animal!')
+end
 
 
 % ================== find the datetimes for recordings ====================
@@ -140,7 +162,6 @@ end
 
 % ===================== finally we plot ===================================
 plotH = figure();
-manualPeakEntry = [2,1,1];
 for iROI = 1:nROI
     subtightplot(3,1,iROI);
     for ii = 1:length(data)
@@ -155,13 +176,23 @@ for iROI = 1:nROI
         title([animal ' stim/resp peak value over time']);
     end
     ylabel([peakData.ROILabels(iROI)]);
-    %ylim([0,900]);
-    %xlim([0,nIndex+1]);
-    %xticks(1:nIndex);
-%     if iROI == 3
-%         set(gca,'xticklabel',exptList);
-%         xtickangle( 45 );
-%     end
+end
+
+figure();
+for iROI = 1:nROI
+    subtightplot(3,1,iROI);
+    for ii = 1:length(data)
+        plotTimeMatrix(ii,:) = data(ii).ROI(iROI).peakTimes(manualPeakEntry(iROI));
+    end
+    plot(exptSeq,plotTimeMatrix,'x-');
+    hold on
+    clear plotTimeMatrix
+    xl = xline(injMoment,'.',drugInj,'DisplayName',drugInj,'LineWidth',1,'Interpreter', 'none');
+    xl.LabelVerticalAlignment = 'middle';
+    if iROI == 1
+        title([animal ' stim/resp peak latency over time']);
+    end
+    ylabel([peakData.ROILabels(iROI)]);
 end
 
 
