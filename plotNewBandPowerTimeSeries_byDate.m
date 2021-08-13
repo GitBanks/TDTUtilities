@@ -9,7 +9,10 @@ function [fname] = plotNewBandPowerTimeSeries_byDate(animalName,params,ephysData
 % and normalized ('nmlz') power which is the absolute power in band vs total power across all bands
 % e.g. for 4 channel EEG there will be four traces
 
-subset
+% subset = {
+% '21623'
+% '21624'
+% '21626'};
 
 chansNums = params.(animalName).ephysInfo.chanNums;
 chanLabels = params.(animalName).ephysInfo.chanLabels;
@@ -139,7 +142,7 @@ for iband = 1:length(bands)
     errorbar(repmat(t',size(chansNums)),squeeze(pows(:,:,iband)),squeeze(err(:,:,iband)));
 
     % set xticks and xlims
-    xticks(exptSeq);
+    xticks(t);
     xticklabels(dates)
     xtickangle(90);
 
@@ -163,21 +166,22 @@ for iband = 1:length(bands)
         legend(chanLabels,'location','eastoutside','autoupdate','off');
         set(gca,'position',sz); % set axis size back to original size after drawing legend
     end
-    title([drugInj ' ' bands{iband}],'FontWeight','Normal');
+    title([bands{iband}],'FontWeight','Normal');
     box off
     axis square
-
 end
+sgtitle([animalName ' ' drugInj],'FontWeight','Bold','Interpreter', 'none');
+
 
 
 % ask user to save
-sgtitle(animalName,'FontWeight','Bold');
 buttonName = questdlg_timer(10,['Would you like to save figure to ' outPath '?'],...
     'Save Dialogue Box','Yes','No','Yes');
 if strcmp(buttonName,'Yes')
     fname = [outPath figName];
     print('-painters',fname,'-r300','-dpng');
 end
+
 
 
 end
