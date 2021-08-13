@@ -35,6 +35,12 @@ marg_h = [.1 .1];
 marg_w = [];
 
 
+for idate = 1:length(dates)
+    thisDate = dates{idate}(5:end);
+    tempList = getExperimentsByAnimalAndDate(animalName,thisDate,'Spon');
+    expts{idate} = ['expt' tempList{1,1}(7:9)];
+end
+
 
 % preallocate your data variables so matlab doesn't yell at you
 pows = nan(length(dates),length(chansNums),length(bands));
@@ -42,7 +48,9 @@ err = nan(length(dates),length(chansNums),length(bands));
 indexOfExpts = 1;
 for idate = 1:length(dates)
     thisDate = dates{idate};
-    expts = fieldnames(ephysData.(animalName).(thisDate));
+    %expts = fieldnames(ephysData.(animalName).(thisDate)); % % % % ---->
+    %see the line where we do thisexpt = expts{idate}; for why we're not
+    %looping through the expts for the day
     indexLabel = getTreatmentFromIndexName(animalName,thisDate(5:end));
     % check if it's an injection date by searching for the Inj string
     % NOTE: this assumes we have kept our naming convention consistent
@@ -57,8 +65,8 @@ for idate = 1:length(dates)
         
     else 
         % if it's not an injection day, do the following  
-        for iexpt = 1:length(expts)
-            thisexpt = expts{iexpt};
+%         for iexpt = 1:length(expts)
+            thisexpt = expts{idate}; % for now, this will be 1:1 with the expt dates.  We need to better filter the experiments we load in from the analysis (which will also require a better analysis, which is why we're not just fixing this now...)
             for iband = 1:length(bands)
                 thisband = bands{iband};
                 pows(idate,:,iband) = nanmean(ephysData.(animalName).(thisDate).(thisexpt).bandPow.(thisband),1); %average over rows, which should be windows
@@ -66,7 +74,7 @@ for idate = 1:length(dates)
             end
             exptList{indexOfExpts} = [thisDate(5:9) '-' thisexpt(5:7)];
             indexOfExpts = indexOfExpts+1;
-        end
+%         end
     end
 end
 
@@ -137,18 +145,24 @@ figure('name',figName,'position',[24 430 1644 417]);
 t = 1:length(dates); % get list of index start times in datetime format
 for iband = 1:length(bands)
     h(iband) = subtightplot(1,length(bands),iband,gap,marg_h,marg_w); % draw subplot with the dimensions as specified above
-
+    datnms = datenum(exptSeq);
     % draw all channels at once
-    errorbar(repmat(t',size(chansNums)),squeeze(pows(:,:,iband)),squeeze(err(:,:,iband)));
-
+    errorbar(repmat(datnms',size(chansNums)),squeeze(pows(:,:,iband)),squeeze(err(:,:,iband)));
     % set xticks and xlims
-    xticks(t);
-    xticklabels(dates)
-    xtickangle(90);
+    
+    
+    
+    hold on
+    xl = xline(datenum(injMoment),'.',drugInj,'DisplayName',drugInj,'LineWidth',1,'Interpreter', 'none');
+    xl.LabelVerticalAlignment = 'middle';
+    
+    
+    
+    xlim([datnms(1)-.3 datnms(end)+.3])
+    datetick('x', 'yyyy-mm-dd','keepticks','keeplimits');
+%     xticklabels(dates)
+    xtickangle(68);
 
-%     hold on
-%     xl = xline(injMoment,'.',drugInj,'DisplayName',drugInj,'LineWidth',1,'Interpreter', 'none');
-%     xl.LabelVerticalAlignment = 'middle';
     
     
     if iband==1

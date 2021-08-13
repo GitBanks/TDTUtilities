@@ -73,8 +73,6 @@ S.pe = uicontrol('style','push',...
     'callback',{@plotbandPow,S});
 
 
-
-
 function [S] = plotPeaksNow(varargin)
 [S] = varargin{3};
 S.userDateSelection = get(S.ls,'Value');
@@ -100,7 +98,6 @@ workingList = getExperimentsByAnimalAndDate(S.animalName,S.justDates{S.userDateS
 for iList = 1:size(workingList,1)
     plotStimRespByDateIndex(workingList{iList,1}(1:5),workingList{iList,1}(7:9),sendToSlack,plotCalculatedPeaks,plotLog);
 end
-
 
 function [S] = plotbandPow(varargin)
 [S] = varargin{3};
