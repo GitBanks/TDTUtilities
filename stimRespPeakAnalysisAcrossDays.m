@@ -94,9 +94,16 @@ for iList = 1:nIndex
         load([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData');
         for iROI = 1:size(peakData.ROILabels,1)
             % this is where we grab the calculated peaks.
-            [data(iList).ROI(iROI).maxPeaks,thisIndex] = max(peakData.pkVals(iROI).data,[],2);
+            [data(iList).ROI(iROI).maxPeaks,peakIndex] = max(peakData.pkVals(iROI).data,[],2);
+            % find whether or not the previous point is within 10% of the
+            % max and mark it for display later
+            %data(iList).ROI(iROI).withinTolerance = peakData.pkVals(iROI).data(peakIndex-1)
+            
+            
+            
+            
             for ii = 1:size(peakData.pkVals(iROI).peakTimeCalc,1)
-                data(iList).ROI(iROI).peakTimes(ii) = peakData.pkVals(iROI).peakTimeCalc(ii,thisIndex(ii));
+                data(iList).ROI(iROI).peakTimes(ii) = peakData.pkVals(iROI).peakTimeCalc(ii,peakIndex(ii));
             end        
 %             data(iList).ROI(iROI).peakTimes = peakData.pkSearchData(iROI).tPk; % this will change
             if isempty(data(iList).ROI(iROI).maxPeaks) % if someone didn't select a peak
@@ -197,6 +204,11 @@ end
 % end
 
 
+
+% datenum(exptSeq)
+% injMoment+1
+
+
 % optional display of one of the stim/resp peaks
 exptDate = exptList{1}(1:5);
 exptIndex = exptList{1}(7:9);
@@ -218,6 +230,8 @@ for iROI = 1:nROI
     clear plotMatrix
     xl = xline(injMoment,'.',drugInj,'DisplayName',drugInj,'LineWidth',1,'Interpreter', 'none');
     xl.LabelVerticalAlignment = 'middle';
+    x2 = xline(injMoment+1,'.','24h post','DisplayName','24h post','LineWidth',1,'Interpreter', 'none');
+    x2.LabelVerticalAlignment = 'middle';
     if iROI == 1
         title([animal ' stim/resp peak value over time']);
     end
@@ -227,10 +241,16 @@ for iROI = 1:nROI
     for iStim = 1:length(avgTraces)
         plot(plotTimeArray,avgTraces(iStim).stimSet(iROI,:));
         hold on;
+        for iUI = 1:length(peakData.pkSearchData(iROI).tPk)
+            plot(peakData.pkSearchData(iROI).tPk(iUI),peakData.pkSearchData(iROI).yPk(iUI),'+r','MarkerSize',12);
+            if manualPeakEntry(iROI) == iUI
+                plot(peakData.pkSearchData(iROI).tPk(iUI),peakData.pkSearchData(iROI).yPk(iUI),'ob','MarkerSize',14);
+            end
+        end
     end
     ax = gca;
     ax.XLim = [plotTimeArray(1),plotTimeArray(end)];
-    ax.YLim = [1.05*peakData.plotMin(iROI),1.05*peakData.plotMax(iROI)];
+    ax.YLim = [1.2*peakData.plotMin(iROI),1.2*peakData.plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
         %ax.YLabel.String = 'avg dataSub (V)';
