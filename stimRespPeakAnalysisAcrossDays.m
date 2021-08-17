@@ -99,7 +99,10 @@ for iList = 1:nIndex
             % max and mark it for display later
             %data(iList).ROI(iROI).withinTolerance = peakData.pkVals(iROI).data(peakIndex-1)
             
+            %slopeDiff = diff(peakData.pkVals(iROI).data(manualPeakEntry(iROI),:));
             
+
+
             
             
             for ii = 1:size(peakData.pkVals(iROI).peakTimeCalc,1)
@@ -219,15 +222,22 @@ catch
     error(['Problem loading ' [outPath exptDate '-' exptIndex '_peakData']]);
 end
 
+
+
+for iROI = 1:nROI
+    for ii = 1:length(data)
+        plotMatrix(ii,iROI) = data(ii).ROI(iROI).maxPeaks(manualPeakEntry(iROI));
+    end
+end
+
+
+
 plotH = figure();
 for iROI = 1:nROI
-    subtightplot(3,10,(1:8)+10*(iROI-1));
-    for ii = 1:length(data)
-        plotMatrix(ii,:) = data(ii).ROI(iROI).maxPeaks(manualPeakEntry(iROI));
-    end
-    plot(exptSeq,plotMatrix,'x-');
+    % plot the peaks over time
+    subtightplot(4,10,(1:8)+10*(iROI-1));
+    plot(exptSeq,plotMatrix(:,iROI),'x-');
     hold on
-    clear plotMatrix
     xl = xline(injMoment,'.',drugInj,'DisplayName',drugInj,'LineWidth',1,'Interpreter', 'none');
     xl.LabelVerticalAlignment = 'middle';
     x2 = xline(injMoment+1,'.','24h post','DisplayName','24h post','LineWidth',1,'Interpreter', 'none');
@@ -236,8 +246,10 @@ for iROI = 1:nROI
         title([animal ' stim/resp peak value over time']);
     end
     ylabel([peakData.ROILabels(iROI)]);
-    
-    subtightplot(3,10,(9:10)+10*(iROI-1));
+    ylim([1.2*min(min(plotMatrix)),1.2*max(max(plotMatrix))]);
+    set(gca,'xticklabel',[]);
+    % Plot examples!
+    subtightplot(4,10,(9:10)+10*(iROI-1));
     for iStim = 1:length(avgTraces)
         plot(plotTimeArray,avgTraces(iStim).stimSet(iROI,:));
         hold on;
@@ -256,11 +268,26 @@ for iROI = 1:nROI
         %ax.YLabel.String = 'avg dataSub (V)';
         title('example peaks Day 1');
     end
+    set(gca,'yticklabel',[]);
 end
-
-
-
-
+% movement plots (an afterthought)
+doPlot = false; % no need to plot each index, just the final
+for ii = 1:length(exptList)
+    strExpt = char(exptList(ii));
+    thisDate = strExpt(1:5);
+    thisIndex = strExpt(7:9);   
+    singleValueForIndex(ii) = plotStimAndMovement(thisDate,thisIndex,doPlot);
+end
+subtightplot(4,10,31:38);
+plot(exptSeq,singleValueForIndex);
+hold on
+xl = xline(injMoment,'.',drugInj,'DisplayName',drugInj,'LineWidth',1,'Interpreter', 'none');
+xl.LabelVerticalAlignment = 'middle';
+x2 = xline(injMoment+1,'.','24h post','DisplayName','24h post','LineWidth',1,'Interpreter', 'none');
+x2.LabelVerticalAlignment = 'middle';
+set(gca,'ytick',[]);
+set(gca,'yticklabel',[]);
+ylabel('Movement');
 
 
 
