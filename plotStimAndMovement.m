@@ -1,4 +1,4 @@
-function singleValueForIndex = plotStimAndMovement(exptDate,exptIndex,doPlot)
+function [singleValueForIndex,valuesForEachWindow] = plotStimAndMovement(exptDate,exptIndex,doPlot)
 %Given an *ephys* expt date and index (ID)
 %1. fetch magnet data
 %2. fetch stim times
@@ -8,11 +8,14 @@ function singleValueForIndex = plotStimAndMovement(exptDate,exptIndex,doPlot)
 % to switch to previous movement plotting, but we need to combine them  and
 % make them consistant in any program that calls both.
 
+% exptDate = '21712';
+% exptIndex = '003';
+
 
 if ~exist('doPlot','var')
     doPlot = true;
 end
-
+valuesForEachWindow = nan;
 
 
 disp(['pulling movement for ' exptDate '-' exptIndex]);
@@ -49,39 +52,44 @@ if isfile([outPath exptDate '-' exptIndex '_peakData.mat'])
     stimTimes = peakData.stimTimes;
     clear peakData
 else
-%     disp('Couldn''t find peakData save file.  Consider running it for faster event related data plotting');
-%     [~,indexOut,isTank] = getIsTank(exptDate,exptIndex);
-%     try
-%         [dataTemp,~] = getSynapseSingleStimData(exptDate,indexOut,tPreStim,tPostStim,isTank);
-%         stimTimes = dataTemp.stimTimes;
-%     catch
-%         [~,~,~,stimTimes] = getSynapseStimSetData(exptDate,indexOut,tPreStim,tPostStim,isTank);
-%     end
+    disp('Couldn''t find peakData save file.  Consider running it for faster event related data plotting');
+    [~,indexOut,isTank] = getIsTank(exptDate,exptIndex);
+    try
+        [dataTemp,~] = getSynapseSingleStimData(exptDate,indexOut,tPreStim,tPostStim,isTank);
+        stimTimes = dataTemp.stimTimes;
+    catch
+        [~,~,~,stimTimes] = getSynapseStimSetData(exptDate,indexOut,tPreStim,tPostStim,isTank);
+    end
 end
 
-if doPlot
-    if exist('stimTimes','var')
-        for iStim = 1:length(stimTimes)
-            magEvent = find(magTimeArray>stimTimes(iStim),1);
-            movementsPreStim(iStim) = mean(moveData(magEvent-movementWindowInSamplesPre:magEvent));
-    %        movementsPostStim(iStim) = mean(moveData(magEvent:magEvent+movementWindowInSamplesPost));
-        end
-        figure;
-        subtightplot(2,1,1)
-        scatter(stimTimes/60,movementsPreStim);
-        hold on
-    %     scatter(stimTimes/60,movementsPostStim);
-        subtightplot(2,1,2)
-        plot(magTimeArray/60,moveData);
-        hold on
-        scatter(stimTimes/60,movementsPreStim);
-        hold on
-    %     scatter(stimTimes/60,movementsPostStim);
-    else
-        figure;
-        subtightplot(2,1,2)
-        plot(magTimeArray/60,moveData);
+if exist('stimTimes','var')
+    for iStim = 1:length(stimTimes)
+        magEvent = find(magTimeArray>stimTimes(iStim),1);
+        movementsPreStim(iStim) = mean(moveData(magEvent-movementWindowInSamplesPre:magEvent));
+        movementsPostStim(iStim) = mean(moveData(magEvent:magEvent+movementWindowInSamplesPost));
     end
+    valuesForEachWindow = movementsPreStim;
+end
+
+if doPlot && exist('stimTimes','var')
+    prePostDiff = movementsPostStim-movementsPreStim;
+    figure;
+    subtightplot(2,1,1)
+    scatter(stimTimes/60,prePostDiff);
+    hold on
+%     scatter(stimTimes/60,movementsPostStim);
+    subtightplot(2,1,2)
+    plot(magTimeArray/60,moveData);
+    hold on
+    scatter(stimTimes/60,prePostDiff);
+    hold on
+%     scatter(stimTimes/60,movementsPostStim);
+end
+
+if doPlot && ~exist('stimTimes','var')
+    figure;
+    subtightplot(2,1,2)
+    plot(magTimeArray/60,moveData);
 end
 
 singleValueForIndex = mean(magTimeArray);

@@ -1,4 +1,4 @@
-function plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+function plotPlasticityAmplitudePeaks(exptDate,exptIndices,description)
 % Function to plot out time series of evoked response amplitudes during
 % LTP/LTD expts. Allows user to choose time and sign of peaks from averqage
 % traces.
@@ -54,9 +54,8 @@ for iExpt = 1:nExpts
     [~,indexOut,isTank] = getIsTank(exptDate,exptIndices{iExpt});
     [dataTemp,dTRec] = getSynapseSingleStimData(exptDate,indexOut,tPreStim,tPostStim,isTank);
     evDataSet(iExpt) = dataTemp;
-    nTrials(iExpt) = size(evDataSet(iExpt).sub,2);
-    
-    movementsPreStim(iExpt).events = plotStimAndMovement(exptDate,exptIndices{iExpt});
+    nTrials(iExpt) = size(evDataSet(iExpt).sub,2); 
+    [~,movementsPreStim(iExpt).events] = plotStimAndMovement(exptDate,exptIndices{iExpt},false);
 end
 
 
@@ -74,6 +73,22 @@ for iExpt = 2:nExpts
     t1 = evDataSet(iExpt-1).info.utcStopTime;
     recDelay(iExpt) = synapseTimeSubtraction(t2,t1);
 end
+
+%%
+% we can assemble the movement data similar to the time series data since
+% we now have time offsets
+moveStimTimes = zeros(1,nTotalTrials); % contains stim times for all recorded trials
+moveStimVals = zeros(1,nTotalTrials);
+timeElapsed = 0;
+lastTrial = 0;
+for iExpt = 1:nExpts
+    timeElapsed = timeElapsed+recDelay(iExpt);
+    moveStimTimes(lastTrial+1:lastTrial+nTrials(iExpt)) = evDataSet(iExpt).stimTimes'+timeElapsed;
+    moveStimVals(lastTrial+1:lastTrial+nTrials(iExpt)) = movementsPreStim(iExpt).events;
+    timeElapsed = timeElapsed+evDataSet(iExpt).stimTimes(end);
+    lastTrial = lastTrial+nTrials(iExpt);
+end
+
 
 %%
 relevantROIs = {'PFC','CA1','Hipp'}; % labels in database can be any of these
@@ -253,6 +268,7 @@ end
 avgWinIndex = floor(avgWinTime/dTRec);
 baseWinIndex = floor(baseWin/dTRec);
 allAdjIPAmpls = zeros(nROIs,nTotalTrials); % contains peaks for all recorded trials
+
 for iROI = 1:nROIs
     timeElapsed = 0;
     lastTrial = 0;
@@ -278,21 +294,22 @@ for iROI = 1:nROIs
         % concatenate the data from each experiment to get one long time
         % series covering the whole recording session.
         allAdjIPAmpls(iROI,lastTrial+1:lastTrial+nTrials(iExpt)) = traceIPAmpl;
+        AdjIPAmplsByExpt(iExpt).data(iROI,:) = traceIPAmpl;
         lastTrial = lastTrial+nTrials(iExpt);
     end
 end
 
 
 %% Plot out time series of peak amplitudes
-figureName = ['Plasticity peaks time series - ' animalName '_' exptDate];
+figureName = ['Plasticity peaks time series - ' animalName '_' exptDate '_' description];
 thisFigure = figure('Name',figureName);
 plotStimTimes = allStimTimes/60; %Convert seconds to minutes
 
-movementsPreStim(iExpt).events
+%movementsPreStim(iExpt).events
 
 for iROI = 1:nROIs
     plotColor = {'or','ob','ok'};
-    subplot(nROIs,1,iROI);
+    subplot(nROIs+1,1,iROI);
     hold on
     plot(plotStimTimes(iROI,1:nTrials(1)),allAdjPeaks(iROI,1:nTrials(1)),'o'); 
     plot(plotStimTimes(iROI,1:nTrials(1)),smooth(allAdjPeaks(iROI,1:nTrials(1)),smFac),'-k','LineWidth',2);
@@ -310,10 +327,21 @@ for iROI = 1:nROIs
     ax.YLim = [1.05*prctile(allAdjPeaks(iROI,:),1),1.05*prctile(allAdjPeaks(iROI,:),99)];
     ax.Title.String = ROILabels{iROI};
     if iROI == nROIs
-        ax.XLabel.String = 'Time (min)';
         ax.YLabel.String = '|Pk ampl|';
     end
 end
+subplot(nROIs+1,1,iROI+1);
+scatter(moveStimTimes/60,moveStimVals);
+hold on
+plot(moveStimTimes(1:nTrials(1))/60,smooth(moveStimVals(1:nTrials(1)),smFac),'-k','LineWidth',2);
+plot(moveStimTimes(nTrials(1)+1:nTrials(1)+nTrials(2))/60,smooth(moveStimVals(nTrials(1)+1:nTrials(1)+nTrials(2)),smFac),'-k','LineWidth',2);
+plot(moveStimTimes(nTrials(1)+nTrials(2)+1:end)/60,smooth(moveStimVals(nTrials(1)+nTrials(2)+1:end),smFac),'-k','LineWidth',2);
+% plot(moveStimTimes/60,smooth(moveStimVals,smFac),'-k','LineWidth',2);
+ax = gca;
+ax.Title.String = 'Movement';
+ax.YLabel.String = 'Mv ampl';
+ax.XLabel.String = 'Time (min)';
+
 saveas(thisFigure,[outPath figureName]);
 saveas(thisFigure,[outPath2 figureName]);
 
@@ -328,36 +356,93 @@ end
 
 
 %% Plot out time series of inner products
-figureName = ['Plasticity IP time series - ' animalName '_' exptDate];
-thisFigure = figure('Name',figureName);
-plotStimTimes = allStimTimes/60; %Convert seconds to minutes
-for iROI = 1:nROIs
-    plotColor = {'or','ob','ok'};
-    subplot(nROIs,1,iROI);
-    hold on
-    plot(plotStimTimes(iROI,1:nTrials(1)),allAdjIPAmpls(iROI,1:nTrials(1)),'o'); 
-    plot(plotStimTimes(iROI,1:nTrials(1)),smooth(allAdjIPAmpls(iROI,1:nTrials(1)),smFac),'-k','LineWidth',2);
-    plot(plotStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),allAdjIPAmpls(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
-    plot(plotStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),...
-        smooth(allAdjIPAmpls(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),smFac),'-k','LineWidth',2);
-    plot(plotStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),allAdjIPAmpls(iROI,nTrials(1)+nTrials(2)+1:end),'o');
-    plot(plotStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),...
-        smooth(allAdjIPAmpls(iROI,nTrials(1)+nTrials(2)+1:end),smFac),'-k','LineWidth',2);
-    baseData = allAdjIPAmpls(iROI,1:nTrials(1));
-    baseData = baseData(baseData>prctile(baseData,1)&baseData<prctile(baseData,99));
-    baseMn = mean(baseData);
-    plot([plotStimTimes(iROI,1),plotStimTimes(iROI,end)],[baseMn,baseMn],'--');
-    ax = gca;
-    ax.YLim = [1.05*prctile(allAdjIPAmpls(iROI,:),1),1.05*prctile(allAdjIPAmpls(iROI,:),99)];
-    ax.Title.String = ROILabels{iROI};
-    if iROI == nROIs
-        ax.XLabel.String = 'Time (min)';
-        ax.YLabel.String = '|IP ampl|';
+% figureName = ['Plasticity IP time series - ' animalName '_' exptDate];
+% thisFigure = figure('Name',figureName);
+% plotStimTimes = allStimTimes/60; %Convert seconds to minutes
+% for iROI = 1:nROIs
+%     plotColor = {'or','ob','ok'};
+%     subplot(nROIs,1,iROI);
+%     hold on
+%     plot(plotStimTimes(iROI,1:nTrials(1)),allAdjIPAmpls(iROI,1:nTrials(1)),'o'); 
+%     plot(plotStimTimes(iROI,1:nTrials(1)),smooth(allAdjIPAmpls(iROI,1:nTrials(1)),smFac),'-k','LineWidth',2);
+%     plot(plotStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),allAdjIPAmpls(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),'o');
+%     plot(plotStimTimes(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),...
+%         smooth(allAdjIPAmpls(iROI,nTrials(1)+1:nTrials(1)+nTrials(2)),smFac),'-k','LineWidth',2);
+%     plot(plotStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),allAdjIPAmpls(iROI,nTrials(1)+nTrials(2)+1:end),'o');
+%     plot(plotStimTimes(iROI,nTrials(1)+nTrials(2)+1:end),...
+%         smooth(allAdjIPAmpls(iROI,nTrials(1)+nTrials(2)+1:end),smFac),'-k','LineWidth',2);
+%     baseData = allAdjIPAmpls(iROI,1:nTrials(1));
+%     baseData = baseData(baseData>prctile(baseData,1)&baseData<prctile(baseData,99));
+%     baseMn = mean(baseData);
+%     plot([plotStimTimes(iROI,1),plotStimTimes(iROI,end)],[baseMn,baseMn],'--');
+%     ax = gca;
+%     ax.YLim = [1.05*prctile(allAdjIPAmpls(iROI,:),1),1.05*prctile(allAdjIPAmpls(iROI,:),99)];
+%     ax.Title.String = ROILabels{iROI};
+%     if iROI == nROIs
+%         ax.XLabel.String = 'Time (min)';
+%         ax.YLabel.String = '|IP ampl|';
+%     end
+% end
+% saveas(thisFigure,[outPath figureName]);
+% saveas(thisFigure,[outPath2 figureName]);
+% 
+% fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
+% print('-painters',fileName,'-r300','-dpng');
+% try
+%     desc = figureName;
+%     sendSlackFig(desc,[fileName '.png']);
+% catch
+%     disp(['failed to upload ' fileName ' to Slack']);
+% end
+
+%%
+
+
+%movement = [movementsPreStim(1).events movementsPreStim(2).events movementsPreStim(3).events];
+
+maxYbyROI = [nan,nan,nan;nan,nan,nan;nan,nan,nan];
+minYbyROI = [nan,nan,nan;nan,nan,nan;nan,nan,nan];
+% stdYbyROI = [nan,nan,nan];
+figureName = ['response peak vs movement - ' animalName '_' exptDate '_' description];
+figure('Name',figureName);
+for iExpt = 1:nExpts
+    for iROI = 1:nROIs
+        subtightplot(nExpts,nROIs,(iExpt-1)*nExpts+iROI);
+        scatter(movementsPreStim(iExpt).events,AdjIPAmplsByExpt(iExpt).data(iROI,:));
+        %scatter(movement,allAdjIPAmpls(iROI,:));
+        if iROI == 1; ylabel(exptIndexLabels{iExpt}); end 
+        stdYbyROI(iROI,iExpt) = std(AdjIPAmplsByExpt(iExpt).data(iROI,:));
+        xlabel('movement/magnet magnitude');
+        ax = gca;
+        ax.XScale = 'log';
+        if iExpt == 1; ax.Title.String = ROILabels{iROI}; end
     end
 end
-saveas(thisFigure,[outPath figureName]);
-saveas(thisFigure,[outPath2 figureName]);
-
+outlierMove = mean(mean(stdYbyROI,2))*3;
+for iExpt = 1:nExpts
+    for iROI = 1:nROIs
+        if outlierMove > stdYbyROI(iROI,iExpt)
+            scaleThisPlot(iROI,iExpt) = true;
+            maxYbyROI(iROI,iExpt) = max(AdjIPAmplsByExpt(iExpt).data(iROI,:));
+            minYbyROI(iROI,iExpt) = min(AdjIPAmplsByExpt(iExpt).data(iROI,:));
+        else
+            scaleThisPlot(iROI,iExpt) = false;
+        end
+    end
+end
+for iExpt = 1:nExpts
+    for iROI = 1:nROIs
+        if scaleThisPlot(iROI,iExpt) == true
+            subtightplot(nExpts,nROIs,(iExpt-1)*nExpts+iROI);
+            ax = gca;
+            ax.YLim = [min(minYbyROI(iROI,:))*1.05,max(maxYbyROI(iROI,:))*1.05];
+        else
+            disp('Warning! Noise detected. Inspect traces.');
+            subtightplot(nExpts,nROIs,(iExpt-1)*nExpts+iROI);
+            scatter(movementsPreStim(iExpt).events,AdjIPAmplsByExpt(iExpt).data(iROI,:),'r');
+        end
+    end
+end
 fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
 print('-painters',fileName,'-r300','-dpng');
 try
@@ -366,15 +451,7 @@ try
 catch
     disp(['failed to upload ' fileName ' to Slack']);
 end
-%%
 
-iROI = 1;
-movement = [movementsPreStim(1).events movementsPreStim(2).events movementsPreStim(3).events];
-oneROI = allAdjIPAmpls(iROI,:);
-figure;
-scatter(movement,oneROI);
-ylabel('response peak');
-xlabel('movement/magnet magnitude');
 
 
 
