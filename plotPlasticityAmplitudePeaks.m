@@ -222,6 +222,7 @@ avgWinIndex = floor(avgWinTime/dTRec);
 baseWinIndex = floor(baseWin/dTRec);
 allAdjPeaks = zeros(nROIs,nTotalTrials); % contains peaks for all recorded trials
 allStimTimes = zeros(nROIs,nTotalTrials); % contains stim times for all recorded trials
+
 for iROI = 1:nROIs
     timeElapsed = 0;
     lastTrial = 0;
@@ -258,6 +259,7 @@ for iROI = 1:nROIs
         allStimTimes(iROI,lastTrial+1:lastTrial+nTrials(iExpt)) = evDataSet(iExpt).stimTimes'+timeElapsed;
         timeElapsed = timeElapsed+evDataSet(iExpt).stimTimes(end);
         lastTrial = lastTrial+nTrials(iExpt);
+        tempStruct(iExpt).saveThesePeaks(iROI,:) = tracePeaks;
         clear tracePeaks
     end
 end
@@ -298,6 +300,53 @@ for iROI = 1:nROIs
         lastTrial = lastTrial+nTrials(iExpt);
     end
 end
+
+
+
+
+%%
+
+
+
+
+
+% we will save 
+% Time of peak re stim time
+% Response magnitude (pk, inner product)
+% Time of stim relative to start of file
+% this was developed in the evokedStimResp_userInput program, and both bits
+% of code should be adjusted if we change things.  The other version will
+% track multiple stim types.  This version will only have one, but we'll
+% keep the same variables and structure for compatability reasons
+% also just found out we need to save a peakData file for each index, so
+% loop through them:
+
+for iExpt = 1:size(exptIndices,2) 
+    fileString = [exptDate '-' exptIndices{iExpt}];
+    outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' fileString '\'];
+    peakData = struct;
+    peakData.pkSearchData = pkSearchData; % user selected Time of peak re stim time
+    peakData.ROILabels = ROILabels; %corresponding labels
+    % peakData.stimArrayNumeric = stimArrayNumeric; % here's our first difference from the evokedStimResp_userInput
+    peakData.stimArrayNumeric = ones(1,nTrials(iExpt));
+    peakData.pkVals = tempStruct(iExpt).saveThesePeaks; % Response magnitude 
+    peakData.stimTimes = evDataSet(iExpt).stimTimes; % Time of stim relative to start of file
+    peakData.plotMin = plotMin;
+    peakData.plotMax = plotMax;
+    avgTraces = struct;
+    avgTraces.stimSet = evDataSet(iExpt).subMean;
+    avgTraces.stimArrayNumeric = ones(1,nTrials(iExpt));
+    avgTraces.ampLabel = ' ';
+    save([outPath fileString '_peakData'],'peakData','plotTimeArray','avgTraces');
+end
+
+% % also save long term data
+% % 
+% if ~exist('peakDataOverTime','var')
+%     peakDataOverTime = struct;
+% end
+% peakDataOverTime.(['expt' strrep(fileString,'-','')]).peakData = peakData;
+% save([outPath2 animal '_peakDataOverTime'],'peakDataOverTime');
 
 
 %% Plot out time series of peak amplitudes
