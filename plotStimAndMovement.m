@@ -1,4 +1,4 @@
-function [singleValueForIndex,valuesForEachWindow] = plotStimAndMovement(exptDate,exptIndex,doPlot)
+function [singleValueForIndex,moveValuesForEachWindow,peakValsForEachWindow] = plotStimAndMovement(exptDate,exptIndex,doPlot)
 %Given an *ephys* expt date and index (ID)
 %1. fetch magnet data
 %2. fetch stim times
@@ -15,7 +15,7 @@ function [singleValueForIndex,valuesForEachWindow] = plotStimAndMovement(exptDat
 if ~exist('doPlot','var')
     doPlot = true;
 end
-valuesForEachWindow = nan;
+moveValuesForEachWindow = nan;
 
 
 disp(['pulling movement for ' exptDate '-' exptIndex]);
@@ -50,16 +50,18 @@ if isfile([outPath exptDate '-' exptIndex '_peakData.mat'])
         error(['Problem loading ' [outPath exptDate '-' exptIndex '_peakData']]);
     end
     stimTimes = peakData.stimTimes;
+    peakValsForEachWindow = peakData.pkVals;
     clear peakData
 else
-    disp('Couldn''t find peakData save file.  Consider running it for faster event related data plotting');
-    [~,indexOut,isTank] = getIsTank(exptDate,exptIndex);
-    try
-        [dataTemp,~] = getSynapseSingleStimData(exptDate,indexOut,tPreStim,tPostStim,isTank);
-        stimTimes = dataTemp.stimTimes;
-    catch
-        [~,~,~,stimTimes] = getSynapseStimSetData(exptDate,indexOut,tPreStim,tPostStim,isTank);
-    end
+    error('Program now depends on user to run peak selection program');
+%     disp('Couldn''t find peakData save file.  Consider running it for faster event related data plotting');
+%     [~,indexOut,isTank] = getIsTank(exptDate,exptIndex);
+%     try
+%         [dataTemp,~] = getSynapseSingleStimData(exptDate,indexOut,tPreStim,tPostStim,isTank);
+%         stimTimes = dataTemp.stimTimes;
+%     catch
+%         [~,~,~,stimTimes] = getSynapseStimSetData(exptDate,indexOut,tPreStim,tPostStim,isTank);
+%     end
 end
 
 if exist('stimTimes','var')
@@ -68,7 +70,7 @@ if exist('stimTimes','var')
         movementsPreStim(iStim) = mean(moveData(magEvent-movementWindowInSamplesPre:magEvent));
         movementsPostStim(iStim) = mean(moveData(magEvent:magEvent+movementWindowInSamplesPost));
     end
-    valuesForEachWindow = movementsPreStim;
+    moveValuesForEachWindow = movementsPreStim;
 end
 
 if doPlot && exist('stimTimes','var')
