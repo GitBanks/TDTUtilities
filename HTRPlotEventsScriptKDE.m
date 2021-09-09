@@ -35,6 +35,11 @@ overWrite = true; % % save over existing save
 % treatment = 'Anlg_5_6_DiMeO_MiPT';
 % treatment = 'Anlg_5_MeO_DET';
 
+% treatment = 'Corticosterone_conc';
+% treatment = 'Lisuride_conc';
+% treatment = 'Mifepristone_conc';
+% gaussLength = 120;
+
 % ================== data curating =====================
 dateTable = getDateAnimalUniqueByTreatment(treatment);
 excludeAnimal = 'EEG112'; % excluded for a variety of reasons: initial recording parameters; incorrect entries; no video; etc.
@@ -58,6 +63,7 @@ dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
 % for now just cycle through the drug combinations.  In the future we can
 % add a popup or menu or something more clever
 plotsToMake = unique(dateTable.DrugList);
+
 % optionally remove the multiple treatments
 a = strfind(plotsToMake,';');
 for iCombo = 1:size(plotsToMake,1)
@@ -67,6 +73,7 @@ for iCombo = 1:size(plotsToMake,1)
     end
     end
 end
+
 % % a way to exclude non-magnet mice here 
 removeRows = zeros(size(dateTable,1),1);
 for iList = 1:size(dateTable,1)

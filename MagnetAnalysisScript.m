@@ -14,6 +14,11 @@
 
 fileMaint('Mag015'); % new fileMaint as of 6/15/21
 
+% fileMaint('Mag003'); 
+% fileMaint('Mag008'); 
+% fileMaint('Mag009'); 
+
+
 %% ==== Analysis ===============================
 % Run this after each day or when a drug is done
 % this finds and verifies HTR events and saves them

@@ -84,35 +84,47 @@ evokedStimResp_userInput(exptDate,exptIndex);
 %exptIndices = {'004','006','008'};
 %plotPlasticityAmplitudePeaks(exptDate,exptIndices)
 
-% %Pre-inj DOI 
-% exptDate = '21615';
-% exptIndices = {'004','006','008'};
-% plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
-
-% exptDate = '21617';
-% exptIndices = {'004','008','012'}; noTank = false;
-% plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
-
-% exptDate = '21617';
-% exptIndices = {'005','009','013'}; noTank = true;
-% plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
 
 
-% exptDate = '21621';
-% exptIndices = {'006','010','014'}; noTank = false;
-% plotPlasticityAmplitudePeaks(exptDate,exptIndices,noTank)
-% exptDate = '21621';
-% exptIndices = {'007','011','015'};
-% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+exptDate = '21617';
+exptIndices = {'004','008','012'};
+plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+exptDate = '21617';
+exptIndices = {'005','009','013'}; 
+plotPlasticityAmplitudePeaks(exptDate,exptIndices)
 
+
+exptDate = '21621';
+exptIndices = {'006','010','014'}; 
+plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+exptDate = '21621';
+exptIndices = {'007','011','015'};
+plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+
+
+
+
+
+% consider automating this by looking for the following key phrases in the
+% description: 'pre LTP/LTD' 'Post LTP / stim' 'Post LTD / stim'
+% 1. be sure these keywords are consistant
+% 2. load in a day using getExperimentsByAnimalAndDate()
+% 3. generate the three exptIndices = {,,,} above
+% 4. feed them to plotPlasticityAmplitudePeaks
 
 exptDate = '21623';
 exptIndices = {'014','018','022'};
 plotPlasticityAmplitudePeaks(exptDate,exptIndices)
-
 exptDate = '21623';
 exptIndices = {'015','019','023'};
 plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+%Pre-inj DOI 
+exptDate = '21615';
+exptIndices = {'004','006','008'};
+plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+
+
+
 
 
 
