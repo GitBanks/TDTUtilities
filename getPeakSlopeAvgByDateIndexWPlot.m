@@ -27,50 +27,30 @@ theseAreActive = moveValuesForEachWindow>activeThresh;
 % sorting them)
 tPreStim = 0.02;
 tPostStim = 0.2;
-% [~,indexOut,isTank] = getIsTank(exptDate,exptIndex);
-% [dataTemp,dTRec] = getSynapseSingleStimData(exptDate,indexOut,tPreStim,tPostStim,isTank);
 disp(['loading peaks for ' exptDate '-' exptIndex]);
 ephysData = getImportedSynapseEvokedData(exptDate,exptIndex,tPreStim,tPostStim);
-
 restingAvgMovement = mean(moveValuesForEachWindow(theseAreResting));
 curatedPeakValsForEachWindow = peakValsForEachWindow;
-% resting = nan(size(peakValsForEachWindow));
-% active = nan(size(peakValsForEachWindow));
 for iROI = 1:3
-%     resting(iROI,theseAreResting) = peakValsForEachWindow(iROI,(theseAreResting));
-%     active(iROI,theseAreActive) = peakValsForEachWindow(iROI,(theseAreActive));
     upperB = mean(peakValsForEachWindow(iROI,:))+std(peakValsForEachWindow(iROI,:))*outlierSTD;
     lowerB = mean(peakValsForEachWindow(iROI,:))-std(peakValsForEachWindow(iROI,:))*outlierSTD;
     rejectThese = curatedPeakValsForEachWindow(iROI,:)>upperB | curatedPeakValsForEachWindow(iROI,:)<lowerB;
     disp(['removed ' num2str(sum(rejectThese)) ' outliers in ROI: ' dataLabels{iROI} ' using ' num2str(outlierSTD) 'x stDev threshold']);
-%     rejectThese = resting(iROI,theseAreResting)>upperB & resting(iROI,theseAreResting)<lowerB;
-%     resting(iROI,rejectThese) = nan;
     curatedPeakValsForEachWindow(iROI,rejectThese) = nan;
-%     rejectThese = active(iROI,theseAreActive)>upperB & active(iROI,theseAreActive)<lowerB;
-%     active(iROI,rejectThese) = nan;
-%     sortedPeakValsForEachWindow(iROI,rejectThese) = nan; 
     restingAvgPeak(iROI) = mean(curatedPeakValsForEachWindow(iROI,theseAreResting),'omitnan');
-    
     % we need a slight... circumlocution because polyfit doesn't like nans
     tempArrayA = moveValuesForEachWindow(theseAreActive);
     tempArrayB = curatedPeakValsForEachWindow(iROI,theseAreActive);
     tempArrayA(isnan(tempArrayB)) = [];
     tempArrayB(isnan(tempArrayB)) = [];
-    
     p = polyfit(tempArrayA,tempArrayB,1);
     activeYhat(iROI,:) = polyval(p,moveValuesForEachWindow(theseAreActive));
     activeSlope(iROI) = p(1);
     stdYbyROI(iROI) = std(curatedPeakValsForEachWindow(iROI,theseAreResting),'omitnan');
-%     restingAvgPeak(iROI) = mean(resting(iROI,useTheseResting(iROI,:)));
-%     p = polyfit(moveValuesForEachWindow(theseAreActive),active(iROI,useTheseActive(iROI,:)),1);
-%     activeYhat(iROI,:) = polyval(p,moveValuesForEachWindow(theseAreActive));
-%     activeSlope(iROI) = p(1);
-%     stdYbyROI(iROI) = std(resting(iROI,useTheseResting(iROI,:)));
 end
 
 if plotPeaks
     outlierMove = mean(mean(stdYbyROI,2))*3;
-    
     disp(['plotting ' exptDate '-' exptIndex]);
     figure;
     maxYforAll=nan;
@@ -82,7 +62,6 @@ if plotPeaks
         scatter(moveValuesForEachWindow(theseAreActive),curatedPeakValsForEachWindow(iROI,theseAreActive));
         plot(moveValuesForEachWindow(theseAreActive),activeYhat(iROI,:),'r');
         scatter(restingAvgMovement,restingAvgPeak(iROI),100,'r','d','filled');
-
         subtightplot(2,3,3+iROI);
         plot(squeeze(mean(ephysData.sub(iROI,theseAreResting,:))));
         hold on
@@ -113,7 +92,6 @@ if plotPeaks
             yticks([ ]);
         end
         xticks([ ]);
-        
         subtightplot(2,3,3+iROI);
         if iROI == 1
             ylabel('avg traces by activity lvl'); 
