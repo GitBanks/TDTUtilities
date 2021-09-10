@@ -46,6 +46,7 @@ for iROI = 1:3
     p = polyfit(tempArrayA,tempArrayB,1);
     activeYhat(iROI,:) = polyval(p,moveValuesForEachWindow(theseAreActive));
     activeSlope(iROI) = p(1);
+    activeIntercept(iROI) = p(2);
     stdYbyROI(iROI) = std(curatedPeakValsForEachWindow(iROI,theseAreResting),'omitnan');
 end
 
@@ -112,6 +113,7 @@ dataOut.active = theseAreActive;
 dataOut.resting = theseAreResting;
 dataOut.activeYhat = activeYhat;
 dataOut.activeSlope = activeSlope;
+dataOut.activeIntercept = activeIntercept;
 disp('Done!');
 disp(' ');
 end
