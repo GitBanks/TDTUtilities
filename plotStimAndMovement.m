@@ -66,9 +66,14 @@ end
 
 if exist('stimTimes','var')
     for iStim = 1:length(stimTimes)
-        magEvent = find(magTimeArray>stimTimes(iStim),1);
-        movementsPreStim(iStim) = mean(moveData(magEvent-movementWindowInSamplesPre:magEvent));
-        movementsPostStim(iStim) = mean(moveData(magEvent:magEvent+movementWindowInSamplesPost));
+        if magTimeArray(end) < stimTimes(iStim)+(postStimMovementWindow+.2)
+            movementsPreStim(iStim) = nan;
+            movementsPostStim(iStim) = nan;
+        else
+            magEvent = find(magTimeArray>stimTimes(iStim),1);
+            movementsPreStim(iStim) = mean(moveData(magEvent-movementWindowInSamplesPre:magEvent));
+            movementsPostStim(iStim) = mean(moveData(magEvent:magEvent+movementWindowInSamplesPost));
+        end
     end
     moveValuesForEachWindow = movementsPreStim;
 end
