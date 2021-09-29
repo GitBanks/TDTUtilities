@@ -1,4 +1,6 @@
 function h = getMovementDataFromHTRByDateIndex(exptDate,exptIndex,useCDF)
+% this is actually more of a plotting function - 
+
 
 % exptDate = '21712';
 % exptIndex = '003';

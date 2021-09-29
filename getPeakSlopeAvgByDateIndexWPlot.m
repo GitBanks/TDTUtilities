@@ -1,4 +1,6 @@
-function dataOut = getPeakSlopeAvgByDateIndexWPlot(exptDate,exptIndex,plotPeaks)
+function [dataOut,figH] = getPeakSlopeAvgByDateIndexWPlot(exptDate,exptIndex,plotPeaks)
+% This compares movement to 
+
 
 if ~exist('plotPeaks','var')
     plotPeaks = false;
@@ -53,7 +55,7 @@ end
 if plotPeaks
     outlierMove = mean(mean(stdYbyROI,2))*3;
     disp(['plotting ' exptDate '-' exptIndex]);
-    figure;
+    figH = figure();
     maxYforAll=nan;
     minYforAll=nan;
     for iROI = 1:3
