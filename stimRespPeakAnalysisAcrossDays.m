@@ -68,10 +68,15 @@ if exist('subset','var') % if we're working with a subset, we can get some speci
     tic;
     for iDay = 1:size(subset,1)
         treats = getTreatmentInfo(animal,subset{iDay});
-        if sum(treats.injIndex) == 1 %warning! this assumes 1 drug manipulation
+        if ~isempty(treats.injIndex)  
             listQ = getExperimentsByAnimalAndDate(animal,subset{iDay});
-            injectionIndex = listQ{treats.injIndex};
-            drugInj = treats.pars{treats.injIndex};
+            %this previously assumed 1 drug manipulation.  It still won't
+            %like it if the same injection is listed twice or some other
+            %nonesense.
+            for iTreat = 1:size(treats.pars,1)
+                injectionIndex{iTreat} = listQ{treats.injIndex(iTreat,:)};
+                drugInj{iTreat} = treats.pars{iTreat,treats.injIndex(iTreat,:)};
+            end
         end
         msg = toc;
         disp(['loaded ' subset{iDay} ' with ' num2str(msg) ' seconds elapsed.']);
@@ -153,13 +158,15 @@ end
 % this section uses getTimeAndDurationFromIndex to get the exact datetime
 % of the index for the x axis. 
 % if there's an injection index, include it here
-if exist('injectionIndex','var') % this will run if we didn't already define 
-    strExpt = char(injectionIndex);
-    thisDate = strExpt(1:5);
-    thisIndex = strExpt(7:9);
-    dateExpt = houseConvertDateTo_dbForm(thisDate);
-    [~,timeOfDay] = getTimeAndDurationFromIndex(thisDate,thisIndex);
-    injMoment = datetime([dateExpt ' ' char(timeOfDay)]);
+if exist('injectionIndex','var') % this will run if we didn't already define
+    for iTreat = 1:size(injectionIndex,2)
+        strExpt = char(injectionIndex(iTreat));
+        thisDate = strExpt(1:5);
+        thisIndex = strExpt(7:9);
+        dateExpt = houseConvertDateTo_dbForm(thisDate);
+        [~,timeOfDay] = getTimeAndDurationFromIndex(thisDate,thisIndex);
+        injMoment(iTreat) = datetime([dateExpt ' ' char(timeOfDay)]);
+    end
 end
 for ii = 1:length(exptList)
     strExpt = char(exptList(ii));
@@ -238,10 +245,19 @@ for iROI = 1:nROI
     subtightplot(4,10,(1:8)+10*(iROI-1));
     plot(exptSeq,plotMatrix(:,iROI),'x-');
     hold on
-    xl = xline(injMoment,'.',drugInj,'DisplayName',drugInj,'LineWidth',1,'Interpreter', 'none');
+    
+    % I just added the possibility of multiple injection times to be
+    % displayed.  In this specific example though, they're injected at the
+    % same time.  Displaying both will make it look jumbled... for now 
+    % we could loop through injMoment
+%     for iTreat = 1:size(injMoment,2)
+    iTreat = 1;
+    xl = xline(injMoment(iTreat),'.',drugInj{iTreat},'DisplayName',drugInj{iTreat},'LineWidth',1,'Interpreter', 'none');
     xl.LabelVerticalAlignment = 'middle';
-    x2 = xline(injMoment+1,'.','24h post','DisplayName','24h post','LineWidth',1,'Interpreter', 'none');
+    x2 = xline(injMoment(iTreat)+1,'.','24h post','DisplayName','24h post','LineWidth',1,'Interpreter', 'none');
     x2.LabelVerticalAlignment = 'middle';
+%     end
+    
     if iROI == 1
         title([animal ' stim/resp peak value over time']);
     end
@@ -281,9 +297,11 @@ end
 subtightplot(4,10,31:38);
 plot(exptSeq,singleValueForIndex);
 hold on
-xl = xline(injMoment,'.',drugInj,'DisplayName',drugInj,'LineWidth',1,'Interpreter', 'none');
+
+iTreat = 1;
+xl = xline(injMoment(iTreat),'.',drugInj{iTreat},'DisplayName',drugInj{iTreat},'LineWidth',1,'Interpreter', 'none');
 xl.LabelVerticalAlignment = 'middle';
-x2 = xline(injMoment+1,'.','24h post','DisplayName','24h post','LineWidth',1,'Interpreter', 'none');
+x2 = xline(injMoment(iTreat)+1,'.','24h post','DisplayName','24h post','LineWidth',1,'Interpreter', 'none');
 x2.LabelVerticalAlignment = 'middle';
 set(gca,'ytick',[]);
 set(gca,'yticklabel',[]);
