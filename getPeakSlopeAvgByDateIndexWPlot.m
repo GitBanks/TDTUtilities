@@ -1,5 +1,12 @@
 function [dataOut,figH] = getPeakSlopeAvgByDateIndexWPlot(exptDate,exptIndex,plotPeaks)
-% This compares movement to 
+% Given: a date and an index
+% optional: plotPeaks boolean - if you want to see the plots or not
+% Do: 
+% 1. splits trials into high and low movement (active and resting)  
+% 2. produces scatterplots for movement against the peak evoked response
+% accross the index (blue dots are quiet and orange are active) 
+% 3. plots average trials below 
+% 4. returns data out structure 
 
 
 if ~exist('plotPeaks','var')
@@ -104,6 +111,8 @@ if plotPeaks
         xticks([ ]);
         drawnow;
     end
+else
+    figH = [];
 end
 
 dataOut.date = exptDate;

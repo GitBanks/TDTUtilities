@@ -9,10 +9,10 @@ if ~exist('useCDF','var')
 end
 exptID = [exptDate '-' exptIndex];
 [magData,magDT] = HTRMagLoadData(exptID);
-magTimeArray = 0:magDT:length(magData)/(1/magDT);
-magTimeArray = magTimeArray(1:length(magData));
+%magTimeArray = 0:magDT:length(magData)/(1/magDT);
+%magTimeArray = magTimeArray(1:length(magData));
 moveData = smooth(abs(magData-mean(magData)),(1/magDT)*4,'sgolay',2);
-magTimeArray = magTimeArray(1:length(moveData));
+%magTimeArray = magTimeArray(1:length(moveData));
 if useCDF
     [f,x] = ecdf(moveData);
     h = plot(x,f);
