@@ -12,7 +12,12 @@
 % fileMaint_Mag('21507','Mag012','Mag013') %failed
 % fileMaint_Mag('21507','Mag014','Mag015')
 
-fileMaint('Mag015'); % new fileMaint as of 6/15/21
+fileMaint('Mag024'); % new fileMaint as of 6/15/21
+
+% fileMaint('Mag003'); 
+% fileMaint('Mag008'); 
+% fileMaint('Mag009'); 
+
 
 %% ==== Analysis ===============================
 % Run this after each day or when a drug is done

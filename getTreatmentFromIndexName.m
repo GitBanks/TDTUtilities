@@ -1,5 +1,6 @@
 function treatment = getTreatmentFromIndexName(animalName,exptDate)
-
+% animalName = 'ZZ09';
+% exptDate = '21616';
 % requires TDTUtilities on path
 % note: probably not the best way to do this. Referencing the drug info
 % directly is probably a safer way to do this, but just as an initial fix

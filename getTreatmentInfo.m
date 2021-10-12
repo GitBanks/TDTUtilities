@@ -5,6 +5,8 @@ function treatments = getTreatmentInfo(animalName,date)
 % index a manipulation was done.  Will error out if stim params are invalid.
 % animalName = 'EEG180';
 % date = '21225';
+% animalName = 'ZZ10';
+% date = '21616';
 exptList = getExperimentsByAnimalAndDate(animalName,date);
 % 2. step through each and verify drug info (global param)
 for ii = 1:size(exptList,1)

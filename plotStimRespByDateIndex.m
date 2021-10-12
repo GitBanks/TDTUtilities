@@ -25,6 +25,7 @@ if ~exist('avgTraces','var')
 end
 
 animalName = getAnimalByDateIndex(exptDate,exptIndex);
+outPath2 = ['M:\PassiveEphys\AnimalData\' animalName '\'];
 FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
 thisFigure = figure('Name',FigName);
 nROIs = size(peakData.ROILabels,1);
@@ -86,9 +87,11 @@ for iROI = 1:nROIs
     legend(legendLabs,'FontSize',6,'Location','NorthWest');
     legend('boxoff');
 end
+%saveas(thisFigure,[outPath FigName]);
+saveas(thisFigure,[outPath2 FigName]);
 
 
-fileName = ['M:\PassiveEphys\AnimalData\' animalName '\' FigName];
+fileName = [outPath2 FigName];
 print(thisFigure,'-painters',fileName,'-r300','-dpng');
 if sendToSlack
     try

@@ -5,6 +5,7 @@ function trialPattern = createTrialPattern(nStimTypes,nTrialsPerStim)
 
 % nTrialsPerStim = 100;
 % nStimTypes = 5;
+% nStimTypes = length(stimArray)
 trialPattern = zeros(1,nStimTypes*nTrialsPerStim);
 for iTrials = 1:nStimTypes
     trialPattern((iTrials-1)*nTrialsPerStim+1:iTrials*nTrialsPerStim) = ...

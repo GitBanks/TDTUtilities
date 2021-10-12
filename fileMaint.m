@@ -5,7 +5,7 @@ function fileMaint(animal)
 % it will very likely fail.
 
 % === test parameters
-% animal = 'ZZ06';
+% animal = 'ZZ10';
 
 % === override and analysis toggle parameters - change rarely
 forceReimport = 0;

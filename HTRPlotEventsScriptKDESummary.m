@@ -6,16 +6,21 @@ clear all
 reportPlot = false;
 gaussLength = 120;
 treatments = {
-% 'Anlg_5_MeO_DET';
-% 'Anlg_Pyr_T'; 
-% 'Anlg_6_FDET'; 
- 'Anlg_5_MeO_MiPT'; 
-% 'Anlg_4_AcO_DMT'; 
- 'Anlg_5_MeO_pyrT';
- 'Anlg_5_6_DiMeO_MiPT';
-%  'DOI_conc'
+'Anlg_5_MeO_DET';
+'Anlg_Pyr_T'; 
+'Anlg_6_FDET'; 
+'Anlg_5_MeO_MiPT'; 
+'Anlg_4_AcO_DMT'; 
+'Anlg_5_MeO_pyrT';
+'Anlg_5_6_DiMeO_MiPT';
+'DOI_conc'
 'psilocybin';
+
+% 'Corticosterone_conc';
+% 'Lisuride_conc';
+% 'Mifepristone_conc';
 };
+
 
 
 
@@ -42,13 +47,7 @@ if contains(treatment,'_')
     treatmentDisplay = strrep(treatmentDisplay,'_','-');
 end
 
-
-
 HTRPlotEventsScriptKDE(treatment,gaussLength)
-
-
-
-
 
 dateTable = getDateAnimalUniqueByTreatment(treatment);
 

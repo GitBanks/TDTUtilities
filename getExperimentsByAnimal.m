@@ -29,7 +29,7 @@ for iExpt = 1:size(exptList,1) %ZS 2/14/2018
     workingList{iExpt,2} = fetchAdjust(dbConn,['SELECT exptIndex FROM masterexpt WHERE exptID =''' num2str(exptList{iExpt,1}) '''']); 
     workingList{iExpt,2} = workingList{iExpt,2}{1};
     workingList{iExpt,3} = fetchAdjust(dbConn,['SELECT notebookDesc FROM masterexpt WHERE exptID =''' num2str(exptList{iExpt,1}) '''']);
-    if ~isempty(strfind(workingList{iExpt,3}{1},findExptType)) || isempty(findExptType)
+    if ~isempty(strfind(workingList{iExpt,3}{1},findExptType)) || isempty(findExptType) || ~isempty(strfind(workingList{iExpt,3}{1},lower(findExptType)))
         indexN = num2str(workingList{iExpt,2});
         if length(indexN) == 1
             indexN = ['0' indexN];

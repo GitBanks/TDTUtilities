@@ -8,7 +8,7 @@ function [operationList] = getExperimentsByAnimalAndDate(animalName,exptDate,fin
 % Calls: [outputList] = getExperimentsByAnimal(animalName,findExptType);
 % (and just sorts / selects by day)
 if nargin <1
-   error('At least provide an animal name'); 
+   error('You need an animal name and date'); 
 end
 if nargin <2
    error('This funtion needs a date'); 
