@@ -25,8 +25,8 @@ function [] = synapseFrontEnd(animalName)
 % ! TODO ! %  add a check to see if we can connect to recording computer path (sometimes network logs us out!) otherwise we can't guarantee importing will work consistantly
 % example path: \\144.92.237.187\c\Data\2018\
 S.enableMultiThread = 0; % for testing or using without parfor, set to 0
-%S.recordingComputer = '144.92.237.183'; % Gilgamesh
-S.recordingComputer = '144.92.237.187'; % Nessus
+S.recordingComputer = '144.92.237.183'; % Gilgamesh
+%S.recordingComputer = '144.92.237.187'; % Nessus
 S.recordingComputerSubfolder = '\Data\PassiveEphys\';%'\c\Data\';
 S.dbConn = dbConnect();
 

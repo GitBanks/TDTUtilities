@@ -110,6 +110,10 @@ S.Preselects = {
     '4-AcO-DMT'
     '5,6-DiMeO-MiPT'
     '5-MeO-DET'
+    'Mifepristone + 4-AcO-DMT'
+    'Lisuride'
+    'Mifepristone + Vehicle'
+    'Vehicle + Vehicle'
     }; 
 % LEFT
 S.pp(1) = uicontrol('style','pop',...
