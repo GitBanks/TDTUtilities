@@ -10,5 +10,5 @@ for iTrials = 1:nStimTypes
     trialPattern((iTrials-1)*nTrialsPerStim+1:iTrials*nTrialsPerStim) = ...
         iTrials;
 end
-
+rng('shuffle');
 trialPattern = trialPattern(randperm(length(trialPattern)));
