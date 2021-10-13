@@ -23,7 +23,7 @@ manuallySetGlobalParamUI(animal);
 
 % === verify the electrode information has been entered correctly.  This is a
 % local function within FileMaint, below
-[electrodeLocation] = checkElectrode(listOfAnimalExpts{1}(1:5),listOfAnimalExpts{1}(7:9),animal);
+[~] = checkElectrode(listOfAnimalExpts{1}(1:5),listOfAnimalExpts{1}(7:9),animal);
 
 % === Set paths
 path.dirStrAnalysisROOT = [mousePaths.M 'PassiveEphys\']; % 'M' drive
