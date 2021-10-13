@@ -7,7 +7,9 @@ function [segmentedData] = segmentData(signal,dT,nSec,prctOverlap)
 nPts = round(nSec/dT); % number of points in each trial
 nPtsOverlap = round((nSec*prctOverlap)/dT); % number of points in overlap
 
-segmentedData = buffer(signal,nPts,nPtsOverlap,'nodelay'); % segment 1D time vector into nPts by trials matrix with nPtsOverlap overlap,
+[segmentedData,~] = buffer(signal,nPts,nPtsOverlap,'nodelay'); % segment 1D time vector into nPts x nTrials matrix with nPtsOverlap overlap,
 % where nTrials is m = floor((L-n)/(n-p))+1 when opt = 'nodelay'
+
+% second output is partial frame data, which should be ignored...
 
 end

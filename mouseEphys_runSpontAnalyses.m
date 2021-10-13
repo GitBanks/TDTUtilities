@@ -32,7 +32,6 @@ batchParams = getBatchParamsByAnimal(animalName);
 % list of frequency bands
 batchParams.(animalName).bandInfo = mouseEEGFreqBands; % information for band power calculation
 bandNames = mouseEEGFreqBands.Names;
-foi = [2:80]; % frequencies for spectral calculation % NOTE: is this correct?
 eParams = batchParams.(animalName); % why are eParams and batchParams separate?
 
 % get list of experiments and dates
@@ -41,7 +40,8 @@ dates = unique(cellfun(@(x) x(1:5), exptList(:,1), 'UniformOutput',false),'stabl
 
 % try loading existing batch params from saved analysis output
 try
-    tempParams = load(EEGUtils.specFile,'batchParams');
+    fpath = getLocalPath('bandPow');
+    tempParams = load(fpath,'batchParams');
 catch
     
 end
@@ -79,11 +79,11 @@ maxSDCriterion = 0.5;
 minSDCriterion = 0.2;
 rejectAcrossChannels = 1;
 
-% window length and overlap
-windowLength = 4;
-windowOverlap = 0.25;
-eParams.windowLength = windowLength; % epoch duration (sec)
-eParams.windowOverlap = windowOverlap; % epoch fractional overlap
+% trial length and overlap
+trialLength = 4; % sec
+trialOverlap = 0.25; % pct overlap
+eParams.trialLength = trialLength; % epoch duration (sec)
+eParams.trialOverlap = trialOverlap; % epoch fractional overlap
 
 % Main analysis section
 for iDate = 1:length(eDates)
@@ -97,13 +97,13 @@ for iDate = 1:length(eDates)
         for iExpt = 1:nExpts
             
             thisExpt = ['expt' eParams.(thisDate).exptIndex{iExpt}];
-            %% TODO: CALCULATE MOVEMENT SCORE 
+            %% TODO: CALCULATE MOVEMENT SCORE
             % Load video-derived movement, divide into segments w/ overlap, calculate mean of each segment
             if ignoreMovement % movement will not be added if this is = 1!!!
                 meanMovementPerWindow = nan(1204,1); % TODO: maybe rethink how the non-movement condition is handled
             else
                 try
-                    [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(thisDate,thisExpt,windowLength,windowOverlap);
+                    [meanMovementPerWindow,windowTimeLims] = segmentMovementDataForAnalysis(thisDate,thisExpt,trialLength,trialOverlap);
                 catch
                     warning('failed to segment movement data, will now ignore movement analysis');
                     ignoreMovement = 1; % set equal to 1 to ignore movement analysis
@@ -115,9 +115,10 @@ for iDate = 1:length(eDates)
             % loadedData is matrix of nChan x nSamples
             [loadedData,eParams] = loadMouseEphysData(eParams,thisDate,iExpt);
             
-            %% APPLY 60HZ NOTCH FILTER
-            file_dT = eParams.(thisDate).trialInfo.dT; % file dT
+            nChans = size(loadedData,1);
+            file_dT = eParams.(thisDate).trialInfo.dT; % get dT of the original data
             
+            %% APPLY 60HZ NOTCH FILTER
             disp('applying 60Hz notch filter');
             [loadedData_filt] = filterData_dbVer(loadedData,-1,-1,file_dT);
             
@@ -125,96 +126,106 @@ for iDate = 1:length(eDates)
             [fsorig, fsres] = rat((1/file_dT)/dsFs); % get nearest ratio
             dT = file_dT*(fsorig/fsres); % new dT
             
+            % resample each channel separately
             disp(['resampling from ' num2str(1/file_dT)  ' to ' num2str(1/dT) ' Hz']);
-            for iChan = 1:size(loadedData_filt,1)
+            for iChan = 1:nChans
                 [loadedData_ds(iChan,:)] = resample(loadedData_filt(iChan,:),fsres,fsorig); % resample data to dsFs
             end
             
-%             % compare freq domain signals
-%             [p,f] = myFFT(loadedData,file_dT);
-%             [p_ds,f_ds] = myFFT(loadedData_ds,dT);
-%             [p_notch,f_notch] = myFFT(loadedData,file_dT);
-
-%             figure;
-%             loglog(f,p);
-%             hold on
-%             loglog(f_notch,p_notch);
-%             loglog(f_ds,p_ds);
-%             legend({'original','notch','notch + downsample'});
-%             ylim([10^-5 10^-2.5]);
-%             xlim([0.5 120]);
-%             ylabel('power');
-%             xlabel('freq (Hz)');
-%             title([thisDate ' ' thisExpt]);
-
-%             % compare time series signals
-%             t = 0:file_dT:(size(loadedData,2)-1)*file_dT;
-           
-%             figure;
-%             plot(t,loadedData(1,:));
-%             hold on
-%             plot(t_ds,loadedData_ds(1,:),'.');
-
+            % create time vector for downsampled data
+            t_ds = 0:dT:(size(loadedData_ds,2)-1)*dT;
+            
+            %             % compare freq domain signals
+            %             [p,f] = myFFT(loadedData,file_dT);
+            %             [p_ds,f_ds] = myFFT(loadedData_ds,dT);
+            %             [p_notch,f_notch] = myFFT(loadedData,file_dT);
+            
+            %             figure;
+            %             loglog(f,p);
+            %             hold on
+            %             loglog(f_notch,p_notch);
+            %             loglog(f_ds,p_ds);
+            %             legend({'original','notch','notch + downsample'});
+            %             ylim([10^-5 10^-2.5]);
+            %             xlim([0.5 120]);
+            %             ylabel('power');
+            %             xlabel('freq (Hz)');
+            %             title([thisDate ' ' thisExpt]);
+            
+            %             % compare time series signals
+            %             t = 0:file_dT:(size(loadedData,2)-1)*file_dT;
+            
+            %             figure;
+            %             plot(t,loadedData(1,:));
+            %             hold on
+            %             plot(t_ds,loadedData_ds(1,:),'.');
+            
             %% SEGMENT DATA INTO TRIALS
+            
+            % to-do: preallocate data
+%             nPts = floor(trialLength/dT);
+%             nTrials = round((round(max(t_ds)/trialLength))*(1+trialOverlap)); %to-do
+%             data_mouseEphys = nan(nChans,nPts,nTrials);
+            
             % loop through channels, transform data vector into nChans x nPts x nTrials vector
-            for iChan = 1:size(loadedData_ds,1)
-                [data_mouseEphys(iChan,:,:)] = segmentData(loadedData_ds(iChan,:),dT,windowLength,windowOverlap);
+            % note that partial trials will be ignored
+            for iChan = 1:nChans
+                [data_mouseEphys(iChan,:,:)] = segmentData(loadedData_ds(iChan,:),dT,trialLength,trialOverlap);
             end
             
             % segment time vector into trials
-            t_ds = 0:dT:(size(loadedData_ds,2)-1)*dT;
-            [trialTimes] = segmentData(t_ds,dT,windowLength,windowOverlap);
+            [trialTimes] = segmentData(t_ds,dT,trialLength,trialOverlap);  
             
-            %% TODO: ADD TRIAL REJECTION
+            %% TRIAL REJECTION
+           
+            nTrials = size(data_mouseEphys,3); % third dimension is number of trials
+            opts.nChans = nChans;
+            opts.nTrials = nTrials;
+            opts.minSDCriterion = minSDCriterion;
+            opts.maxSDCriterion = maxSDCriterion;
+            opts.rejectAcrossChannels = rejectAcrossChannels;
+            [theseTrials] = trialRejection_SD(data_mouseEphys,opts);
             
-            nChans = length(batchParams.(animalName).ephysInfo.chanNums);
-            nWindows = length(data_MouseEphysDS.trial);
-            nonRejects_byChan = ones(nChans,nWindows);
-            nonRejects_all = ones(1,nWindows);
-            for iChan = 1:nChans
-                for iWindow = 1:nWindows
-                    tempSD(iWindow) = std(data_MouseEphysDS.trial{1,iWindow}(iChan,:));
-                    tempMax(iWindow) = max(data_MouseEphysDS.trial{1,iWindow}(iChan,:));
-                end
-                sortSD = sort(tempSD(:));
-                SDCriterion = sortSD(ceil(length(sortSD)*0.95));
-                SDCriterion = min(SDCriterion,maxSDCriterion);
-                SDCriterion = max(SDCriterion,minSDCriterion);
-                nonRejectLogic_1 = tempSD<SDCriterion;
-                nonRejects_byChan(iChan,:) = nonRejectLogic_1; %& nonRejectLogic_2;
-                disp(['SDcrit = ' num2str(SDCriterion) '; Accepting ' num2str(sum(nonRejects_byChan(iChan,:))) '/' num2str(nWindows) ' trials for chan#' num2str(iChan) '.']);
-                nonRejects_all = nonRejects_all & nonRejects_byChan(iChan,:);
+            %% DBT SPEC ANALYSIS
+            
+            tic
+            parfor iTrial = 1:nTrials
+                powSpec{iTrial} = specAnalysis(data_mouseEphys(:,:,iTrial)',dsFs); % change dimension of data_mouseEphys because dbt takes channels in columns
             end
-            if rejectAcrossChannels
-                disp('Rejecting across channels...');
-                for iChan = 1:nChans
-                    nonRejects_byChan(iChan,:) = nonRejects_all;
-                end
-                disp(['Cumulative accepted trials = ' num2str(sum(nonRejects_all))]);
-            end
-            clear tempSD tempMax
-            theseTrials = 1:length(nonRejects_all);
-            theseTrials = theseTrials(nonRejects_all == 1);
+            toc
             
-            %% TODO: UPDATE LEMPEL-ZIV COMPLEXITY ANALYSIS
-            [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
-            LZc = Cnorm(theseTrials,:);
+            freqs = cat(3,powSpec.freq{:}); % TODOD
+            bandPower = cat(3,powSpec.powspctrm{:}); % concatenate along third dimensions (trials), chans x freqs x trials matrix
+            
+
+            disp('calculated power spectrum');
+            % TODO: make sure band definitions make sense
+            
+            % TODO: separate out the different bands in powSpec?
+            
+            %% TODO: RUN LEMPEL-ZIV COMPLEXITY ANALYSIS
+            
+            disp('starting Lempel-Ziv Complexity Analysis');
+            LZc = nan(nChans,nTrials); % preallocate
+            LZcn = nan(nChans,nTrials);
+            tic
+            for iTrial = 1:nTrials
+                [LZc(:,iTrial),LZcn(:,iTrial)] = calculateLZcn(data_mouseEphys(:,:,iTrial));
+            end
+            toc
+            
             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = LZc;
-            surrogateAvg = mean(Cnormrand(theseTrials,:,:),3); % average across n (dimension 3) surrogate signals
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = LZc./surrogateAvg; %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
-            
-            %% TODO: INCORPORATE ECOG VERSION OF SPEC ANALYSIS
-            [output] = specAnalysis(data,dsFs);
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = LZcn;
             
             %% TODO: INCORPORATE ECOG VERSION OF WPLI ANALYSIS?
             
             
-            %%             
+            %%
             if ignoreMovement
-               meanMovementPerWindow = nan(size(theseTrials)); 
+                meanMovementPerWindow = nan(size(theseTrials));
             end
-            %% 
-                    end % Loop over expts
+            %%
+        end % Loop over expts
         batchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     catch why
         warning('Error Message:');
@@ -251,8 +262,8 @@ end
             
             % Segment data into trials of length trialLength with overlap
 %             cfg         = [];
-%             cfg.length  = eParams.windowLength;
-%             cfg.overlap = eParams.windowOverlap;
+%             cfg.length  = eParams.trialLength;
+%             cfg.overlap = eParams.trialOverlap;
 %             data_MouseEphysDS   = ft_redefinetrial(cfg, data_MouseEphysDS);
 %             eParams.(thisDate).trialInfo(iExpt).trialTimesRedef = ...
 %                 (data_MouseEphysDS.sampleinfo-1)/data_MouseEphysDS.fsample;  

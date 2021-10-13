@@ -1,7 +1,7 @@
 function [output] = specAnalysis(data,fs,options,mask)
 %specAnalysis Compute spectral power using dbt
 %   data: samples x chans
-dbtPath = what('+ephysutils/kovach');
+dbtPath = what('TDTUtilities/+ephysutils/kovach');
 c = onCleanup(@() rmpath(dbtPath.path));
 try
     addpath(dbtPath.path);
@@ -10,11 +10,11 @@ catch why
 end
 powSpec = [];
 freqs = [];
-bandDef = mouseEEGFreqBands;
-for iBand = 1:length(bandDef.FreqBands.Names)
-    thisBand = bandDef.FreqBands.Names{iBand};
-    bw = bandDef.FreqBands.Widths.(thisBand);
-    freqRange = bandDef.FreqBands.Limits.(thisBand);
+FreqBands = mouseEEGFreqBands;
+for iBand = 1:length(FreqBands.Names)
+    thisBand = FreqBands.Names{iBand};
+    bw = FreqBands.Widths.(thisBand);
+    freqRange = FreqBands.Limits.(thisBand);
     
     bandTFR = dbt(data,fs,bw,'offset',freqRange(1),'lowpass',freqRange(2)-bw);
     
