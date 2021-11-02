@@ -23,7 +23,7 @@ manuallySetGlobalParamUI(animal);
 
 % === verify the electrode information has been entered correctly.  This is a
 % local function within FileMaint, below
-[~] = checkElectrode(listOfAnimalExpts{1}(1:5),listOfAnimalExpts{1}(7:9),animal);
+[electrodeLocation] = checkElectrode(listOfAnimalExpts{1}(1:5),listOfAnimalExpts{1}(7:9),animal);
 
 % === Set paths
 path.dirStrAnalysisROOT = [mousePaths.M 'PassiveEphys\']; % 'M' drive
@@ -235,6 +235,7 @@ end
 
 function [electrodeLocation] = checkElectrode(date,index,animal)
 % check to see if probe has been entered, if not, copy existing template
+electrodeLocation = [];
 try
     [electrodeLocation,~] = getElectrodeLocationFromDateIndex(date,index);
 catch
@@ -248,7 +249,7 @@ catch
         setElectrodeLocationFromAnimal('DREADD07',animal);
     elseif strcmp(animal(1:2),'ZZ')
         error('please enter probe configuration for this animal'); % ZZ animals tend to be unique
-    elseif strcmp(animal(1:3),'Mag')
+    elseif strcmp(animal(1:3),'Mag') || strcmp(animal(1:3),'mag')
         setElectrodeLocationFromAnimal('Mag003',animal);
     else
         error('Animal type not recognized.')
