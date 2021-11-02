@@ -19,6 +19,9 @@ for iFile = 1:size(outputList,1)
     textIndex = strfind(notebookDescText,'a Spon');
     hourOfRecording = str2num(notebookDescText{:}(textIndex{1}-2:textIndex{1}-1)); 
     timeStruct.desc(iFile) = notebookDescText;
+    if isempty(hourOfRecording)
+        error('only ''spontaneous hour''  recording is supported');
+    end
     timeStruct.hourOfRecording(iFile) = hourOfRecording;
     fileLocation = ['M:\PassiveEphys\20' exptID(1:2) '\'  exptID '\' ];
     [~,timeStruct.timeOfDay{iFile}] = getTimeAndDurationFromIndex(exptID(1:5),exptID(7:9));
