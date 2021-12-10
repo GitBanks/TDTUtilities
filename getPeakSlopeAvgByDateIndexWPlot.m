@@ -9,6 +9,10 @@ function [dataOut,figH] = getPeakSlopeAvgByDateIndexWPlot(exptDate,exptIndex,plo
 % 4. returns data out structure 
 
 
+exptDate = '21n30'
+exptIndex = '005'
+
+
 if ~exist('plotPeaks','var')
     plotPeaks = false;
 end
@@ -32,6 +36,8 @@ restingThresh = 0.1;
 activeThresh = 0.15;
 theseAreResting = moveValuesForEachWindow<restingThresh;
 theseAreActive = moveValuesForEachWindow>activeThresh;
+
+
 % We need to pull the unaveraged trials again (because obviously, we're
 % sorting them)
 tPreStim = 0.02;
@@ -40,6 +46,20 @@ disp(['loading peaks for ' exptDate '-' exptIndex]);
 ephysData = getImportedSynapseEvokedData(exptDate,exptIndex,tPreStim,tPostStim);
 restingAvgMovement = mean(moveValuesForEachWindow(theseAreResting));
 curatedPeakValsForEachWindow = peakValsForEachWindow;
+
+for iROI = 1
+    restingPeaksIPSI = curatedPeakValsForEachWindow(iROI,theseAreResting),'omitnan';
+end
+
+for iROI = 2
+    restingPeaksCONTRA = curatedPeakValsForEachWindow(iROI,theseAreResting),'omitnan';
+end
+
+for iROI = 3
+    restingPeaksVCA1 = curatedPeakValsForEachWindow(iROI,theseAreResting),'omitnan';
+end
+
+
 for iROI = 1:3
     upperB = mean(peakValsForEachWindow(iROI,:))+std(peakValsForEachWindow(iROI,:))*outlierSTD;
     lowerB = mean(peakValsForEachWindow(iROI,:))-std(peakValsForEachWindow(iROI,:))*outlierSTD;
@@ -118,6 +138,9 @@ end
 dataOut.date = exptDate;
 dataOut.index = exptIndex;
 dataOut.restingAvgMovement = restingAvgMovement;
+dataOut.restingPeaksIPSI = restingPeaksIPSI
+dataOut.restingPeaksCONTRA = restingPeaksCONTRA
+dataOut.restingPeaksVCA1 = restingPeaksVCA1
 dataOut.restingAvgPeak = restingAvgPeak;
 dataOut.peaks = curatedPeakValsForEachWindow;
 dataOut.active = theseAreActive;
