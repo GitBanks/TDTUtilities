@@ -1,13 +1,13 @@
 function plotPlasticityDuringQuiescence(animal,subset)
 
 %chose animal
-animal = 'ZZ09'; 
+%animal = 'ZZ13'; 
 
 %Define the subset of experiment days to use
-subset = {'21621'};
+%subset = {'21n30'};
 
 %Create a table out of the experiment list which is called from exptPlasticitySet
-[exptTable] = getExptPlasticitySetByAnimal(animal);
+[~,exptTable] = getExptPlasticitySetByAnimal(animal);
 
 
 %We now want to make a table that pulls data from indices from the dates we give it
