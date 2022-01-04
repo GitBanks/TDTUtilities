@@ -1,4 +1,16 @@
 function [batchParams, mouseEphys_out] = mouseEphys_specAnalysis(animalName,forceReRun)
+
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!   SAFE FILE LOCATION HERE:    EEGUtils  !!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 % Computes the power spectrum (and Lempel-Ziv complexity for Banks Lab
 % mouse ephys data.
 % Workflow is
@@ -13,6 +25,7 @@ function [batchParams, mouseEphys_out] = mouseEphys_specAnalysis(animalName,forc
 %   (h) save mouseEphys_out and batchParams to output file
 
 % input parameters:
+% animalName = 'EEG172'
 % animalName as the animal ID character string, e.g., 'EEG170';
 % forceReRun is a boolean (true or false) 
 
@@ -28,12 +41,13 @@ switch nargin
 end
 
 % generate batchParams
-batchParams = getBatchParamsByAnimal(animalName);
+batchParams = getBatchParamsByAnimal(animalName); 
 
 % list of frequency bands
 batchParams.(animalName).bandInfo = mouseEEGFreqBands; % information for band power calculation
 bandNames = mouseEEGFreqBands.Names;
-foi = [2:80]; % frequencies for spectral calculation % NOTE: is this correct?
+foilim = mouseEEGFreqBands.Limits.all; % frequency limits for spectral calculation % changed from foi to foilim 12/17/21
+% foi = [0.5 1:80];
 eParams = batchParams.(animalName); % why are eParams and batchParams separate?
 
 % get list of experiments and dates
@@ -93,10 +107,10 @@ for iDate = 1:length(eDates)
     disp(['Animal ' animalName ' - Date: ' thisDate]);
     disp('------------------------');
     nExpts = length(eParams.(thisDate).exptIndex);
-    try
+    
         % Expts correspond to the TDT recording files, i.e. 000, 001, etc
         for iExpt = 1:nExpts
-            
+%             try
             thisExpt = ['expt' eParams.(thisDate).exptIndex{iExpt}];
                         
             % loadedData is matrix of nChan x nSamples
@@ -191,24 +205,28 @@ for iDate = 1:length(eDates)
             end
             
             % LEMPEL-ZIV COMPLEXITY ANALYSIS
-            [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
-            LZc = Cnorm(theseTrials,:);
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = LZc;
-            surrogateAvg = mean(Cnormrand(theseTrials,:,:),3); % average across n (dimension 3) surrogate signals
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = LZc./surrogateAvg; %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
-            
+%             [~,Cnorm,~,Cnormrand] = runLZC_withRandom(data_MouseEphysDS.trial);
+%             LZc = Cnorm(theseTrials,:);
+%             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZc = LZc;
+%             surrogateAvg = mean(Cnormrand(theseTrials,:,:),3); % average across n (dimension 3) surrogate signals
+%             mouseEphys_out.(animalName).(thisDate).(thisExpt).LZcn = LZc./surrogateAvg; %LZcn is the signal LZc divided by the average LZc from 100 surrogate signals
+%             
             % SPECTRAL ANALYSIS
-            % First compute band power, keeping trials separate to generate a time series
+            % Compute band power and power spectra, keeping trials separate to generate a time series
             cfg           = [];
             cfg.trials    = theseTrials;
             cfg.method    = 'mtmfft';
             cfg.taper     = 'hanning';
             cfg.output    = 'pow';
             cfg.pad       = ceil(max(cellfun(@numel, data_MouseEphysDS.time)/data_MouseEphysDS.fsample));
-            cfg.foi       = foi;
+            cfg.foilim     = foilim;
+%             cfg.foi       = foi;
             cfg.keeptrials= 'yes';
             tempSpec      = ft_freqanalysis(cfg, data_MouseEphysDS);
             mouseEphys_out.(animalName).(thisDate).(thisExpt).bandPow.cfg = cfg; %store config from band power
+            
+            % save spectral power (added 12/17/21)
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).spec = tempSpec;
             
             % Calculate average power in each band
             for iBand = 1:length(bandNames)
@@ -217,36 +235,38 @@ for iDate = 1:length(eDates)
                 mouseEphys_out.(animalName).(thisDate).(thisExpt).bandPow.(thisBand) = ...
                     squeeze(mean(tempSpec.powspctrm(:,:,tempSpec.freq>=fLims(1) & tempSpec.freq<=fLims(2)),3));
             end
-            
-            % Set params for the spectral calculation
-            cfg           = [];
-            cfg.trials    = theseTrials;
-            cfg.method    = 'mtmfft';
-            cfg.output    = 'pow';
-            cfg.pad       = ceil(max(cellfun(@numel, data_MouseEphysDS.time)/data_MouseEphysDS.fsample));
-            cfg.foi       = foi;
-            cfg.tapsmofrq = 2;
-            cfg.keeptrials= 'no';
-            
-            % Calculate average spectral power
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).spec = ...
-                ft_freqanalysis(cfg, data_MouseEphysDS);
+            % this section Was used to calculate the average power spectra
+            % over the hour for plotting with plotFieldTripSpetra
+            % (commented out 12/17/21)
+%             % Set params for the spectral calculation
+%             cfg           = [];
+%             cfg.trials    = theseTrials;
+%             cfg.method    = 'mtmfft';
+%             cfg.output    = 'pow';
+%             cfg.pad       = ceil(max(cellfun(@numel, data_MouseEphysDS.time)/data_MouseEphysDS.fsample));
+%             cfg.foi       = foi;
+%             cfg.tapsmofrq = 2;
+%             cfg.keeptrials= 'no';
+%             
+%             % Calculate average spectral power
+%             mouseEphys_out.(animalName).(thisDate).(thisExpt).spec = ...
+%                 ft_freqanalysis(cfg, data_MouseEphysDS);
             
             mouseEphys_out.(animalName).(thisDate).(thisExpt).activity = ...
                 meanMovementPerWindow(theseTrials); % store movement array with only the accepted trials...
             
             mouseEphys_out.(animalName).(thisDate).(thisExpt).trialsKept = theseTrials'; % store theseTrials
             
-            mouseEphys_out.(animalName).(thisDate).(thisExpt).windowTimeLims = eParams.(thisDate).trialInfo.trialTimesRedef(theseTrials,:); % store movement time windows with only accepted trials
+            mouseEphys_out.(animalName).(thisDate).(thisExpt).windowTimeLims = eParams.(thisDate).trialInfo(iExpt).trialTimesRedef(theseTrials,:); % store movement time windows with only accepted trials
             
             clear windowTimeLims indexLength meanMovementPerWindow
-            
+%             catch why
+%                 warning('Error Message:');
+%                 warning([why.message ' ' why.stack(1).name ' line ' num2str(why.stack(1).line)]);
+%             end
         end % Loop over expts
         batchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
-    catch why
-        warning('Error Message:');
-        warning([why.message ' ' why.stack(1).name ' line ' num2str(why.stack(1).line)]);
-    end
+    
 end % Loop over recording dates for this animal
 
 % save!

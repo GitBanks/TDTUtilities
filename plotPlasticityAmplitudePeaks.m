@@ -6,15 +6,14 @@ function plotPlasticityAmplitudePeaks(exptDate,exptIndices,description)
 % discrete sections for readability and modularity reasons.
 
 if ~exist('exptDate','var') || ~exist('exptIndices','var') 
-    error('need to input date and index as parameters');
-%     exptDate = '21d21'; 
-%     exptIndices = {'008','012','015'};
+%     exptDate = '21527';
+%     exptIndices = {'001','003','005'};
+    exptDate = '21616'; 
+    exptIndices = {'009','017','021'};
+%     exptDate = '21616'; noTank = true;
+%     exptIndices = {'010','018','022'};
 end
 nExpts = length(exptIndices);
-
-if ~exist('description','var')
-    description = '';
-end
 
 outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndices{1} '\'];
 if ~exist(outPath,'dir')
@@ -36,11 +35,15 @@ avgWinTime = 1.e-3; %sec;
 % Time window re stim time to calculate baseline value that is subtracted from peak values
 baseWin = [-5,-0.5]*1.e-3; %sec; 
 % pkAvgWin = 8; % Average over this window to estimate peak
-%exptIndexLabels = {'Baseline','postLTP','postLTD'}; % these correspond to
-%each stimset we load below IF YOU ARE DOING 2 LTP OR LTD INDICES MUST EDIT
-%HERE
-exptIndexLabels = {'Baseline','postLTP','postLTD'};
+%exptIndexLabels = {'Baseline','postLTP','postLTD'}; % these correspond to each stimset we load below
+%exptIndexLabels = {'Baseline','postLTP','postLTD'};
+exptIndexLabels = {'Baseline','postLTP','postLTP(2)'};
 smFac = 15; %smoothing window for time series plots
+
+%%
+
+
+
 
 
 %% =========  load data in this block  ========= % % % %
@@ -56,6 +59,9 @@ for iExpt = 1:nExpts
     [~,movementsPreStim(iExpt).events] = plotStimAndMovement(exptDate,exptIndices{iExpt},false);
 end
 
+
+
+
 nTotalTrials = sum(nTrials);
 [nROIs,nDataPts] = size(evDataSet(1).subMean);
 preStimIndex = floor(tPreStim/dTRec);
@@ -66,11 +72,8 @@ recDelay = zeros(1,nExpts);
 for iExpt = 2:nExpts
     t2 = evDataSet(iExpt).info.utcStartTime;
     t1 = evDataSet(iExpt-1).info.utcStopTime;
-    if synapseTimeSubtraction(t2,t1) < 0 
-        recDelay(iExpt) = 600;
-    else
-        recDelay(iExpt) = synapseTimeSubtraction(t2,t1);
-    end
+     recDelay(iExpt) = 600;
+%     recDelay(iExpt) = synapseTimeSubtraction(t2,t1);
 end
 
 %%
@@ -206,14 +209,14 @@ end
 saveas(thisFigure,[outPath figureName]);
 saveas(thisFigure,[outPath2 figureName]);
 
-% fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
-% print('-painters',fileName,'-r300','-dpng');
-% try
-%     desc = figureName;
-%     sendSlackFig(desc,[fileName '.png']);
-% catch
-%     disp(['failed to upload ' fileName ' to Slack']);
-% end
+fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
+print('-painters',fileName,'-r300','-dpng');
+try
+    desc = figureName;
+    sendSlackFig(desc,[fileName '.png']);
+catch
+    disp(['failed to upload ' fileName ' to Slack']);
+end
 
 %% Measure response magnitude of single trial via peak amplitude
 
@@ -393,16 +396,14 @@ ax.XLabel.String = 'Time (min)';
 saveas(thisFigure,[outPath figureName]);
 saveas(thisFigure,[outPath2 figureName]);
 
-
-%Send to slack
-% fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
-% print('-painters',fileName,'-r300','-dpng');
-% try
-%     desc = figureName;
-%     sendSlackFig(desc,[fileName '.png']);
-% catch
-%     disp(['failed to upload ' fileName ' to Slack']);
-% end
+fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
+print('-painters',fileName,'-r300','-dpng');
+try
+    desc = figureName;
+    sendSlackFig(desc,[fileName '.png']);
+catch
+    disp(['failed to upload ' fileName ' to Slack']);
+end
 
 
 %% Plot out time series of inner products
@@ -493,13 +494,13 @@ for iExpt = 1:nExpts
         end
     end
 end
-% fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
-% print('-painters',fileName,'-r300','-dpng');
-% try
-%     desc = figureName;
-%     sendSlackFig(desc,[fileName '.png']);
-% catch
-%     disp(['failed to upload ' fileName ' to Slack']);
+fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
+print('-painters',fileName,'-r300','-dpng');
+try
+    desc = figureName;
+    sendSlackFig(desc,[fileName '.png']);
+catch
+    disp(['failed to upload ' fileName ' to Slack']);
 end
 
 

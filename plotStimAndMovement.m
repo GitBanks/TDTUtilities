@@ -46,7 +46,7 @@ movementWindowInSamplesPost = round((postStimMovementWindow+.2)*(1/magDT));
 % Warning, we've got a bit of a circular dependancy thing going on here:
 % plotStimAndMovement (this program) is called by a number of programs, but needs
 % '_peakData' data saved to be efficient.  _peakData is saved in programs
-% that call this program (again, in an attempt to be efficient.  This else
+% that call this program (again, in an attempt to be efficient).  This else
 % statement fixes that, but be aware of circular issue.  Consider pulling
 % out the sections that need this movement data from
 % getSynapseSingleStimData and getSynapseStimSetData

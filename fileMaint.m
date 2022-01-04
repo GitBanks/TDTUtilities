@@ -254,6 +254,7 @@ catch
     else
         error('Animal type not recognized.')
     end
+    [electrodeLocation,~] = getElectrodeLocationFromDateIndex(date,index);
 end
 
 end

@@ -114,6 +114,7 @@ S.Preselects = {
     'Lisuride'
     'Mifepristone + Vehicle'
     'Vehicle + Vehicle'
+    'Fluvoxamine + LPS'
     }; 
 % LEFT
 S.pp(1) = uicontrol('style','pop',...

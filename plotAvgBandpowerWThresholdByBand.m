@@ -7,7 +7,7 @@ function plotAvgBandpowerWThresholdByBand(bandToUse)
 
 
 %load('C:\Users\Matt Banks\Desktop\bandpower_psilocybin_210701.mat');
-load('C:\Users\Matt Banks\Desktop\bandpower_psilocybin_nmlz=0_21714');
+load('C:\Users\Matt Banks\Documents\Code\TDTUtilities\bandpower_psilocybin_nmlz=0_21714');
 
 drugToUse = 'PSIL';
 drugLabel = 'Psilocybin';
