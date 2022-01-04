@@ -5,16 +5,18 @@ function saveBatchParamsAndEphysOut(gBatchParams,gMouseEphys_out)
 % 2. add updated animal
 % 3. save
 
-specFile = EEGUtils.specFile;
+%specFile = EEGUtils.specFile; 
+%SEAN: SWAP IN GET LOCALPATH
+[specFile] = getLocalPath('bandPow');
 
-if ~exist([specFile '.mat'],'file') % check if the .mat file exists
+if ~isfile(specFile) % check if the .mat file exists
     warning([specFile ' does not exist! check path.'])
 end
 
 try
     load(specFile,'mouseEphys_out','batchParams'); % load file
 catch
-    warning([specFile ' not found. Creating new save file']);
+    error([specFile ' not found. Creating new save file']);
 end
 
 gName = fieldnames(gBatchParams);
@@ -22,6 +24,7 @@ gName = gName{1,1};
 dates = fieldnames(gMouseEphys_out.(gName));
 
 batchParams.(gName).ephysInfo = gBatchParams.(gName).ephysInfo;
+batchParams.(gName).bandInfo = gBatchParams.(gName).bandInfo;
 
 for iDate = 1:length(dates)
     thisDate = dates{iDate};
@@ -29,7 +32,7 @@ for iDate = 1:length(dates)
     mouseEphys_out.(gName).(thisDate) = gMouseEphys_out.(gName).(thisDate);
 end
 
-save(specFile,'mouseEphys_out','batchParams');
+save(specFile,'mouseEphys_out','batchParams','-v7.3');
 disp('mouseEphys_out and batchParams saved!');
 
 
