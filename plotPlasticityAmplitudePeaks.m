@@ -207,14 +207,14 @@ end
 saveas(thisFigure,[outPath figureName]);
 saveas(thisFigure,[outPath2 figureName]);
 
-fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
-print('-painters',fileName,'-r300','-dpng');
-try
-    desc = figureName;
-    sendSlackFig(desc,[fileName '.png']);
-catch
-    disp(['failed to upload ' fileName ' to Slack']);
-end
+% fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
+% print('-painters',fileName,'-r300','-dpng');
+% try
+%     desc = figureName;
+%     sendSlackFig(desc,[fileName '.png']);
+% catch
+%     disp(['failed to upload ' fileName ' to Slack']);
+% end
 
 %% Measure response magnitude of single trial via peak amplitude
 
@@ -394,14 +394,16 @@ ax.XLabel.String = 'Time (min)';
 saveas(thisFigure,[outPath figureName]);
 saveas(thisFigure,[outPath2 figureName]);
 
-fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
-print('-painters',fileName,'-r300','-dpng');
-try
-    desc = figureName;
-    sendSlackFig(desc,[fileName '.png']);
-catch
-    disp(['failed to upload ' fileName ' to Slack']);
-end
+
+%Send to slack
+% fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
+% print('-painters',fileName,'-r300','-dpng');
+% try
+%     desc = figureName;
+%     sendSlackFig(desc,[fileName '.png']);
+% catch
+%     disp(['failed to upload ' fileName ' to Slack']);
+% end
 
 
 %% Plot out time series of inner products
@@ -492,13 +494,13 @@ for iExpt = 1:nExpts
         end
     end
 end
-fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
-print('-painters',fileName,'-r300','-dpng');
-try
-    desc = figureName;
-    sendSlackFig(desc,[fileName '.png']);
-catch
-    disp(['failed to upload ' fileName ' to Slack']);
+% fileName = ['M:\PassiveEphys\AnimalData\' animal '\' figureName];
+% print('-painters',fileName,'-r300','-dpng');
+% try
+%     desc = figureName;
+%     sendSlackFig(desc,[fileName '.png']);
+% catch
+%     disp(['failed to upload ' fileName ' to Slack']);
 end
 
 
