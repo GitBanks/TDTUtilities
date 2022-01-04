@@ -1,5 +1,10 @@
 %function plasticityPlots(exptDate,exptIndex)
 
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% 21n02: this has been replaced by 
+%    plotPlasticityAmplitudePeaks(exptDate,exptIndices,description)
+% (not today, but long ago)
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 % this is for the 0.1 Hz plasticity expts (with LTP and LTD between).
 % this version has discrete sections that can (and should) get pulled out
@@ -19,19 +24,19 @@ tPostStim = 0.5;
 
 indexLabels = {'Baseline','LTP','LTD'}; % these correspond to each stimset we load below
 
-exptDate = '21428';
-exptIndex = '009';
+exptDate = '21623';
+exptIndex = '000';
 %evokedData = struct();
 %[stimSet(1),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
 [evokedData(1),dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
 
-exptDate = '21428';
-exptIndex = '013';
+exptDate = '21623';
+exptIndex = '018';
 %[stimSet(2),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
 [evokedData(2),dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
 
-exptDate = '21428';
-exptIndex = '015';
+exptDate = '21623';
+exptIndex = '022';
 %[stimSet(3),dTRec] = getPlasticityData(exptDate,exptIndex,tPreStim,tPostStim);
 [evokedData(3),dTRec] = getSynapseSingleStimData(exptDate,exptIndex,tPreStim,tPostStim);
 

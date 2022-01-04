@@ -1,4 +1,4 @@
-function exptList = getExptPlasticitySetByAnimal(animal)
+function [exptList,exptTable] = getExptPlasticitySetByAnimal(animal)
 
 % === test parameters
 % animal = 'ZZ10';
@@ -33,11 +33,16 @@ for iList = 1:length(listOfAnimalExpts)
         exptTable.postLTD(iList) = false;
     end
 end
+
+
+
 tic
 exptFound = 1;
 operatingListPreLTP = exptTable.DateIndex(exptTable.preLTP == true);
 operatingListPostLTP = exptTable.DateIndex(exptTable.postLTP == true);
 operatingListPostLTD = exptTable.DateIndex(exptTable.postLTD == true);
+
+
 for iList = 1:length(operatingListPreLTP)    
     dateA = operatingListPreLTP{iList}(1:5);
     postLTPflag = contains(operatingListPostLTP,dateA);
@@ -58,6 +63,7 @@ for iList = 1:length(operatingListPreLTP)
         end
         exptFound = exptFound+1;
     end
+    
 end
 
 
