@@ -71,7 +71,11 @@ recDelay = zeros(1,nExpts);
 for iExpt = 2:nExpts
     t2 = evDataSet(iExpt).info.utcStartTime;
     t1 = evDataSet(iExpt-1).info.utcStopTime;
-    recDelay(iExpt) = synapseTimeSubtraction(t2,t1);
+    if synapseTimeSubtraction(t2,t1) < 0 
+        recDelay(iExpt) = 600;
+    else
+        recDelay(iExpt) = synapseTimeSubtraction(t2,t1);
+    end
 end
 
 %%
