@@ -36,7 +36,8 @@ avgWinTime = 1.e-3; %sec;
 baseWin = [-5,-0.5]*1.e-3; %sec; 
 % pkAvgWin = 8; % Average over this window to estimate peak
 %exptIndexLabels = {'Baseline','postLTP','postLTD'}; % these correspond to each stimset we load below
-exptIndexLabels = {'Baseline','postLTP','postLTD'};
+%exptIndexLabels = {'Baseline','postLTP','postLTD'};
+exptIndexLabels = {'Baseline','postLTP','postLTP(2)'};
 smFac = 15; %smoothing window for time series plots
 
 %%
@@ -71,7 +72,8 @@ recDelay = zeros(1,nExpts);
 for iExpt = 2:nExpts
     t2 = evDataSet(iExpt).info.utcStartTime;
     t1 = evDataSet(iExpt-1).info.utcStopTime;
-    recDelay(iExpt) = synapseTimeSubtraction(t2,t1);
+     recDelay(iExpt) = 600;
+%     recDelay(iExpt) = synapseTimeSubtraction(t2,t1);
 end
 
 %%
