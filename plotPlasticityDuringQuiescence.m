@@ -1,10 +1,20 @@
 function plotPlasticityDuringQuiescence(animal,subset)
 
+
+
+%Run this from ephysAnalysisScript so we can get the peakData save file
+%this is the user selction of the peaks - make sure to clear all after
+exptDate = '21d31';
+exptIndices = {'002','004'};
+description = '';
+plotPlasticityAmplitudePeaks(exptDate,exptIndices,description)
+
+
 %chose animal
-animal = 'ZZ06'; 
+animal = 'ZZ14'; 
 
 %Define the subset of experiment days to use
-subset = {'21616'}; 
+subset = {'21d31'}; 
 
 %Create a table out of the experiment list which is called from exptPlasticitySet
 [~,exptTable] = getExptPlasticitySetByAnimal(animal);
@@ -50,6 +60,10 @@ for iExptDate = 1:nExpts
    end
 end
 
+% What is the threshold?
+
+threshold = (dataOut.date.expt(1).data.threshold);
+
 % 2) Plotting Peak IPSI evoked response 
 
 figure();
@@ -59,7 +73,7 @@ ourIndex = 1;
     for iExptIndex = 1:nIndex
         disp("loop")
         ecdf(dataOut.date(iExptDate).expt(iExptIndex).data.restingPeaksIPSI(1,:));
-        if iExptDate == 1; title(['eCDF of IPSI Peak Evoked Response During Quiesensce']); end
+        if iExptDate == 1; title(['eCDF of IPSI Peak Evoked Response During Quiesensce ZZ14 21d30']); end
         hold on;
         if iExptDate == nExpts
             ylabel('Probability');
@@ -74,27 +88,13 @@ ourIndex = 1;
 %%% =======================================================
 %Plotting a histogram of all movement values 
 
-% 1) pull in movement data from getPeakSlopeAvgByDateIndex script
-
-nExpts = size(uniqueDates,1);
-nIndex = size(indexStepDescription,2);
-ourIndex = 1;
-for iExptDate = 1:nExpts 
-    for iExptIndex = 1:nIndex
-        thisDate = char(exptSubTable.DateIndex(ourIndex));
-        thisIndex = thisDate(7:9);
-        thisDate = thisDate(1:5);
-        [dataOut.date(iExptDate).expt(iExptIndex).data] = getPeakSlopeAvgByDateIndexWPlot(thisDate,thisIndex);
-        ourIndex = ourIndex+1;
-   end
-end
-
-% 2) Make Histograms
+% 1) Make Histograms - be sure to adjust the index to plot out correct
+% index if more than 1 LTP protocol was run in a day
 
 subplot(2,3,4);
   for iExptDate = 1:nExpts
     for iExptIndex = 1
-        edges = linspace(0, 1.5, 41);  
+        edges = linspace(0, 1.5, 101);  
         x = dataOut.date(iExptDate).expt(iExptIndex).data.totalMovementValues(1,:);
         %[N,edges,bin]=histcounts(x);
         %x = dataOut.date(iExptDate).expt(iExptIndex).data.restingValues(1,:)
@@ -105,7 +105,7 @@ subplot(2,3,4);
         xlabel('Amplitude of Movement');
         xticks(0:.2:1.5);
         xlim([0,1.5]);
-        xline(.3)
+        xline(threshold)
         ylim([0,275]);
         drawnow;
     end
@@ -114,7 +114,7 @@ subplot(2,3,4);
 subplot(2,3,5);
   for iExptDate = 1:nExpts
     for iExptIndex = 2
-        edges = linspace(0, 1.5, 41);
+        edges = linspace(0, 1.5, 101);
         x = dataOut.date(iExptDate).expt(iExptIndex).data.totalMovementValues(1,:);
         %[N,edges,bin]=histcounts(x);
         %x = dataOut.date(iExptDate).expt(iExptIndex).data.restingValues(1,:), 'FaceColor', '#D95319'
@@ -125,7 +125,7 @@ subplot(2,3,5);
         xlabel('Amplitude of Movement');
         xticks(0:.2:1.5);
         xlim([0,1.5]);
-        xline(.3)
+        xline(threshold)
         ylim([0,275]);
         drawnow;
     end
@@ -135,22 +135,65 @@ subplot(2,3,5);
 subplot(2,3,6);
   for iExptDate = 1:nExpts
     for iExptIndex = 3
-        edges = linspace(0, 1.5, 41);
+        edges = linspace(0, 1.5, 101);
         x = dataOut.date(iExptDate).expt(iExptIndex).data.totalMovementValues(1,:);
         %[N,edges,bin]=histcounts(x);
         %x = dataOut.date(iExptDate).expt(iExptIndex).data.restingValues(1,:)
         histogram(x, 'BinEdges', edges,'FaceColor', '#EDB120');
         grid on;
-        title(['Movement Distribution Post-LTD']);
+        title(['Movement Distribution 2 hr Post-LTP']);
         ylabel('Frequency');
         xlabel('Amplitude of Movement');
         xticks(0:.2:1.5);
         xlim([0,1.5]);
-        xline(.3)
+        xline(threshold)
         ylim([0,275]);
         drawnow;
     end
   end
+  
+  
+%   subplot(2,4,8);
+%   for iExptDate = 1:nExpts
+%     for iExptIndex = 4
+%         edges = linspace(0, 1.5, 101);  
+%         x = dataOut.date(iExptDate).expt(iExptIndex).data.totalMovementValues(1,:);
+%         %[N,edges,bin]=histcounts(x);
+%         %x = dataOut.date(iExptDate).expt(iExptIndex).data.restingValues(1,:)
+%         histogram(x, 'BinEdges', edges, 'FaceColor', '#7E2F8E');
+%         grid on;
+%         title(['Movement Distribution During LTP2']);
+%         ylabel('Frequency');
+%         xlabel('Amplitude of Movement');
+%         xticks(0:.2:1.5);
+%         xlim([0,1.5]);
+%         xline(threshold)
+%         ylim([0,275]);
+%         drawnow;
+%     end
+%   end
+
+  
+%   subplot(2,5,10);
+%   for iExptDate = 1:nExpts
+%     for iExptIndex = 6
+%         edges = linspace(0, 1.5, 101);  
+%         x = dataOut.date(iExptDate).expt(iExptIndex).data.totalMovementValues(1,:);
+%         %[N,edges,bin]=histcounts(x);
+%         %x = dataOut.date(iExptDate).expt(iExptIndex).data.restingValues(1,:)
+%         histogram(x, 'BinEdges', edges);
+%         grid on;
+%         title(['Movement Distribution During Baseline']);
+%         ylabel('Frequency');
+%         xlabel('Amplitude of Movement');
+%         xticks(0:.2:1.5);
+%         xlim([0,1.5]);
+%         xline(threshold)
+%         ylim([0,275]);
+%         drawnow;
+%     end
+%   end
+
   
   %%%======================================================================
  %Determine what thresholds we should be using
@@ -182,13 +225,53 @@ end
 
 
 syms x
-eqn = (mean(moveValuesForEachWindow < x) == baselineMeanMove);
+eqn = (mean(moveValuesForEachWindow > x) == baselineMeanMove);
 ANS = sollve
+
+
+%%% ==================================================
+doMovePlot = false;
+% pull needed data
+
+thisDate = iExptDate;
+thisIndex = '004';
+[~,moveValuesForEachWindow,peakValsForEachWindow] = plotStimAndMovement(thisDate,thisIndex);
+
+% the following were determined in getMovementDataFromHTRByDateIndex(exptDate,exptIndex,useCDF) so I'm not sure if we need to run it, or display it or what 
+restingThresh = 0.3;
+activeThresh = 0.15;
+theseAreResting = moveValuesForEachWindow<restingThresh;
+theseAreActive = moveValuesForEachWindow>activeThresh;
+
+restingValues = moveValuesForEachWindow(moveValuesForEachWindow<restingThresh);
+activeValues = moveValuesForEachWindow(moveValuesForEachWindow>activeThresh);
+
+
+% We need to pull the unaveraged trials again (because obviously, we're
+% sorting them)
+tPreStim = 0.02;
+tPostStim = 0.2;
+disp(['loading peaks for ' exptDate '-' exptIndex]);
+ephysData = getImportedSynapseEvokedData(exptDate,exptIndex,tPreStim,tPostStim);
+restingAvgMovement = mean(moveValuesForEachWindow(theseAreResting));
+curatedPeakValsForEachWindow = peakValsForEachWindow;
+
+
+%These are peak responses by ROI during just the quiet period
+for iROI = 1
+    restingPeaksIPSI = curatedPeakValsForEachWindow(iROI,theseAreResting),'omitnan';
+end
+
+for iROI = 2
+    restingPeaksCONTRA = curatedPeakValsForEachWindow(iROI,theseAreResting),'omitnan';
+end
+
+for iROI = 3
+    restingPeaksVCA1 = curatedPeakValsForEachWindow(iROI,theseAreResting),'omitnan';
+end
   
   
-  
-  
-  
+ 
   end
   
    
