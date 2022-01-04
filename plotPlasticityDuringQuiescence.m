@@ -15,8 +15,10 @@ exptSubTable = exptTable(contains(exptTable.DateIndex,subset(:)),:);
 exptSubTable = exptSubTable(exptSubTable.preLTP == true | exptSubTable.postLTP == true | exptSubTable.postLTD == true,:);
 
 %These are the descriptions for the indices will be useful during the
-%plotting portion
-indexStepDescription = {'pre LTP','post LTP', 'post LTD'};
+%plotting portion- you will need to write out ALL the indices regardless of
+%whether you will plot them or not bc this is how we determine size of nIndex
+
+indexStepDescription = {'pre LTP','post LTP'};
 
 
 %quick grab unique dates- we have to do this because there are multiple

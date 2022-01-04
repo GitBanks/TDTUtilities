@@ -6,14 +6,15 @@ function plotPlasticityAmplitudePeaks(exptDate,exptIndices,description)
 % discrete sections for readability and modularity reasons.
 
 if ~exist('exptDate','var') || ~exist('exptIndices','var') 
-%     exptDate = '21527';
-%     exptIndices = {'001','003','005'};
-    exptDate = '21616'; 
-    exptIndices = {'009','017','021'};
-%     exptDate = '21616'; noTank = true;
-%     exptIndices = {'010','018','022'};
+    error('need to input date and index as parameters');
+%     exptDate = '21d21'; 
+%     exptIndices = {'008','012','015'};
 end
 nExpts = length(exptIndices);
+
+if ~exist('description','var')
+    description = '';
+end
 
 outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndices{1} '\'];
 if ~exist(outPath,'dir')
@@ -35,14 +36,11 @@ avgWinTime = 1.e-3; %sec;
 % Time window re stim time to calculate baseline value that is subtracted from peak values
 baseWin = [-5,-0.5]*1.e-3; %sec; 
 % pkAvgWin = 8; % Average over this window to estimate peak
-%exptIndexLabels = {'Baseline','postLTP','postLTD'}; % these correspond to each stimset we load below
+%exptIndexLabels = {'Baseline','postLTP','postLTD'}; % these correspond to
+%each stimset we load below IF YOU ARE DOING 2 LTP OR LTD INDICES MUST EDIT
+%HERE
 exptIndexLabels = {'Baseline','postLTP','postLTD'};
 smFac = 15; %smoothing window for time series plots
-
-%%
-
-
-
 
 
 %% =========  load data in this block  ========= % % % %
@@ -57,9 +55,6 @@ for iExpt = 1:nExpts
     nTrials(iExpt) = size(evDataSet(iExpt).sub,2); 
     [~,movementsPreStim(iExpt).events] = plotStimAndMovement(exptDate,exptIndices{iExpt},false);
 end
-
-
-
 
 nTotalTrials = sum(nTrials);
 [nROIs,nDataPts] = size(evDataSet(1).subMean);

@@ -9,8 +9,8 @@ function [dataOut,figH] = getPeakSlopeAvgByDateIndexWPlot(exptDate,exptIndex,plo
 % 4. returns data out structure 
 
 
-% exptDate = '21n30'
-% exptIndex = '005'
+% exptDate = '21d21'
+% exptIndex = '008'
 % 
 
 if ~exist('plotPeaks','var')
