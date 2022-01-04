@@ -21,18 +21,13 @@ end
 dataLabels = {'ipsi PFC','contra PFC','vCA1'};
 outlierSTD = 3;
 
-% here are a few stim-resp expts we just ran
-% exptDate = '21616';
-% exptIndex = '010';
-% exptIndex = '018';
-% exptIndex = '022';
 
 doMovePlot = false;
 % pull needed data
 [~,moveValuesForEachWindow,peakValsForEachWindow] = plotStimAndMovement(exptDate,exptIndex,doMovePlot);
 
 % the following were determined in getMovementDataFromHTRByDateIndex(exptDate,exptIndex,useCDF) so I'm not sure if we need to run it, or display it or what 
-restingThresh = 0.3;
+restingThresh = 0.09;
 activeThresh = 0.15;
 theseAreResting = moveValuesForEachWindow<restingThresh;
 theseAreActive = moveValuesForEachWindow>activeThresh;
@@ -145,6 +140,7 @@ end
 
 dataOut.date = exptDate;
 dataOut.index = exptIndex;
+dataOut.threshold = restingThresh;
 dataOut.restingAvgMovement = restingAvgMovement;
 dataOut.totalMovementValues = moveValuesForEachWindow
 dataOut.restingValues = restingValues
