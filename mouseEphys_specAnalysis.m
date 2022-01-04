@@ -1,4 +1,16 @@
 function [batchParams, mouseEphys_out] = mouseEphys_specAnalysis(animalName,forceReRun)
+
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!   SAFE FILE LOCATION HERE:    EEGUtils  !!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 % Computes the power spectrum (and Lempel-Ziv complexity for Banks Lab
 % mouse ephys data.
 % Workflow is
@@ -13,6 +25,7 @@ function [batchParams, mouseEphys_out] = mouseEphys_specAnalysis(animalName,forc
 %   (h) save mouseEphys_out and batchParams to output file
 
 % input parameters:
+% animalName = 'EEG172'
 % animalName as the animal ID character string, e.g., 'EEG170';
 % forceReRun is a boolean (true or false) 
 
@@ -28,7 +41,7 @@ switch nargin
 end
 
 % generate batchParams
-batchParams = getBatchParamsByAnimal(animalName);
+batchParams = getBatchParamsByAnimal(animalName); 
 
 % list of frequency bands
 batchParams.(animalName).bandInfo = mouseEEGFreqBands; % information for band power calculation

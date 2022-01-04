@@ -235,6 +235,7 @@ end
 
 function [electrodeLocation] = checkElectrode(date,index,animal)
 % check to see if probe has been entered, if not, copy existing template
+electrodeLocation = [];
 try
     [electrodeLocation,~] = getElectrodeLocationFromDateIndex(date,index);
 catch
@@ -248,11 +249,12 @@ catch
         setElectrodeLocationFromAnimal('DREADD07',animal);
     elseif strcmp(animal(1:2),'ZZ')
         error('please enter probe configuration for this animal'); % ZZ animals tend to be unique
-    elseif strcmp(animal(1:3),'Mag')
+    elseif strcmp(animal(1:3),'Mag') || strcmp(animal(1:3),'mag')
         setElectrodeLocationFromAnimal('Mag003',animal);
     else
         error('Animal type not recognized.')
     end
+    [electrodeLocation,~] = getElectrodeLocationFromDateIndex(date,index);
 end
 
 end

@@ -29,10 +29,14 @@ fileMaint('Mag024'); % new fileMaint as of 6/15/21
 %treatment = 'DOI_conc';
 %treatment = 'Anlg_5_MeO_MiPT'; 
 %treatment = 'Anlg_Pyr_T'; 
-treatment = 'Anlg_4_AcO_DMT'; 
+% treatment = 'Anlg_4_AcO_DMT'; 
 %treatment = 'Anlg_5_MeO_pyrT';
 %treatment = 'Anlg_5_6_DiMeO_MiPT';
 % treatment = 'Anlg_5_MeO_DET';
+
+treatment = 'Lisuride_conc'; 
+%treatment = 'Mifepristone_conc'; 
+
 
 HTRPlotEventsScript(treatment);
 

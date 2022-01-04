@@ -125,7 +125,10 @@ plotPlasticityAmplitudePeaks(exptDate,exptIndices)
 
 
 
-
+exptDate = '21d29';
+exptIndices = {'002','004','007'};%,'006','008'};
+description = '';
+plotPlasticityAmplitudePeaks(exptDate,exptIndices,description)
 
 
 
