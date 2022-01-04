@@ -8,7 +8,7 @@
 % including data corruption!!!
 
 % READ THE WARNING!
-fileMaint('ZZ10'); 
+%fileMaint('ZZ10'); 
 % READ THE WARNING!
 
 %% ==== Stim / response specific plots ==============
@@ -38,13 +38,13 @@ fileMaint('ZZ10');
 % noTank = false;
 % evokedStimResp_userInput(exptDate,exptIndex,noTank);
 
-exptDate = '21621';
-exptIndex = '004';
-evokedStimResp_userInput(exptDate,exptIndex);
+% exptDate = '21d21';
+% exptIndex = '008';
+% evokedStimResp_userInput(exptDate,exptIndex);
 
-exptDate = '21727';
-exptIndex = '003';
-evokedStimResp_userInput(exptDate,exptIndex);
+% exptDate = '21727';
+% exptIndex = '003';
+% evokedStimResp_userInput(exptDate,exptIndex);
 
 
 %% ==== whole day plasticity plots ==================
@@ -86,46 +86,40 @@ evokedStimResp_userInput(exptDate,exptIndex);
 
 
 
-exptDate = '21617';
-exptIndices = {'004','008','012'};
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
-exptDate = '21617';
-exptIndices = {'005','009','013'}; 
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% exptDate = '21617';
+% exptIndices = {'004','008','012'};
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% exptDate = '21617';
+% exptIndices = {'005','009','013'}; 
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
 
 
-exptDate = '21621';
-exptIndices = {'006','010','014'}; 
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
-exptDate = '21621';
-exptIndices = {'007','011','015'};
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
-
-
-
-
-
+% exptDate = '21d21';
+% exptIndices = {'008','012','015'}; 
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% exptDate = '21621';
+% exptIndices = {'007','011','015'};
+% plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% 
+% 
+% 
+% 
+% 
 % consider automating this by looking for the following key phrases in the
 % description: 'pre LTP/LTD' 'Post LTP / stim' 'Post LTD / stim'
 % 1. be sure these keywords are consistant
 % 2. load in a day using getExperimentsByAnimalAndDate()
 % 3. generate the three exptIndices = {,,,} above
 % 4. feed them to plotPlasticityAmplitudePeaks
-
-exptDate = '21623';
-exptIndices = {'014','018','022'};
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
-exptDate = '21623';
-exptIndices = {'015','019','023'};
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
-%Pre-inj DOI 
-exptDate = '21615';
-exptIndices = {'004','006','008'};
-plotPlasticityAmplitudePeaks(exptDate,exptIndices)
+% 
+exptDate = '21d29';
+exptIndices = {'002','004','007'};
+description = '';
+plotPlasticityAmplitudePeaks(exptDate,exptIndices,description)
 
 
 
-
+%this is previously run it wokrked Ive shown you guys these plots even
 
 
 

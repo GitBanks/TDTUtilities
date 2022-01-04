@@ -6,8 +6,8 @@ function evokedStimResp_userInput(exptDate,exptIndex)
 if ~exist('exptDate','var') || ~exist('exptIndex','var')
 %     exptDate = '21601'; 
 %     exptIndex = '009';
-    exptDate = '21716'; 
-    exptIndex = '003';
+    exptDate = '21d21'; 
+    exptIndex = '008';
     
 %     exptIndex = '008'; noTank = false;
 %	exptIndex = '004'; noTank = false;
@@ -180,10 +180,6 @@ for iROI = 1:nROIs
 end
 
 % do we want to load in peaks from other experiments here?
-
-
-
-
 
 
 

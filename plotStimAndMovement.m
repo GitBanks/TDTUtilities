@@ -8,8 +8,8 @@ function [singleValueForIndex,moveValuesForEachWindow,peakValsForEachWindow] = p
 % to switch to previous movement plotting, but we need to combine them  and
 % make them consistant in any program that calls both.
 
-% exptDate = '21712';
-% exptIndex = '003';
+% exptDate = '21d29';
+% exptIndex = '002';
 
 
 if ~exist('doPlot','var')

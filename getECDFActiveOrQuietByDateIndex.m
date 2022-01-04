@@ -15,8 +15,8 @@ function [allF,allX,quietF,quietX,activeF,activeX] = getECDFActiveOrQuietByDateI
 % account for that.
 % exptIndex = '003';
 
-% exptDate = '21616';
-% exptIndex = '010';
+exptDate = '21d28';
+exptIndex = '006';
 
 % user defined parameters
 windowLength = 7; % movement window around stim, in seconds
@@ -57,6 +57,7 @@ end
 quietTrials = eventArray(dataOut.resting(1:end-1),:);
 activeTrials = eventArray(dataOut.active(1:end-1),:);
 
+
 quietTrials = quietTrials(:);
 activeTrials = activeTrials(:);
 eventArray = eventArray(:);
@@ -64,6 +65,7 @@ eventArray = eventArray(:);
 [quietF,quietX] = ecdf(quietTrials);
 
 [activeF,activeX] = ecdf(activeTrials);
+
 
 [allF,allX] = ecdf(eventArray);
 

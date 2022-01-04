@@ -9,7 +9,7 @@ function [fname] = plotNewBandPowerTimeSeries_byDate(animalName,params,ephysData
 % and normalized ('nmlz') power which is the absolute power in band vs total power across all bands
 % e.g. for 4 channel EEG there will be four traces
 
-% subset = {
+%  subset = {
 % '21623'
 % '21624'
 % '21626'};
