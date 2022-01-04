@@ -14,6 +14,13 @@ function createArbitraryStimForMCStim(date,index,frequency,nPulses,magnitude,fre
 %nPulses = 50
 %magnitude = '150';
 
+%TBS protocol
+%date = '';
+%index = '';
+%frequency = 400;
+%nPulses = 6;
+%magnitude = '80% of maximal response from stim resp';
+
 if ~ischar(magnitude)
     magnitude = num2str(magnitude);
 end
@@ -30,7 +37,8 @@ end
 %IMPORTANT: fopen or Windows permissions to Matlab DO NOT like it when you
 %try to address this thorough the network.  If we ever run this on a remote
 %computer there will be trouble when switching to the format above.
-fileName = ['C:\Users\Ziyad Sultan\Documents\Multi Channel Systems\' date '-' index '.dat']; %can only be run from gilgamesh C drive hardcoded
+%fileName = ['C:\Users\Ziyad Sultan\Documents\Multi Channel Systems\' date '-' index '.dat']; %can only be run from gilgamesh C drive hardcoded
+fileName = ['C:\Users\banksadmin\Documents\Multi Channel Systems\' date '-' index '.dat']; %can only be run from gilgamesh C drive hardcoded
 %fileName = ['\\NESSUS\Users\LabRat\Documents\Multi Channel Systems\' date '-' index '.dat']; %BAD BAD BAD HARDCODING
 %trialPattern = createTrialPattern(length(stimArray),nTrialsPerStim);
 
