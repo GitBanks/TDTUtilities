@@ -1,4 +1,4 @@
-function [gBatchParams, mouseEphys_out,failedTable] = mouseEphys_specAnalysis_4secPSD(animalName,runICA,forceReRun)
+function [gBatchParams, mouseEphys_out,failedTable] = mouseEphys_specAnalysis_4secPSD(animalName,forceReRun)
 % Computes the power spectrum (and Lempel-Ziv complexity (WIP) for
 % mouse ephys data from delirium project (either EEG or LFP).
 % Workflow is
@@ -21,11 +21,10 @@ switch nargin
     case 0
         error('at least select an animal!');
     case 1
-        runICA = 0;     %default not to run ICA
-        forceReRun = 0; %default to not re-analyze previous dates, just most recent
-    case 2
         forceReRun = 0;
 end
+
+runICA = 0;
 
 % generate batchParams
 gBatchParams = getBatchParamsByAnimal(animalName);
@@ -217,7 +216,7 @@ for iDate = 1:length(eDates)
         end %Loop over expts
         gBatchParams.(animalName).(thisDate).trialInfo = eParams.(thisDate).trialInfo;
     catch why
-        keyboard
+%         keyboard
         failedTable.(thisDate).(thisExpt) = why;
     end
 end %Loop over recording dates for this animal

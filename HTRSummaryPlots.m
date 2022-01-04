@@ -68,12 +68,18 @@ function HTRSummaryPlots(treatment,selection,acceptedPermutations)
 % selection = 1; % selection is a choice of drug combinations
 % acceptedPermutations = [1,2];
 
+% treatment = 'Mifepristone_conc'; 
+% selection = 1; 
+% acceptedPermutations = [1,2]; 
+
+
 dateTable = getDateAnimalUniqueByTreatment(treatment);
+
+excludeAnimal = 'ZZ09'; % there should really be a 'hasMagnet' flag in the database
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+
 plotsToMake = unique(dateTable.DrugList);
 subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
-
-
-
 
 
 
@@ -124,6 +130,30 @@ for iList = 1:size(trimmedAnimalData,2)
         hourData(thisHour).dt = trimmedAnimalData(iList).data.timeDT(iHour);
     end
 end
+
+
+
+%we need to output these to a table for other people
+%binsByAnimal = zeros();
+binSize = 10; 
+for iList = 1:size(animalData,2)
+    for iHour = 1:size(trimmedAnimalData(iList).data.hourOfRecording,2)
+        thisHour = trimmedAnimalData(iList).data.hourOfRecording(iHour);
+        binSizeMin = binSize*60;
+        timeArray = (0:hourData(thisHour).dt:hourData(iHour).maxLength*hourData(thisHour).dt);
+        edges = timeArray(1):binSizeMin:timeArray(end);
+        centers = edges+(binSizeMin/2);
+        centers = centers(1:end-1);
+        Y = discretize(hourData(iHour).events,edges);
+        nBins = length(edges)-1;    
+    end
+end
+
+
+
+
+
+
 
 % Finally, we plot
 figure();
