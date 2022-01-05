@@ -38,7 +38,7 @@ end
 if ~exist('ephysData','var')
     disp('loading ephysData structure')
     [ephysData,params] = loadEphysData('power');
-%     load('\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\ephysData_noParse_psychedelics.mat');
+%     load([getPathGlobal('W') 'PassiveEphys\EEG animal data\ephysData_noParse_psychedelics.mat']);
     disp('ephysData loaded')
 end
 

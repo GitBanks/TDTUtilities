@@ -38,7 +38,7 @@ animal = animal{:};
 
 % added fixed map location functionality.  Some older mice or magnet mice
 % won;t have this.  Allow an empty map to be output
-mapLoc = ['W:\Data\PassiveEphys\Metadata\' animal '.csv'];
+mapLoc = [getPathGlobal('W') 'PassiveEphys\Metadata\' animal '.csv'];
 if isfile(mapLoc)
     map = xlsread(mapLoc);
 else

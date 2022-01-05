@@ -1,7 +1,7 @@
 function behaviorVideoImportFrontEnd()
 
 S.nMice = 8;
-S.fileSys.rawData = '\\144.92.218.131\Data\Data\PassiveEphys\';
+S.fileSys.rawData = [getPathGlobal('W') 'PassiveEphys\'];
 S.fileSys.analyzedData = '\\MEMORYBANKS\Data\PassiveEphys\';
 
 

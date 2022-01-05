@@ -13,7 +13,7 @@ end
 disp(['Data will be saved to `' outPath '`']);
 
 if ~exist('defaultPath','var')
-    defaultPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
+    defaultPath = [getPathGlobal('W') 'PassiveEphys\EEG animal data\'];
 %     defaultPath = '/Users/bankslaptop/Box Sync/My documents/Data and analysis/mouseDeliriumEphys/Data/';
     % defaultPath = 'D:\Box Sync\My documents\Data and analysis\mouseDeliriumEphys\Data\';
 end

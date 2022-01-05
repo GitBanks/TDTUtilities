@@ -51,7 +51,7 @@ movementWindowInSamplesPost = round((postStimMovementWindow+.2)*(1/magDT));
 % out the sections that need this movement data from
 % getSynapseSingleStimData and getSynapseStimSetData
 %2. fetch stim times - try to load existing data set first
-outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+outPath = [getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
 if isfile([outPath exptDate '-' exptIndex '_peakData.mat'])
     try
         load([outPath exptDate '-' exptIndex '_peakData'],'peakData');

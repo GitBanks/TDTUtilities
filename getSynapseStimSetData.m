@@ -12,7 +12,7 @@ end
 
 
 % load saved trial pattern
-saveFileRoot = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' tankIndex '\'];
+saveFileRoot = [getPathGlobal('W') 'PassiveEphys\20' exptDate(1:2) '\' exptDate '-' tankIndex '\'];
 load([saveFileRoot  'stimSet-' exptDate '-' tankIndex],'stimArray','trialPattern');
 nStims = length(stimArray);
 

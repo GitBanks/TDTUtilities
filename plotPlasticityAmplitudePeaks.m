@@ -15,12 +15,12 @@ if ~exist('exptDate','var') || ~exist('exptIndices','var')
 end
 nExpts = length(exptIndices);
 
-outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndices{1} '\'];
+outPath = [getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndices{1} '\'];
 if ~exist(outPath,'dir')
     mkdir(outPath);
 end
 animal = getAnimalByDateIndex(exptDate,exptIndices{1});
-outPath2 = ['M:\PassiveEphys\AnimalData\' animal '\'];
+outPath2 = [getPathGlobal('M') 'PassiveEphys\AnimalData\' animal '\'];
 if ~exist(outPath2,'dir')
     mkdir(outPath2);
 end

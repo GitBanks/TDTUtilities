@@ -24,7 +24,7 @@ function [] = synapseFrontEnd_mag
 % ! TODO ! %  add a check to see if we can connect to recording computer path (sometimes network logs us out!) otherwise we can't guarantee importing will work consistantly
 % example path: \\144.92.237.187\c\Data\2018\
 S.enableMultiThread = 0; % for testing or using without parfor, set to 0
-S.recordingComputer = '144.92.237.183'; % Gilgamesh
+S.recordingComputer = getPathGlobal('REC'); % Gilgamesh
 %S.recordingComputer = '144.92.237.187'; % Nessus
 S.recordingComputerSubfolder = '\Data\PassiveEphys\';%'\c\Data\';
 S.dbConn = dbConnect();
@@ -324,9 +324,10 @@ blockLocation = varargin{5}; %added 6/18
 if ~isempty(strfind(index,'-1')); return; end; % don't run on first index - if nothing has been run today yet.
 dirStrRecSource = ['\\' recordingComputer subfolder '20' dateX(1:2) '\' dateX '-' index '\'];
 % TODO %  the following shouldn't be hard coded as they are.  Pass as parameters to synapseImportingPathway
-dirStrRawData = ['W:\Data\PassiveEphys\' '20' dateX(1:2) '\' dateX '-' index '\'];
+
+dirStrRawData = [getPathGlobal('W') 'PassiveEphys\' '20' dateX(1:2) '\' dateX '-' index '\'];
 % dirStrAnalysis = ['M:\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
-dirStrAnalysis = ['\\MEMORYBANKS\Data\PassiveEphys\' '20' dateX(1:2) '\' dateX '-' index '\'];
+dirStrAnalysis = [getPathGlobal('M') 'PassiveEphys\' '20' dateX(1:2) '\' dateX '-' index '\'];
 % MOVE RECORDED DATA TO RAW %
 try
     moveDataRecToRaw(dirStrRecSource,dirStrRawData); % move recorded files to raw data server
@@ -336,7 +337,7 @@ end
 
 % IMPORT CAM2 APPROPRIATELY
 if ~strcmp([dateX '-' index],blockLocation)
-    tankDir = ['W:\Data\PassiveEphys\' '20' dateX(1:2) '\' blockLocation '\'];
+    tankDir = [getPathGlobal('W') 'PassiveEphys\' '20' dateX(1:2) '\' blockLocation '\'];
     dirCheck = dir(dirStrRawData);
     if isempty(dirCheck)
         mkdir(dirStrRawData);

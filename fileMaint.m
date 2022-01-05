@@ -29,7 +29,7 @@ manuallySetGlobalParamUI(animal);
 path.dirStrAnalysisROOT = [mousePaths.M 'PassiveEphys\']; % 'M' drive
 %dirStrRecSourceAROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
 %path.dirStrRecSourceAROOT = '\\144.92.237.183\Data\PassiveEphys\'; %Gilgamesh
-path.dirStrRecSourceAROOT = '\\144.92.237.183\Data\PassiveEphys\'; % fake Gilgamesh (21708, it's broken today)
+path.dirStrRecSourceAROOT = ['\\' getPathGlobal('REC') '\Data\PassiveEphys\']; % fake Gilgamesh (21708, it's broken today)
 path.dirStrRecSourceBROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
 path.dirStrRawDataROOT = [mousePaths.W 'PassiveEphys\']; %'W' drive
 path.dirStrServer = '\\144.92.237.186\Users\'; %Helmholz

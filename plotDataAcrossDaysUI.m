@@ -136,7 +136,7 @@ function [S] = plotbandPow(varargin)
 [S] = varargin{3};
 S.userDateSelection = get(S.ls,'Value');
 subset = S.justDates(S.userDateSelection);
-specFile = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\mouseEphys_out_LFP_psychedelics.mat';
+specFile = [getPathGlobal('W') 'PassiveEphys\EEG animal data\mouseEphys_out_LFP_psychedelics.mat'];
 disp('Loading ');
 load(specFile,'mouseEphys_out','batchParams');
 plotNewBandPowerTimeSeries_byDate(S.animalName,batchParams,mouseEphys_out,subset);

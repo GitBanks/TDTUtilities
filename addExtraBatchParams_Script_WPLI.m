@@ -7,7 +7,7 @@ if ~exist('params','var')
 end
 
 % get metadata table
-animalTable = readtable('W:\Data\PassiveEphys\EEG animal data\Mouse Master Log Psychedelics Project.xlsx');
+animalTable = readtable([getPathGlobal('W') 'PassiveEphys\EEG animal data\Mouse Master Log Psychedelics Project.xlsx']);
 
 % get list of animals
 animalList = unique(animalTable.animalName);
@@ -60,7 +60,7 @@ mouseEphys_conn = ephysData;
 clear ephysData
 batchParams = params; 
 clear params
-save('\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\mouseEphys_conn_dbt_noParse_20sWin_0p5sTrial_psychedelics.mat','mouseEphys_conn','batchParams');
+save([getPathGlobal('W') 'PassiveEphys\EEG animal data\mouseEphys_conn_dbt_noParse_20sWin_0p5sTrial_psychedelics.mat','mouseEphys_conn','batchParams']);
 
     
 

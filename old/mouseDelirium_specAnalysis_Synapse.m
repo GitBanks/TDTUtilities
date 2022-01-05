@@ -22,7 +22,7 @@ function [gBatchParams, mouseEphys_out] = mouseDelirium_specAnalysis_Synapse(ani
 % synapsePathing;
  
 noMovtToggle =0; % WARNING: this is a temporary fix until we can analyze the movement data from Synapse.
-outPath = '\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\';
+outPath = [getPathGlobal('W') 'PassiveEphys\EEG animal data\'];
 outFileName = 'mouseEphys_out_noParse_Synapse.mat';
 disp(['Data will be saved to `' outPath '`']);
 

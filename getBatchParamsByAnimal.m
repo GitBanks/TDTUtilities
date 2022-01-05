@@ -3,7 +3,7 @@ function [batchParams] = getBatchParamsByAnimal(animalName)
 % test info: animalName = 'EEG55'
 
 batchParams = struct;
-defaultPath = '\\144.92.237.185\Data\PassiveEphys\'; % changed 3/9/2021 %'\\144.92.218.131\Data\Data\PassiveEphys\EEG animal data\'; % W: drive, where downsampled data lives
+defaultPath = [getPathGlobal('W') 'PassiveEphys\']; % changed 3/9/2021 %[getPathGlobal('W') 'PassiveEphys\EEG animal data\']; % W: drive, where downsampled data lives
 exptList = getExperimentsByAnimal(animalName,'Spon'); %grab only spon indices
 
 if isempty(exptList{1})

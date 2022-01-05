@@ -37,10 +37,10 @@ avgWinTime = 1.e-3; %sec;
 baseWin = [-5,-0.5]*1.e-3; %sec; 
 %hardcoded location - not ideal, but this works for now
 fileString = [exptDate '-' exptIndex];
-outPath = ['M:\PassiveEphys\20' exptDate(1:2) '\' fileString '\'];
+outPath = [getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' fileString '\'];
 
 animal = getAnimalByDateIndex(exptDate,exptIndex);
-outPath2 = ['M:\PassiveEphys\AnimalData\' animal '\'];
+outPath2 = [getPathGlobal('M') 'PassiveEphys\AnimalData\' animal '\'];
 if ~exist(outPath2,'dir')
     mkdir(outPath2);
 end
