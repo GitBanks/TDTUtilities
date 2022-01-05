@@ -97,10 +97,10 @@ for iDate = 1:length(eDates)%1:length(eDates)
             fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt(5:end)...
                 '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat']; %WARNING: EDITED ON 5/6/2019
             try
-                load(['W:\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj');
+                load([getPathGlobal('W') fileNameStub],'finalMovementArray','frameTimeStampsAdj');
             catch
                 try
-                    load(['\\MEMORYBANKS\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj'); %WARNING: EDITED ON 5/2/2019
+                    load([getPathGlobal('M') fileNameStub],'finalMovementArray','frameTimeStampsAdj'); %WARNING: EDITED ON 5/2/2019
                 catch
                     error(['Can not find ' fileNameStub])
                 end

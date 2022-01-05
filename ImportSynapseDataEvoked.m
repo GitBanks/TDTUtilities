@@ -39,10 +39,10 @@ drawTrains = false;
 for iExpt = 1:length(pulseAmp)
 % pulseAmp = '10';
 
-dirStrRawData = ['W:\Data\PassiveEphys\' '20' exptDate(1:2) '\' exptDate '-' pulseAmp{iExpt} 'uAtest\']; %input
+dirStrRawData = [getPathGlobal('W') 'PassiveEphys\' '20' exptDate(1:2) '\' exptDate '-' pulseAmp{iExpt} 'uAtest\']; %input
 
 
-%dirStrRawData = ['W:\Data\PassiveEphys\' '20' exptDate(1:2) '\' exptDate '-' pulseAmp{iExpt} 'uAStim2test\']; %input
+%dirStrRawData = [getPathGlobal('W') 'PassiveEphys\' '20' exptDate(1:2) '\' exptDate '-' pulseAmp{iExpt} 'uAStim2test\']; %input
 
 data = TDTbin2mat(dirStrRawData);
 

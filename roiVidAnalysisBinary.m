@@ -25,7 +25,7 @@ function [roiPix,fullROI] = roiVidAnalysisBinary(vidFileName,date,index,fullROI,
 % * fullROI (see above)
 
 % EXAMPLE:
-% vidFileName = 'W:\Data\PassiveEphys\2019\19404-000\2019_19404-000_Cam1.avi';
+% vidFileName = 'W' ':\Data\PassiveEphys\2019\19404-000\2019_19404-000_Cam1.avi';
 % date = '19404';
 % index = '000';
 

@@ -6,7 +6,7 @@ function trialList = updateStimInfoSynapse(exptDate,exptIndex)
 % in Synapse (WIP).  The solution for now is to pull expected values from a
 % list.  There is a permanent record in each raw data folder about which
 % experiment was run (to know the parameters) e.g., 
-% W:\Data\PassiveEphys\2018\18830-020
+% [getPathGlobal('W') 'PassiveEphys\2018\18830-020']
 
 % test params
 % exptDate = '18o01';
@@ -21,8 +21,8 @@ exptID = masterResult{1,1};
 ephysResult = fetchAdjust(dbConn,['select sample_freq,filter_highcut,amp_gain,headstage from detail_ephys where exptid=' num2str(exptID)]);
 % only load the stim info from the data tank
 % % TODO % can't seem to get away from this stupid 'hardcoding'
-tankFileLoc = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
-saveFileLoc = ['\\Memorybanks\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+tankFileLoc = [getPathGlobal('W') 'PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+saveFileLoc = [getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
 stimInfo = TDTbin2mat(tankFileLoc,'TYPE',{'scalars'});
 % scan the list of stims and get them ready to sort
 if isempty(stimInfo) % throw an error, since we couldn;t find these data

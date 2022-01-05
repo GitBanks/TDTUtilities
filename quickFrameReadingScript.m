@@ -34,7 +34,7 @@ end
 
 
 
-fileRoots = {'W:\Data\PassiveEphys\' '\\MEMORYBANKS\Data\PassiveEphys\';
+fileRoots = {[getPathGlobal('W') 'PassiveEphys\'] [getPathGlobal('M') 'PassiveEphys\']};
 
 
 
@@ -42,7 +42,7 @@ fileRoots = {'W:\Data\PassiveEphys\' '\\MEMORYBANKS\Data\PassiveEphys\';
 
 
 for i = 1:length(exptStr)
-    fileName = ['W:\Data\PassiveEphys\' '20' exptStr{i}(1:2) '\' exptStr{i} '\' exptStr{i} '.avi'];
+    fileName = [getPathGlobal('W') 'PassiveEphys\' '20' exptStr{i}(1:2) '\' exptStr{i} '\' exptStr{i} '.avi'];
     if exist(fileName) ~= 2
         fileName = fileName(1:end-4);
         if exist(fileName) ~= 2

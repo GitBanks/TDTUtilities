@@ -29,7 +29,7 @@ for jList = 1:length(uniqueDates)
     for iList = 1:length(listOfAnimalExpts)
         exptDate = listOfAnimalExpts{iList,1}(1:5);
         exptIndex = listOfAnimalExpts{iList,1}(7:9);
-        ephysDir = ['\\Memorybanks\data\PassiveEphys\' '20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+        ephysDir = [getPathGlobal('M') 'PassiveEphys\' '20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
         if ~isempty(strfind(uniqueDates{jList},exptDate))
             indexingCalc = 2*(jList-1);
             if ~isempty(strfind(descOfAnimalExpts{iList,1}{:},'1c'))

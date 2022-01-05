@@ -231,18 +231,18 @@
 % [load('M:\PassiveEphys\2019\19814-300uAtest\19814-300uAtest-movementBinary.mat');]
 
 % just need to run the following movement analysis once
-% vidFile1 = 'W:\Data\PassiveEphys\2019\19814-300uAtest\2019_19814-300uAtest_Cam1.avi';
+% vidFile1 = 'W' ':\Data\PassiveEphys\2019\19814-300uAtest\2019_19814-300uAtest_Cam1.avi';
 % [roiPix,fullROI] = roiVidAnalysisBinary(vidFile1,'19814','300uAtest')
 % 
-% vidFile2 = 'W:\Data\PassiveEphys\2019\19814-303uAtest\19814-303uAtest1.mp4';
+% vidFile2 = 'W' ':\Data\PassiveEphys\2019\19814-303uAtest\19814-303uAtest1.mp4';
 % roiVidAnalysisBinary(vidFile2,'19814','303uAtest1',fullROI,1);
 % 
-% vidFile3 = 'W:\Data\PassiveEphys\2019\19814-303uAtest\19814-303uAtest2.mp4';
+% vidFile3 = 'W' ' :\Data\PassiveEphys\2019\19814-303uAtest\19814-303uAtest2.mp4';
 % roiVidAnalysisBinary(vidFile3,'19814','303uAtest2',fullROI,1);
 %
 % closer formatting for this script
 % fText = [exptDate '-' pulseAmp{iExpt} 'uAtest'];
-% vidFile = ['W:\Data\PassiveEphys\' '20' exptDate(1:2) '\' fText '\2019_' fText '_Cam1.avi'];
+% vidFile = ['W' ':\Data\PassiveEphys\' '20' exptDate(1:2) '\' fText '\2019_' fText '_Cam1.avi'];
 % [roiPix,fullROI] = roiVidAnalysisBinary(vidFile,exptDate,[pulseAmp{iExpt} 'uAtest\']);
 
 

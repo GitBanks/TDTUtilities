@@ -95,7 +95,7 @@ if exist('frequency2','var')%,nPulses2,magnitude2
 end
 
 % fileName
-% saveFileRoot = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
+% saveFileRoot = ['W'  ':\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
 % if ~exist(saveFileRoot,'dir')
 %     mkdir(saveFileRoot);
 %     disp(['making dir: ' saveFileRoot]);

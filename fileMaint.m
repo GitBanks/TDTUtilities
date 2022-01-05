@@ -107,7 +107,7 @@ for iList = 1:length(operatingList)
     end
 end
 
-% === CONVERT FROM TDT TANK FILE TO MATLAB FORMAT, SAVE TO MEMORYBANKS
+% === CONVERT FROM TDT TANK FILE TO MATLAB FORMAT, SAVE TO MEMORY BANKS
 operatingList = exptTable.DateIndex(exptTable.Imported == false);
 for iList = 1:length(operatingList)    
     date = operatingList{iList}(1:5);
@@ -125,7 +125,7 @@ for iList = 1:length(operatingList)
     evokedStimResp_userInput(date,index);
 end
 
-% === CHECK FOR MAGNET DATA, SAVE TO MEMORYBANKS
+% === CHECK FOR MAGNET DATA, SAVE TO MEMORY BANKS
 operatingList = exptTable.DateIndex(exptTable.Magnets == false);
 for iList = 1:length(operatingList)
     date = operatingList{iList}(1:5);
@@ -141,7 +141,7 @@ for iList = 1:length(listOfAnimalExpts)
     [exptTable] = magnetFileScan(dirStrAnalysis,exptTable,iList);
 end
 
-% === RUN THE MAGNET EVENT VERIFIER, SAVE TO MEMORYBANKS\
+% === RUN THE MAGNET EVENT VERIFIER, SAVE TO MEMORY BANKS\
 if runMagnetDataSaving
 operatingList = exptTable.DateIndex(exptTable.Magnets == true);
 for iList = 1:length(operatingList)

@@ -2,7 +2,7 @@
 function [batchParams] = mouseDelirium_getBatchParamsManual(outPath,defaultPath)
 batchParams = struct;
 if ~exist('outPath','var')
-    outPath = '\\MEMORYBANKS\Data\mouseEEG\videoScoring\';
+    outPath = [getPathGlobal('M') 'mouseEEG\videoScoring\'];
 %     outPath = '/Users/bankslaptop/Box Sync/My documents/Data and analysis/mouseDeliriumEphys/Data/';
     % outPath = 'D:\Box Sync\My documents\Data and analysis\mouseDeliriumEphys\Data\';
 end

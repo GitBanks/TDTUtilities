@@ -236,9 +236,9 @@ subfolder = varargin{4};
 if ~isempty(strfind(index,'-1')); return; end; % don't run on first index - if nothing has been run today yet.
 dirStrRecSource = ['\\' recordingComputer subfolder '20' date(1:2) '\' date '-' index '\'];
 % TODO %  the following shouldn't be hard coded as they are.  Pass as parameters to synapseImportingPathway
-dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+dirStrRawData = [getPathGlobal('W') 'PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
 % dirStrAnalysis = ['M:\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
-dirStrAnalysis = ['\\MEMORYBANKS\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+dirStrAnalysis = [getPathGlobal('M') 'PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
 % MOVE RECORDED DATA TO RAW %
 moveDataRecToRaw(dirStrRecSource,dirStrRawData); % move recorded files to raw data server
 % IMPORT DATA % 

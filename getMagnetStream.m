@@ -1,14 +1,14 @@
 
 
-%dirStrRawData='W:\Data\PassiveEphys\2019\19o31-000\';
-dirStrRawData='W:\Data\PassiveEphys\2019\19n08-002\';
+%dirStrRawData='W' ':\Data\PassiveEphys\2019\19o31-000\';
+dirStrRawData= [getPathGlobal('W') 'PassiveEphys\2019\19n08-002\'];
 
-%dirStrRawData='W:\Data\PassiveEphys\2019\19o29-001\';
+%dirStrRawData='W' ':\Data\PassiveEphys\2019\19o29-001\';
 %dirStrAnalyzedData='M:\PassiveEphys\2019\19o29-001\19o25-001-movementBinary';
 
-% dirStrRawData='W:\Data\PassiveEphys\2019\19o31-magnetTest\';
+% dirStrRawData='W' ':\Data\PassiveEphys\2019\19o31-magnetTest\';
 
-% dirStrRawData='W:\Data\PassiveEphys\2019\19o25-002\';
+% dirStrRawData='W' ':\Data\PassiveEphys\2019\19o25-002\';
 % dirStrAnalyzedData='M:\PassiveEphys\2019\19o25-002\19o25-002-movementBinary';
 data = TDTbin2mat(dirStrRawData);
 

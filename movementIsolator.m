@@ -5,7 +5,7 @@ function [heatMapMoveIsolated] = movementIsolator(fileName,heatMapMoveIsolated)
 % Then: plot an overlay of the first video frame and highlight these active
 % squares
 % example parameter:
-% fileName = '\\MEMORYBANKS\Data\PassiveEphys\2018\18907-001\2018_18907-001_Cam1-framegrid.mat';
+% fileName = '\\MEMORY BANKS\Data\PassiveEphys\2018\18907-001\2018_18907-001_Cam1-framegrid.mat';
 % TODO % would make so much more sense for 'filename' to be a date+index,
 % so this program could be loaded from the command line more easily
 

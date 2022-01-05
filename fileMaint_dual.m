@@ -3,9 +3,9 @@ function fileMaint_dual(animal,hasTankIndices)
 % synapseFrontEnd
 % 1. add drug information to e-notebook
 % 2. add probe information to e-notebook
-% 3. move files from tank location on recording computer to W:\Data\PassiveEphys\Year
-% 4. process & import data from W:\Data\PassiveEphys\Year\ to M:\Data\PassiveEphys\Year
-% 5. move processed data from M:\Data\PassiveEphys\Year back to W:\Data\PassiveEphys\EEG animal data\animal (sorry)
+% 3. move files from tank location on recording computer to W :\Data\PassiveEphys\Year
+% 4. process & import data from W :\Data\PassiveEphys\Year\ to M :\Data\PassiveEphys\Year
+% 5. move processed data from M :\Data\PassiveEphys\Year back to W :\Data\PassiveEphys\EEG animal data\animal (sorry)
 % 6. run roi-based movement analysis
 % 7. run spectral analysis & plot results
 % 8. run weighted phase lag index analysis & plot results
@@ -56,9 +56,9 @@ catch
     end
 end
 
-if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\'],'dir')
-    mkdir(['W:\Data\PassiveEphys\EEG animal data\' animal '\']);
-    disp(['making dir: W:\Data\PassiveEphys\EEG animal data\' animal '\']);
+if ~exist([getPathGlobal('W') 'PassiveEphys\EEG animal data\' animal '\'],'dir')
+    mkdir([getPathGlobal('W') 'PassiveEphys\EEG animal data\' animal '\']);
+    disp(['making dir: ' getPathGlobal('W') 'PassiveEphys\EEG animal data\' animal '\']);
 end
 
 % loop through list of experiments
@@ -78,9 +78,9 @@ for iList = 1:length(listOfAnimalExpts)
         blockLocation = [date '-' tempIndex];
     end
 
-    dirStrAnalysis = ['\\MEMORYBANKS\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
-    dirStrRecSource = ['\\144.92.237.183\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\']; 
-    dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+    dirStrAnalysis = [getPathGlobal('M') 'PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+    dirStrRecSource = ['\\' getPathGlobal('REC') '\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\']; 
+    dirStrRawData = [getPathGlobal('W') 'PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
     disp(['$$$ Processing ' date '-' index ' $$$']);
     
     % 3a. MOVE TANK FILE FROM RECORDING COMPUTER TO W DRIVE 
@@ -92,7 +92,7 @@ for iList = 1:length(listOfAnimalExpts)
     
     % 3b. COPY CAM2 FILE TO SEPARATE INDEX
     if ~strcmp([date '-' index],blockLocation)
-        tankDir = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' blockLocation '\'];
+        tankDir = [getPathGlobal('W') 'PassiveEphys\' '20' date(1:2) '\' blockLocation '\'];
         dirCheck = dir(dirStrRawData);
         if isempty(dirCheck) || dirCheck(1).bytes==0
             mkdir(dirStrRawData);
@@ -107,7 +107,7 @@ for iList = 1:length(listOfAnimalExpts)
         end
     end
     
-    % 4. IMPORT DATA TO M: DRIVE aka MEMORYBANKS
+    % 4. IMPORT DATA TO M: DRIVE aka MEMORY BANKS
     dirCheck = dir([dirStrAnalysis '*data*']); % check to see if ephys info is imported
     if isempty(dirCheck) || forceReimport
         disp('Handing info to existing importData function.  This will take a few minutes.');
@@ -123,9 +123,9 @@ for iList = 1:length(listOfAnimalExpts)
     
     % 5. MOVE PROCESSED DATA BACK TO W (sadly)
     % (sadly because analyzed data are going to 'raw data' storage zone)
-    if ~exist(['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\'],'dir')
-        mkdir(['W:\Data\PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
-        disp(['making dir: W:\Data\PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
+    if ~exist([getPathGlobal('W') 'PassiveEphys\EEG animal data\' animal '\' date '-' index '\'],'dir')
+        mkdir([getPathGlobal('W') 'PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
+        disp(['making dir: ' getPathGlobal('W') 'PassiveEphys\EEG animal data\' animal '\'  date '-' index '\']);
     end
     currentDir = dir(dirStrAnalysis);
     for iDir = 1:length(currentDir) %could add a check to see if files exist to save time (if they do)
@@ -135,14 +135,14 @@ for iList = 1:length(listOfAnimalExpts)
             load(fileString);
             DSephysData = ephysData;
             DSdT = dT;
-            save(['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\DS-' currentDir(iDir).name],'DSephysData','DSdT');
+            save([getPathGlobal('W') 'PassiveEphys\EEG animal data\' animal '\' date '-' index '\DS-' currentDir(iDir).name],'DSephysData','DSdT');
             clear ephysData
             clear DSephysData
         end
         if strfind(currentDir(iDir).name,'trial') >0
             %if 
             display(['Copying ' currentDir(iDir).name]);
-            copyfile([dirStrAnalysis currentDir(iDir).name],['W:\Data\PassiveEphys\EEG animal data\' animal '\' date '-' index '\' currentDir(iDir).name])
+            copyfile([dirStrAnalysis currentDir(iDir).name],[getPathGlobal('W') 'PassiveEphys\EEG animal data\' animal '\' date '-' index '\' currentDir(iDir).name])
             %else
                 
             %end

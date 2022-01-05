@@ -11,7 +11,7 @@ function [keepFrames,newTimes,finalLEDTimes] = videoROIBrainwareLED(vidFileName,
 % 4. match to LED time array, make adjustments as needed (since ephys is
 % the 'truth')
 
-% ex: vidFileName = 'W:\Data\PassiveEphys\2018\18410-000\18410-000'; %EEG51
+% ex: vidFileName = 'W' ':\Data\PassiveEphys\2018\18410-000\18410-000'; %EEG51
 
 % setup 
 delims = strfind(vidFileName,filesep);

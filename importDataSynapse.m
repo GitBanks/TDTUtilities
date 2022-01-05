@@ -12,7 +12,7 @@ function importDataSynapse(exptDate,exptIndex)
 % exptDate = '21426';
 % exptIndex = '007';
 
-% dirStrRawData = 'W:\Data\PassiveEphys\2018\18o01-001\'; %input
+% dirStrRawData = 'W' ':\Data\PassiveEphys\2018\18o01-001\'; %input
 % TODO / WIP works, but some parameters not handled appropriately (so
 % analyze MUA will not work)
 
@@ -36,8 +36,8 @@ postStim = 500;
 
 signalTypes = {'EEG','LFP','SU'};
 % TODO don't hardcode any of the following:
-dirStrRawData = ['W:\Data\PassiveEphys\' '20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %input
-dirStrAnalysis = ['\\MEMORYBANKS\data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %output
+dirStrRawData = [getPathGlobal('W') 'PassiveEphys\' '20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %input
+dirStrAnalysis = [getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %output
 
 
 % All stim info is now handled in here.  and saved, so there may be no

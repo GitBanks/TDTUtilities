@@ -12,11 +12,11 @@ function [roiPix,fullROI] = roiVidAnalysis(vidFileName,date,index,loadRoiPix,ful
 addpath('Z:\DataBanks\mmread');
 
 % example parameters:
-% vidFileName = 'W:\Data\PassiveEphys\2018\18410-000\18410-000'; %EEG51  %108905
-% vidFileName = 'W:\Data\PassiveEphys\2019\19404-000\2019_19404-000_Cam1.avi'; %EEG74 %36152
-% vidFileName = 'W:\Data\PassiveEphys\2017\17512-000\17512-000'; %EEG29 
-% vidFileName = 'W:\Data\PassiveEphys\2019\19310-001\2019_19310-001_Cam1.avi'; %EEGRoboMouse %603
-% vidFileName = 'W:\Data\PassiveEphys\2019\19425-000\2019_19425-000_Cam1.avi'; %EEG76
+% vidFileName = 'W' ':\Data\PassiveEphys\2018\18410-000\18410-000'; %EEG51  %108905
+% vidFileName = 'W' ':\Data\PassiveEphys\2019\19404-000\2019_19404-000_Cam1.avi'; %EEG74 %36152
+% vidFileName = 'W' ':\Data\PassiveEphys\2017\17512-000\17512-000'; %EEG29 
+% vidFileName = 'W' ':\Data\PassiveEphys\2019\19310-001\2019_19310-001_Cam1.avi'; %EEGRoboMouse %603
+% vidFileName = 'W' ':\Data\PassiveEphys\2019\19425-000\2019_19425-000_Cam1.avi'; %EEG76
 % roiPix = [];
 
 
@@ -69,7 +69,7 @@ if nargin<4
     loadRoiPix = false;
 end
 if loadRoiPix
-    load(['\\MEMORYBANKS\Data\PassiveEphys\2019\' date '-' index '\' date '-' index '-movement.mat'],'roiPix');
+    load([getPathGlobal('M') 'PassiveEphys\2019\' date '-' index '\' date '-' index '-movement.mat'],'roiPix');
 end
 
 
@@ -238,7 +238,7 @@ frameTimeStampsAdj = times;
 
 finalMovementArrayNoScale = finalMovementArray * ((musArea/bkgdArea)*(bkgdLum-musLum));
 
-save(['\\MEMORYBANKS\Data\PassiveEphys\2019\' date '-' index '\' date '-' index '-movement.mat'],'finalMovementArray','frameTimeStampsAdj','roiPix','fullROI','mouseROI','finalMovementArrayNoScale');
+save([getPathGlobal('M') 'PassiveEphys\2019\' date '-' index '\' date '-' index '-movement.mat'],'finalMovementArray','frameTimeStampsAdj','roiPix','fullROI','mouseROI','finalMovementArrayNoScale');
 
 end
 

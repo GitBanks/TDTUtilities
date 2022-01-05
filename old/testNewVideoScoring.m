@@ -11,8 +11,8 @@
 %what are best practices for optimizing code? When to convert to double?
 %Matrix computation for frame x frame differences instead of individual?
 
-fileName = 'W:\Data\PassiveEphys\2019\19310-002\2019_19310-002_Cam1.avi';
-%  fileName = 'W:\Data\PassiveEphys\2019\19313-001\2019_19313-001_Cam1.avi';
+fileName = [getPathGlobal('W') 'PassiveEphys\2019\19310-002\2019_19310-002_Cam1.avi'];
+%  fileName = 'W' ':\Data\PassiveEphys\2019\19313-001\2019_19313-001_Cam1.avi';
 
 %2. draw shape around where mouse movement can be expected
 S = loadVidDrawShape(fileName);
@@ -118,8 +118,8 @@ title('sean')
 % or a median average in a small window might work for the samed
 localDir = 'roboMouse_001';
 
-% fileNombre = 'W:\Data\PassiveEphys\2019\19310-002\2019_19310-002_Cam1.avi';
-fileNombre = 'W:\Data\PassiveEphys\2019\19310-001\2019_193130-001_Cam1.avi';
+% fileNombre = 'W' ':\Data\PassiveEphys\2019\19310-002\2019_19310-002_Cam1.avi';
+fileNombre = [getPathGlobal('W') 'PassiveEphys\2019\19310-001\2019_193130-001_Cam1.avi'];
 
 %load video using VideoReader, have user draw shape around area to analyze
 S = loadVidDrawShape(fileNombre);

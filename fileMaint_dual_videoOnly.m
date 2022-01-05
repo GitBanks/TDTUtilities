@@ -32,9 +32,9 @@ for iList = 1:length(listOfAnimalExpts)
         blockLocation = [date '-' tempIndex];
     end
 
-    dirStrAnalysis = ['\\MEMORYBANKS\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
-    dirStrRecSource = ['\\144.92.237.183\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\']; 
-    dirStrRawData = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+    dirStrAnalysis = [getPathGlobal('M') 'PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
+    dirStrRecSource = ['\\' getPathGlobal('REC') '\Data\PassiveEphys\' '20' date(1:2) '\' date '-' index '\']; 
+    dirStrRawData = [getPathGlobal('W') 'PassiveEphys\' '20' date(1:2) '\' date '-' index '\'];
     disp(['$$$ Processing ' date '-' index ' $$$']);
     
     % 3a. MOVE TANK FILE FROM RECORDING COMPUTER TO W DRIVE 
@@ -46,7 +46,7 @@ for iList = 1:length(listOfAnimalExpts)
     
     % 3b. COPY CAM2 FILE TO SEPARATE INDEX
     if ~strcmp([date '-' index],blockLocation)
-        tankDir = ['W:\Data\PassiveEphys\' '20' date(1:2) '\' blockLocation '\'];
+        tankDir = [getPathGlobal('W') 'PassiveEphys\' '20' date(1:2) '\' blockLocation '\'];
         dirCheck = dir(dirStrRawData);
         if isempty(dirCheck) || dirCheck(1).bytes==0
             mkdir(dirStrRawData);

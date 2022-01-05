@@ -1,11 +1,11 @@
 function [indexDur,timeOfDay] = getTimeAndDurationFromIndex(thisDate,thisIndex)
 % test params
-% fileN = 'W:\Data\PassiveEphys\2020\20o08-000';
+% fileN = 'W' ':\Data\PassiveEphys\2020\20o08-000';
 % thisDate='21318'
 % thisIndex='002'
 thisDate = strrep(thisDate,'date','');
 try
-fileN = ['W:\Data\PassiveEphys\20' thisDate(1:2) '\' thisDate '-' thisIndex];
+fileN = [getPathGlobal('W') 'PassiveEphys\20' thisDate(1:2) '\' thisDate '-' thisIndex];
 
 dataX = TDTbin2mat(fileN,'TYPE',{'scalars'});
 
@@ -14,7 +14,7 @@ if isempty(dataX)
     while size(tempIndex) <3
         tempIndex = ['0' tempIndex];
     end
-    fileN = ['W:\Data\PassiveEphys\20' thisDate(1:2) '\' thisDate '-' tempIndex];    
+    fileN = [getPathGlobal('W') 'PassiveEphys\20' thisDate(1:2) '\' thisDate '-' tempIndex];    
     dataX = TDTbin2mat(fileN,'TYPE',{'scalars'});
     if isempty(dataX)
         error('Not a proper index');

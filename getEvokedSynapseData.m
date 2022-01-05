@@ -3,7 +3,7 @@ function [stimSet,dTRec,stimArray] = getEvokedSynapseData(exptDate,exptIndex,tPr
 dataType = 'LFP1';
 
 % load saved trial pattern
-saveFileRoot = ['W:\Data\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+saveFileRoot = [getPathGlobal('W') 'PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
 load([saveFileRoot  'stimSet-' exptDate '-' exptIndex],'stimArray','trialPattern');
 nStims = length(stimArray);
 

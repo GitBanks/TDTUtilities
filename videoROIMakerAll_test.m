@@ -10,11 +10,11 @@ function [finalMovementArray_adj,timeGrid,roiPix] = videoROIMakerAll_test(vidFil
 % calls: TDTbin2mat & loadTrialList (in TDTUtilities); mmread (Z:\DataBanks\mmread); roipoly & imfilter (Image Processing Toolbox)
 
 % example parameters:
-% vidFileName = 'W:\Data\PassiveEphys\2018\18410-000\18410-000'; %EEG51  
-% vidFileName = 'W:\Data\PassiveEphys\2019\19404-000\2019_19404-000_Cam1.avi'; %EEG74 
-vidFileName = 'W:\Data\PassiveEphys\2017\17512-000\17512-000'; %EEG29 
-% vidFileName = 'W:\Data\PassiveEphys\2016\16o27-001\16o27-001'; %EEG18
-% vidFileName = 'W:\Data\PassiveEphys\2019\19310-001\2019_19310-001_Cam1.avi'; %EEGRoboMouse
+% vidFileName = 'W' ':\Data\PassiveEphys\2018\18410-000\18410-000'; %EEG51  
+% vidFileName = 'W' ':\Data\PassiveEphys\2019\19404-000\2019_19404-000_Cam1.avi'; %EEG74 
+vidFileName = 'W' ':\Data\PassiveEphys\2017\17512-000\17512-000'; %EEG29 
+% vidFileName = 'W' ':\Data\PassiveEphys\2016\16o27-001\16o27-001'; %EEG18
+% vidFileName = 'W' ':\Data\PassiveEphys\2019\19310-001\2019_19310-001_Cam1.avi'; %EEGRoboMouse
 roiPix = [];
 
 % 1a. make sure file or non .avi video version exist (copied from Sean's code)
@@ -132,7 +132,7 @@ outFileName = [outPath vidFileName((delims(4)+1):(delims(5)-1)) '_finalMovementA
 save(outFileName,'finalMovementArray_adj');
 
 %% TO-DO: SAVING
-saveDirRoot = '\\MEMORYBANKS\Data\PassiveEphys\'; % analyzed data should be put in 'memorybanks'
+saveDirRoot = [getPathGlobal('M') 'PassiveEphys\']; % analyzed data should be put in 'memory banks'
 savePath = [saveDirRoot vidFileName(delims(end-2)+1:delims(end))];
 saveFile = [savePath vidFileName(delims(end)+1:end-4) '- roiMovementArray.mat'];
 %% DUMPSTER:

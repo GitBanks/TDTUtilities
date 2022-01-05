@@ -17,12 +17,12 @@ fileNameStub = ['PassiveEphys\20' thisDate(5:6) '\' thisDate(5:end) '-' thisExpt
     '\' thisDate(5:end) '-' thisExpt(5:end) '-movementBinary.mat']; %WARNING: EDITED ON 5/6/2019
 
 try
-    load(['\\MEMORYBANKS\Data\' fileNameStub],'finalMovementArray','frameTimeStampsAdj'); %WARNING: EDITED ON 5/2/2019
+    load([getPathGlobal('M') fileNameStub],'finalMovementArray','frameTimeStampsAdj'); %WARNING: EDITED ON 5/2/2019
 catch
     error(['Can not find ' fileNameStub])
 end
 
-% fileInfo = dir(['\\MEMORYBANKS\Data\' fileNameStub]);
+% fileInfo = dir(['\\MEMORY BANKS\Data\' fileNameStub]);
 
 try
     windowLength = gBatchParams.(animalName).windowLength;

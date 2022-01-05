@@ -44,7 +44,7 @@ for iTrial = 1:length(trialPattern)
     fprintf(fid, '%s\n', ['C:\Users\banksadmin\Documents\Multi Channel Systems\DUALpulseRange\' stimArray{trialPattern(iTrial)} '.stm']);
 end
 
-saveFileRoot = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\'];
+saveFileRoot = [getPathGlobal('W') 'PassiveEphys\20' date(1:2) '\' date '-' index '\'];
 if ~exist(saveFileRoot,'dir')
     mkdir(saveFileRoot);
     disp(['making dir: ' saveFileRoot]);

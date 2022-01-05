@@ -64,10 +64,10 @@ if ~isempty(listOfExpts)
         for jj = 1:length(indices)
             index = indices{jj};
             if animalNum > 51 || ~contains(animal,'EEG') % assumes animal name has a number associated with it (and follows the EEG animal order). New system videos started with EEG52
-                vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\20' date(1:2) '_' date '-' index '_Cam*.avi'];
+                vidFileName = [getPathGlobal('W') 'PassiveEphys\20' date(1:2) '\' date '-' index '\20' date(1:2) '_' date '-' index '_Cam*.avi'];
             else
-                vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index ];
-                % vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index '-converted.mp4']; %ONLY FOR EEG43 and 47
+                vidFileName = [getPathGlobal('W') 'PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index ];
+                % vidFileName = ['W' ':\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\' date '-' index '-converted.mp4']; %ONLY FOR EEG43 and 47
             end
             dirCheck = dir(vidFileName);
             if ~isempty(dirCheck)

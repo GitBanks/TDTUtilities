@@ -3,7 +3,7 @@ function tempEphysTrialTime = loadTrialList(ephysDirName)
 % cohesive list of trial times. -ZS 4/10/2019
 
 % EXAMPLE: 
-% ephysFileName = '\\MEMORYBANKS\Data\PassiveEphys\\2018\18410-000\';
+% ephysFileName = '\\MEMORY BANKS\Data\PassiveEphys\\2018\18410-000\';
 
 trialInfoFiles = dir([ephysDirName '*trial*']);
 tempEphysTrialTime = [];

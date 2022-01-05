@@ -12,7 +12,7 @@ function importDataSynapse_dual(exptDate,exptIndex,blockLocation)
 % exptDate = '18o19';
 % exptIndex = '005';
 
-% dirStrRawData = 'W:\Data\PassiveEphys\2018\18o01-001\'; %input
+% dirStrRawData = 'W' ':\Data\PassiveEphys\2018\18o01-001\'; %input
 % TODO / WIP works, but some parameters not handled appropriately (so
 % analyze MUA will not work)
 
@@ -36,8 +36,8 @@ postStim = 500;
 
 signalTypes = {'EEG','LFP','SU'};
 % TODO don't hardcode any of the following:
-dirStrRawData = ['W:\Data\PassiveEphys\' '20' exptDate(1:2) '\' blockLocation '\']; %input
-dirStrAnalysis = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %output
+dirStrRawData = [getPathGlobal('W') 'PassiveEphys\' '20' exptDate(1:2) '\' blockLocation '\']; %input
+dirStrAnalysis = [getPathGlobal('M') '\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\']; %output
 
 
 % All stim info is now handled in here.  and saved, so there may be no
@@ -50,7 +50,7 @@ catch
     if strcmp([exptDate '-' exptIndex],blockLocation)
         error(['updateStimInfoSynapse appears to never have been run on ' exptDate ' ' exptIndex])
     else
-        sourceFileLoc = ['\\Memorybanks\Data\PassiveEphys\20' exptDate(1:2) '\' blockLocation '\'];
+        sourceFileLoc = [getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' blockLocation '\'];
         trialFileName = [sourceFileLoc blockLocation '_' 'trial0.mat'];
         dirCheck = dir(trialFileName); %check the block location dir before copying to the actual directory
         if ~isempty(dirCheck)

@@ -8,7 +8,7 @@
 % roiVidAnalysisBinary(vidFileName,date,index,fullROI,useOldROI)
 % addpath('Z:\DataBanks\mmread'); % this hopefully will have been added
 
-vidFileName = ['W:\Data\PassiveEphys\20' date(1:2) '\' date '-' index '\20' date(1:2) '_' date '-' index '_Cam*.avi'];
+vidFileName = [getPathGlobal('W') 'PassiveEphys\20' date(1:2) '\' date '-' index '\20' date(1:2) '_' date '-' index '_Cam*.avi'];
  
 useOldROI = false; % won't use previously drawn ROI
 
