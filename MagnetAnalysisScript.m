@@ -34,11 +34,12 @@ fileMaint('Mag024'); % new fileMaint as of 6/15/21
 %treatment = 'Anlg_5_6_DiMeO_MiPT';
 % treatment = 'Anlg_5_MeO_DET';
 
-treatment = 'Lisuride_conc'; 
+% treatment = 'Lisuride_conc'; 
 %treatment = 'Mifepristone_conc'; 
+treatment = 'psilocybin';
+animalName = 'ZZ14';
 
-
-HTRPlotEventsScript(treatment);
+HTRPlotEventsScript(treatment,animalName);
 
 
 

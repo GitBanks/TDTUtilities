@@ -1,11 +1,10 @@
-function  HTRPlotEventsScript(treatment)
+function  HTRPlotEventsScript(treatment,animalName)
 
+% animalName is an optional parameter to select just that named animal.
 
 
 %  before proceeding please check out MagnetAnalysisScript for the full
 %  workflow 
-
-
 
 %clear all
 % 3. step through dates - use get treatmentInfo to get exact times of
@@ -22,13 +21,18 @@ function  HTRPlotEventsScript(treatment)
 %treatment = 'Anlg_5_MeO_pyrT';
 %treatment = 'Anlg_5_6_DiMeO_MiPT';
 % treatment = 'Anlg_5_MeO_DET';
+% treatment = 'psilocybin';
+% animalName = 'ZZ14'
 
 dateTable = getDateAnimalUniqueByTreatment(treatment);
-
 excludeAnimal = 'ZZ05'; % there should really be a 'hasMagnet' flag in the database
 dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
 excludeAnimal = 'Dummy_Test';
 dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+
+if exist('animalName','var')
+    dateTable = dateTable(animalName==dateTable.AnimalName,:);
+end
 
 removeRows = zeros(size(dateTable,1),1);
 for iList = 1:size(dateTable,1)
