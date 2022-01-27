@@ -37,13 +37,18 @@ fileMaint('ZZ10');
 % exptIndex = '024';
 % noTank = false;
 % evokedStimResp_userInput(exptDate,exptIndex,noTank);
+% 
+% exptDate = '21621';
+% exptIndex = '004';
+% evokedStimResp_userInput(exptDate,exptIndex);
+% 
+% exptDate = '21727';
+% exptIndex = '003';
+% evokedStimResp_userInput(exptDate,exptIndex);
 
-exptDate = '21621';
-exptIndex = '004';
-evokedStimResp_userInput(exptDate,exptIndex);
 
-exptDate = '21727';
-exptIndex = '003';
+exptDate = '22127'; 
+exptIndex = '002';
 evokedStimResp_userInput(exptDate,exptIndex);
 
 
