@@ -1,6 +1,6 @@
 function [batchParams] = getBatchParamsByAnimal(animalName)
 % Using this script, we can generate 'batchParams' programmatically by accessing database.
-% test info: animalName = 'EEG55'
+% test info: animalName = 'ZZ14'
 
 batchParams = struct;
 defaultPath = [getPathGlobal('W') 'PassiveEphys\']; % changed 3/9/2021 %[getPathGlobal('W') 'PassiveEphys\EEG animal data\']; % W: drive, where downsampled data lives
