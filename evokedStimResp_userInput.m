@@ -61,7 +61,9 @@ if ~exist(outPath,'dir')
     mkdir(outPath);
 end
 animalName = getAnimalByDateIndex(exptDate,exptIndex);
-electrodeLocs = getElectrodeLocationFromDateIndex(exptDate,exptIndex);
+[electrodeLocs,map,~] = getElectrodeLocationFromDateIndex(exptDate,exptIndex);
+
+electrodeLocs = electrodeLocs(map);
 %%%%NOTE: The following assumes that channels are arranged in pairs and
 %%%%that the channels are ordered in Synapse as they are in eNotebook
 ROILabels = electrodeLocs(contains(electrodeLocs,relevantROIs,'IgnoreCase',true));
