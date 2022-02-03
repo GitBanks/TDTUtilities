@@ -17,12 +17,19 @@ dirStrRawData = [dirStrRawDataROOT '20' date(1:2) '\' date '-' index '\'];
 dirCheck = dir(dirStrRawData);
 isTank = true; %default should assume the tank is the index
 
-%spare us from effort if it's already the correct directory
+
+% spare us from effort if it's already the correct directory
+% The first thing the program does is look for video in the recording
+% directory we gave it.  If "Cam1" is there, it will exit - assured that
+% this is the index with the data files.  BUT, if the camera data is not
+% there it will look in the previous folder (i.e., the code after this if
+% statement)
 if ~isempty(dir([dirStrRawData '*_Cam1*']))
     dateOut = date;
     indexOut = index;
     return
 end
+disp(['Cam1 data not found in ' dirStrRawData '. This recording is not the tank keeper.  Loading previous index for tank.']);
 
 %establish a hypothetical earlier index
 tempIndex = str2double(index)-1;
@@ -43,7 +50,7 @@ end
 if size(dirCheck,1)==2 || isempty(dir([dirStrRawData '*_Cam2*']))
     prevIndexDirCheck = dir(blockLocation);
     if isempty(prevIndexDirCheck) % if this is true, we've really derailed somewhere.  stop here.
-        error(['previous index ' blockLocation ' doesn''t exist - something is wrong.  Was video recorded?' ]);
+        error(['previous index ' blockLocation ' doesn''t exist - something is wrong.  Was video recorded?  Please check this directory for data.' ]);
     end
     %dir([blockLocation '*_Cam*']);
     vidFileDir = dir([blockLocation '*_Cam2*']);
