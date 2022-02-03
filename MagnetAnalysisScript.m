@@ -38,10 +38,11 @@ fileMaint('Mag024'); % new fileMaint as of 6/15/21
 %treatment = 'Mifepristone_conc'; 
 treatment = 'psilocybin';
 animalName = 'ZZ14';
-
 HTRPlotEventsScript(treatment,animalName);
 
-
+treatment = 'saline0p9_vol';
+animalName = 'ZZ14';
+HTRPlotEventsScript(treatment,animalName);
 
 %% ==== Plotting ================================
 %treatment = '5-MeO-DET'; % use the treatment from above
@@ -50,6 +51,31 @@ selection = 1; % selection is a choice of drug combinations - we may need
 % i.e., TODO: make this better
 acceptedPermutations = [1,2]; % this is a selection of hours to use
 HTRSummaryPlots(treatment,selection,acceptedPermutations)
+
+
+
+
+
+%% ========= KDE version??? =======================
+
+
+treatment = 'psilocybin';
+gaussLength = 120;
+HTRPlotEventsScriptKDE(treatment,gaussLength)
+%HTRPlotEventsScriptKDESummary %?
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
