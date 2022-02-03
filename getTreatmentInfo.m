@@ -15,8 +15,12 @@ for ii = 1:size(exptList,1)
     drugData(ii,1) = {parNames};
     drugData(ii,2) = {parVals};
 end
+try
 treatments.pars = [drugData{:,1}];
 treatments.vals = [drugData{:,2}];
+catch
+    error(['Drug data seems incorrect for ' animalName ' on ' date]);
+end
 % find column elements that differ from previous column
 treatments.injIndex = false(size(treatments.vals)); % logical array for whether next element differs from subsequent element
 for jj = 1:size(treatments.vals,1) % loop though number of treatments (first dimension)
