@@ -1,4 +1,4 @@
-function [metaData] = getMetaDataByAnimal(animalName)
+function [metaData] = getMetaDataByAnimal(animalName,overWrite)
 % This function will pull metadata associated with a particular animal
 %test param
 % animalName = 'ZZ10'
@@ -19,12 +19,29 @@ function [metaData] = getMetaDataByAnimal(animalName)
 % ECoGchannels**
 % electrodeRev
 
+
+% add a saving feature so we don't need to rerun existing stuff.
+if ~exist('overWrite','var')
+    overWrite = true;
+end
+rootFolder = ['M:\PassiveEphys\AnimalData\' animalName];
+if exist(rootFolder,'dir') ~=7
+    mkdir(rootFolder)
+end
+fileName = [rootFolder '\metaData.mat'];
+
+
+if ~isfile(fileName) || overWrite
+
+
+
+
 listOfAnimalExpts = getExperimentsByAnimal(animalName);
 descOfAnimalExpts = listOfAnimalExpts(:,2);
 listOfAnimalExpts = listOfAnimalExpts(:,1);
 
 sz = [length(listOfAnimalExpts) 13];
-varTypes = {'string','string','string','string','string','datetime','datetime','string','string','datetime','datetime','struct','string'};
+varTypes = {'string','string','string','string','string','datetime','datetime','string','string','datetime','datetime','cell','string'};
 varNames = {'block','conditions','electrodeSheet','dataPrefix','dateTime','startMin','stopMin','timePostOp','patientID','refTime','blockTime','ECoGchannels','electrodeRev'};
 metaData = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 implantDate = getImplantDate(animalName);
@@ -46,7 +63,7 @@ for i = 1:size(listOfAnimalExpts,1)
     
     % ======= drug, stim, etc. for condition =======    
    [conditionsDescription,electrodeType,drugDesc,timeInj,exptType] = getConditionsDescription(exptDate,exptIndex);
-    metaData.conditions(i) = conditionsDescription;
+    metaData.conditions(i) = [drugDesc '.' timeInj '.' exptType];
     
     % ======= date and time ========================
     [indexDur,timeOfDay] = getTimeAndDurationFromIndex(exptDate,exptIndex);
@@ -66,17 +83,19 @@ for i = 1:size(listOfAnimalExpts,1)
     % ======= create channel map and info structure ======= 
     
     % check each channel from the electrode info 
-    iterate = 1;
+    
 %     for ii = 1:size(electrodeLocation,1)
+
+    iterate = 1;
     for ii = 1:16
         if ~isempty(electrodeLocation{ii})
-            metaData.ECoGchannels(i).chanNum(iterate) = iterate;
-            metaData.ECoGchannels(i).Region(iterate) = electrodeLocation(ii);
-            metaData.ECoGchannels(i).contNum(iterate) = ii;
+            ECoGchannels(iterate).chanNum = iterate;
+            ECoGchannels(iterate).oldROI = electrodeLocation(ii);
+            ECoGchannels(iterate).contNum = ii;
             iterate = iterate+1;
         end
     end
-%     metaData.ECoGchannels(i) = ECoGchannels; % do we need these as a structure?
+    metaData.ECoGchannels(i) = {ECoGchannels}; % do we need these as a structure?
     
     % ======= misc stuff just to make the tables similar (do we need any of these?) ===============
     metaData.refTime(i) = '';
@@ -86,7 +105,10 @@ for i = 1:size(listOfAnimalExpts,1)
     metaData.electrodeSheet(i) = '';
     metaData.dataPrefix(i) = '';
     metaData.dateTime(i) = '';
+
+    save(fileName,'metaData');
 end
 
-
+else
+    load(fileName,'metaData');
 end

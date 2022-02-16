@@ -104,84 +104,82 @@ for iCond = 1:size(plotsToMake,1)
     maxTime = 0;
     maxY = 0;
     for iList = 1:size(subTable,1)
-        outputList = getExperimentsByAnimalAndDate(subTable.AnimalName{iList},subTable.Date{iList});
+        %outputList = getExperimentsByAnimalAndDate(subTable.AnimalName{iList},subTable.Date{iList});
         %step through each index for that day
-        injectionTime = []; % now handled by getTreatmentInfo
-        fullTimeArray = [];
-        fullMagStream = [];
-        fullEventTimes = [];
-        timeSteps = zeros(1,size(outputList,1));
-        previousIndexTimeElapsed = 0;
-        for idx = 1:size(outputList,1)
-            try
-                [magData,magDT] = HTRMagLoadData(outputList{idx,1});
-            catch
-                fileMaint(subTable.AnimalName{iList});
-            end
-            plotEnable = false;
-            [htrEventTimes] = HTRMagDetectionHandler(outputList{idx,1},plotEnable);% get HTR times 
-            timeArray = 0:magDT:length(magData)*magDT;
-            while length(timeArray) > length(magData) %sometimes time is a mystery
-                timeArray = timeArray(1:end-1);
-            end
-            fullTimeArray = cat(2,fullTimeArray,(timeArray+previousIndexTimeElapsed));
-            fullMagStream = cat(2,fullMagStream,magData);
-            fullEventTimes = cat(2,fullEventTimes,htrEventTimes+previousIndexTimeElapsed);
-            previousIndexTimeElapsed = previousIndexTimeElapsed+timeArray(end);
-            timeSteps(idx) = previousIndexTimeElapsed;
-        end
-        % = = downsample here = = 
-        fullTimeArray = fullTimeArray(1:10:end);
-        fullMagStream = fullMagStream(1:10:end);
-        magDT_DS = magDT*10;
         
+        [yEvents,fullTimeArray,fullMagStream,fullEventTimes,timeSteps] = runHTReventsKDEByAnimalAndDate(subTable.AnimalName{iList},subTable.Date{iList},treatment,overWrite,gaussLength);
+
         figure(HTRevents);
         subtightplot(size(subTable,1),1,iList);
-        rootFolder = ['M:\PassiveEphys\AnimalData\' subTable.AnimalName{iList}];
-        if exist(rootFolder,'dir') ~=7
-            mkdir(rootFolder)
-        end
         
-        
-        saveTreatment = plotsToMake{iCond};
-        saveTreatment = strrep(saveTreatment,';','');
-        saveTreatment = strrep(saveTreatment,' ','');
-        fileName = [rootFolder '\pdfHTRevents-' num2str(gaussLength) '-' saveTreatment '.mat'];
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        % TODO need to be sure the following calculation is correct
-        
-        if ~isfile(fileName) || overWrite
-%             pdEvents = fitdist(fullEventTimes','Kernel','BandWidth',gaussLength);
-%             yEvents = pdf(pdEvents,fullTimeArray);
-            % concat all events
-            % convolve
-            % / nAnimals
-            % / by time resolution
-            yEvents = zeros(1,size(fullTimeArray,2));
-            for iTrial = 1:size(fullEventTimes,2)
-                yEvents(find(fullTimeArray>fullEventTimes(iTrial),1,'first')) = 1;
-            end
-            
-            
-            % numbers are seconds, so 8 minutes wide, with a sigma of
-            % gaussLength (seconds)
-            gaussFilt = normpdf([-240:magDT_DS:240],1,gaussLength);
-            yEvents = conv(yEvents,gaussFilt,'same');
+%         injectionTime = []; % now handled by getTreatmentInfo
+%         fullTimeArray = [];
+%         fullMagStream = [];
+%         fullEventTimes = [];
+%         timeSteps = zeros(1,size(outputList,1));
+%         previousIndexTimeElapsed = 0;
+%         for idx = 1:size(outputList,1)
+%             try
+%                 [magData,magDT] = HTRMagLoadData(outputList{idx,1});
+%             catch
+%                 fileMaint(subTable.AnimalName{iList});
+%             end
+%             plotEnable = false;
+%             [htrEventTimes] = HTRMagDetectionHandler(outputList{idx,1},plotEnable);% get HTR times 
+%             timeArray = 0:magDT:length(magData)*magDT;
+%             while length(timeArray) > length(magData) %sometimes time is a mystery
+%                 timeArray = timeArray(1:end-1);
+%             end
+%             fullTimeArray = cat(2,fullTimeArray,(timeArray+previousIndexTimeElapsed));
+%             fullMagStream = cat(2,fullMagStream,magData);
+%             fullEventTimes = cat(2,fullEventTimes,htrEventTimes+previousIndexTimeElapsed);
+%             previousIndexTimeElapsed = previousIndexTimeElapsed+timeArray(end);
+%             timeSteps(idx) = previousIndexTimeElapsed;
+%         end
+%         % = = downsample here = = 
+%         fullTimeArray = fullTimeArray(1:10:end);
+%         fullMagStream = fullMagStream(1:10:end);
+%         magDT_DS = magDT*10;
+%         
 
-            
-            save(fileName,'yEvents','fullTimeArray','fullMagStream');
-        else
-            load(fileName,'yEvents','fullTimeArray','fullMagStream');
-        end
+%         
+%         rootFolder = ['M:\PassiveEphys\AnimalData\' subTable.AnimalName{iList}];
+%         if exist(rootFolder,'dir') ~=7
+%             mkdir(rootFolder)
+%         end
+%         
+%         
+%         saveTreatment = plotsToMake{iCond};
+%         saveTreatment = strrep(saveTreatment,';','');
+%         saveTreatment = strrep(saveTreatment,' ','');
+%         fileName = [rootFolder '\pdfHTRevents-' num2str(gaussLength) '-' saveTreatment '.mat'];
+%         
+%         
+%         % TODO need to be sure the following calculation is correct
+%         
+%         if ~isfile(fileName) || overWrite
+% %             pdEvents = fitdist(fullEventTimes','Kernel','BandWidth',gaussLength);
+% %             yEvents = pdf(pdEvents,fullTimeArray);
+%             % concat all events
+%             % convolve
+%             % / nAnimals
+%             % / by time resolution
+%             yEvents = zeros(1,size(fullTimeArray,2));
+%             for iTrial = 1:size(fullEventTimes,2)
+%                 yEvents(find(fullTimeArray>fullEventTimes(iTrial),1,'first')) = 1;
+%             end
+%             
+%             
+%             % numbers are seconds, so 8 minutes wide, with a sigma of
+%             % gaussLength (seconds)
+%             gaussFilt = normpdf([-240:magDT_DS:240],1,gaussLength);
+%             yEvents = conv(yEvents,gaussFilt,'same');
+% 
+%             
+%             save(fileName,'yEvents','fullTimeArray','fullMagStream');
+%         else
+%             load(fileName,'yEvents','fullTimeArray','fullMagStream');
+%         end
         
         minuteTimeArray = fullTimeArray/60;
         plot(minuteTimeArray,yEvents,'k-','LineWidth',1)
