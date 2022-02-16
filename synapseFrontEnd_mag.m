@@ -115,6 +115,7 @@ S.Preselects = {
     'Mifepristone + Vehicle'
     'Vehicle + Vehicle'
     'Fluvoxamine + LPS'
+    'Saline + LPS'
     }; 
 % LEFT
 S.pp(1) = uicontrol('style','pop',...
@@ -223,15 +224,15 @@ S = recordingStart(S); % create a parameter set and load it in. This starts reco
 
 
 % [date{1,1},~] = fixDateIndexToFiveForSynapse(S.exptDate,S.exptIndex);
-if ~isempty(S.exptIndexLast')
-    [date,indexLast{1}] = fixDateIndexToFiveForSynapse(S.exptDate{1},S.exptIndexLast{1});
-    [~,indexLast{2}] = fixDateIndexToFiveForSynapse(S.exptDate{1},S.exptIndexLast{2});
-else
-    indexLast = '-1'; %this will hand synapseImportingPathway a -1 val
-    % if we haven't run anything previously today which will tell it to
-    % skip analysis
-end
-
+% if ~isempty(S.exptIndexLast')
+%     [date,indexLast{1}] = fixDateIndexToFiveForSynapse(S.exptDate{1},S.exptIndexLast{1});
+%     [~,indexLast{2}] = fixDateIndexToFiveForSynapse(S.exptDate{1},S.exptIndexLast{2});
+% else
+%     indexLast = '-1'; %this will hand synapseImportingPathway a -1 val
+%     % if we haven't run anything previously today which will tell it to
+%     % skip analysis
+% end
+indexLast = '-1'; %this has been having problems.  We don;t need to analyze it in real time - not necessary for now.
 
 %this is the length of the recording!
 sponTime = 3610;
