@@ -119,10 +119,14 @@ end
 
 % === CHECK IF WE NEED TO RUN A STIM RESP CURVE AND DO SO
 operatingList = exptTable.DateIndex(exptTable.needStimResp == true);
-for iList = 1:length(operatingList)    
-    date = operatingList{iList}(1:5);
-    index = operatingList{iList}(7:9);
-    evokedStimResp_userInput(date,index);
+try
+    for iList = 1:length(operatingList)    
+        date = operatingList{iList}(1:5);
+        index = operatingList{iList}(7:9);
+        evokedStimResp_userInput(date,index);
+    end
+catch
+    warning(['WARNING! tried to run evokedStimResp_userInput but it failed for ' date ' ' index  ' !WARNING!']);
 end
 
 % === CHECK FOR MAGNET DATA, SAVE TO MEMORY BANKS
