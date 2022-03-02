@@ -22,8 +22,10 @@ if isempty(dataX)
 end
 
 indexDur = dataX.info.duration;
-timeOfDay = datetime(dataX.info.utcStartTime,'Format','HH:mm:ss','TimeZone','UTC'); % convert from UTC to local time, adjusting for daylight savings time
+timeOfDay = datetime(dataX.info.date,'TimeZone','UTC') + timeofday(datetime(dataX.info.utcStartTime,'TimeZone','UTC'));
+%timeOfDay = datetime(dataX.info.utcStartTime,'Format','HH:mm:ss','TimeZone','UTC'); % convert from UTC to local time, adjusting for daylight savings time
 timeOfDay.TimeZone = 'America/Chicago';
+
 catch why
     warning(why.message);
     indexDur = [];
