@@ -6,6 +6,7 @@ function fileMaint(animal)
 
 % === test parameters
 % animal = 'ZZ10';
+% animal = 'ZZ09';
 
 % === override and analysis toggle parameters - change rarely
 forceReimport = 0;
@@ -117,13 +118,6 @@ for iList = 1:length(operatingList)
     importDataSynapse_dual(date,index,[tankDate '-' tankIndex]);
 end
 
-% === CHECK IF WE NEED TO RUN A STIM RESP CURVE AND DO SO
-operatingList = exptTable.DateIndex(exptTable.needStimResp == true);
-for iList = 1:length(operatingList)    
-    date = operatingList{iList}(1:5);
-    index = operatingList{iList}(7:9);
-    evokedStimResp_userInput(date,index);
-end
 
 % === CHECK FOR MAGNET DATA, SAVE TO MEMORY BANKS
 operatingList = exptTable.DateIndex(exptTable.Magnets == false);
@@ -151,6 +145,14 @@ for iList = 1:length(operatingList)
     disp(['running HTR event verifier on ' date '-' index])
     [~] = HTRMagDetectionHandler([date '-' index],plotEnable);
 end
+end
+
+% === CHECK IF WE NEED TO RUN A STIM RESP CURVE AND DO SO
+operatingList = exptTable.DateIndex(exptTable.needStimResp == true);
+for iList = 1:length(operatingList)    
+    date = operatingList{iList}(1:5);
+    index = operatingList{iList}(7:9);
+    evokedStimResp_userInput(date,index);
 end
 
 % === SAVE AN UPDATED SUMMARY FILE FOR THIS ANIMAL
