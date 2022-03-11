@@ -1,4 +1,4 @@
-function finalOutputTable = getMetaDataSetByFilters(drugSelection,recordingSelection,animalName,overWrite)
+function finalOutputTable = getMetaDataSetByFilters(o)
 % TODO
 % we need to take the 'metaData' produced by getMetaDataByAnimal and filter
 % / find specific experiments of interest.  These could be drug type, stim
@@ -18,13 +18,30 @@ function finalOutputTable = getMetaDataSetByFilters(drugSelection,recordingSelec
 % drugSelection = {'NoDrug'};
 % recordingSelection = {'Spon'};
 
-
-
 % animalName = 'ZZ14';
 % overWrite = false;
 
+
+% instead of this full range, we want to allow a single parameter/structure
+% as input
+
+% drugSelection,recordingSelection,animalName,overWrite
+overWrite = false; % toggle this if we've added recordings to animals
+
+animalName = o.Subjects; %only set to run one mouse - runAnalysis is set to run on multiple
+if ~isempty(o.Blocks)
+    error('Not presently configured to handle blocks')    
+end
+    
+
+o.Conditions %e.g.
+
+
 % Do we want to try loading an existing?
 [metaDataMouse] = getMetaDataByAnimal(animalName,overWrite);
+
+recordingSelection = o.Conditions;
+drugSelection = o.Conditions;
 
 
 tempTableIteration = 1;

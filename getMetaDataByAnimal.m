@@ -46,7 +46,6 @@ varNames = {'block','conditions','electrodeSheet','dataPrefix','dateTime','start
 metaData = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 implantDate = getImplantDate(animalName);
 
-implantDate = convertvars(implantDate, @isdatetime, @(t) datetime(t, 'TimeZone', 'local'));
 
 doOnce = 1;
 for i = 1:size(listOfAnimalExpts,1)
@@ -66,12 +65,16 @@ for i = 1:size(listOfAnimalExpts,1)
     metaData.conditions(i) = [drugDesc '.' timeInj '.' exptType];
     
     % ======= date and time ========================
-    [indexDur,timeOfDay] = getTimeAndDurationFromIndex(exptDate,exptIndex);
-%     metaData.startMin(i) = timeOfDay;
-%     metaData.stopMin(i) = timeOfDay+indexDur;
+    metaData.refTime.TimeZone = 'local';
+    metaData.refTime(i) = datetime(implantDate.implantDate{1},'TimeZone','local')+hours(12);
+    [indexDur,exptDatetime] = getTimeAndDurationFromIndex(exptDate,exptIndex);
+    [exptDate_dbForm] = houseConvertDateTo_dbForm(exptDate);
+
 
     % ======= time since implant ===================
-    metaData.timePostOp(i) = implantDate.implantDate{1}; %todo: subtract recording date from implant date for this number
+    
+
+    metaData.timePostOp(i) = exptDatetime- metaData.refTime(i); %todo: subtract recording date from implant date for this number
     
     % ======= animal name ==========================
     metaData.patientID(i) = animalName;
@@ -98,7 +101,7 @@ for i = 1:size(listOfAnimalExpts,1)
     metaData.ECoGchannels(i) = {ECoGchannels}; % do we need these as a structure?
     
     % ======= misc stuff just to make the tables similar (do we need any of these?) ===============
-    metaData.refTime(i) = '';
+
     metaData.electrodeRev(i) = '';
     metaData.startMin(i) = '';
     metaData.stopMin(i) = '';
