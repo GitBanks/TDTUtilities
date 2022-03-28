@@ -26,7 +26,7 @@ function finalOutputTable = getMetaDataSetByFilters(o)
 % as input
 
 % drugSelection,recordingSelection,animalName,overWrite
-overWrite = false; % toggle this if we've added recordings to animals
+
 
 animalName = o.Subjects; %only set to run one mouse - runAnalysis is set to run on multiple
 if ~isempty(o.Blocks)
@@ -34,14 +34,22 @@ if ~isempty(o.Blocks)
 end
     
 
-o.Conditions %e.g.
+%o.Conditions %e.g.
 
 
+
+if iscell(animalName)
+    animalName = animalName{1};
+end
 % Do we want to try loading an existing?
+overWrite = false; % toggle this if we've added recordings to animals
 [metaDataMouse] = getMetaDataByAnimal(animalName,overWrite);
 
-recordingSelection = o.Conditions;
-drugSelection = o.Conditions;
+
+% !!!!!!!!!!!!!! TODO:  add a way to parse these arbitrarily instead of
+% fixed 
+recordingSelection = o.Conditions(1);  %shitty hardcode for now.  TODO
+drugSelection = o.Conditions(2);
 
 
 tempTableIteration = 1;
@@ -72,6 +80,9 @@ finalOutputTable = tempTable;
 finalOutputTable(logical(1:size(finalOutputTable,1)),:) = [];
 
 
+% refTime = cell(1,joinSize);
+% blockTime = cell(1,joinSize);
+
 for i = 1:size(uniqueDates,1)
     joinThese = contains(tempTable.block,uniqueDates{i});
     finalOutputTable.block(i) = join(tempTable.block(joinThese,:),',');
@@ -85,12 +96,14 @@ for i = 1:size(uniqueDates,1)
 %     finalOutputTable.stopMin(i) = join(tempTable.stopMin(joinThese,:),',');  
     finalOutputTable.timePostOp(i) = ''; 
     finalOutputTable.patientID(i) = tempTable.patientID(i);
-%     finalOutputTable.refTime(i) = tempTable.refTime(joinThese,:);
-%     finalOutputTable.blockTime(i) = tempTable.blockTime(joinThese,:);
+%     blockTime{iRow}(iBlock) = refTime{iRow}
+    blockTime{i} = tempTable.blockTime(joinThese);
     finalOutputTable.ECoGchannels(i) = tempTable.ECoGchannels(i);
     finalOutputTable.electrodeRev(i) = tempTable.electrodeRev(i);
 end
 
+finalOutputTable.refTime = {tempTable.refTime(joinThese(1))};
+finalOutputTable.blockTime = blockTime;
 
 
 % Table Differences

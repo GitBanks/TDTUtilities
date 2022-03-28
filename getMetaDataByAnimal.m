@@ -62,7 +62,7 @@ for i = 1:size(listOfAnimalExpts,1)
     
     % ======= drug, stim, etc. for condition =======    
    [conditionsDescription,electrodeType,drugDesc,timeInj,exptType] = getConditionsDescription(exptDate,exptIndex);
-    metaData.conditions(i) = [drugDesc '.' timeInj '.' exptType];
+    metaData.conditions(i) = [drugDesc '_' timeInj '_' exptType];
     
     % ======= date and time ========================
     metaData.refTime.TimeZone = 'local';
@@ -80,15 +80,13 @@ for i = 1:size(listOfAnimalExpts,1)
     metaData.patientID(i) = animalName;
     
     % ======= if we ever hold multiple blocks in one line, expand this to represent block times
+    % It turns out this is important for any analysis that segments data.
 %     metaData.blockTime(i) = timeOfDay; %this will need to be expanded if we ever break an index into chunks
-      metaData.blockTime(i) = ''; 
-
+    metaData.blockTime.TimeZone = 'local';
+    metaData.blockTime(i) = datetime(datetime(exptDate_dbForm)+timeofday(exptDatetime),'TimeZone','local'); 
+   
     % ======= create channel map and info structure ======= 
-    
     % check each channel from the electrode info 
-    
-%     for ii = 1:size(electrodeLocation,1)
-
     iterate = 1;
     for ii = 1:16
         if ~isempty(electrodeLocation{ii})
@@ -101,7 +99,6 @@ for i = 1:size(listOfAnimalExpts,1)
     metaData.ECoGchannels(i) = {ECoGchannels}; % do we need these as a structure?
     
     % ======= misc stuff just to make the tables similar (do we need any of these?) ===============
-
     metaData.electrodeRev(i) = '';
     metaData.startMin(i) = '';
     metaData.stopMin(i) = '';

@@ -1,4 +1,4 @@
-function [loadedData,fs,metaData,rescaleFS,params] = loadMouseDataForPipeline(params)
+function [loadedData,fs,metaData,rescaleFS] = loadMouseDataForPipeline(params)
 
 % Given params -
 % params = metaData(1,:);
@@ -13,6 +13,8 @@ function [loadedData,fs,metaData,rescaleFS,params] = loadMouseDataForPipeline(pa
 %   only and do not need to be set except for sleep data.
 % we are expecting output from 
 % metaData = getMetaDataSetByFilters(drugSelection,recordingSelection,animalName,overWrite);
+
+metaData = struct('blockTime',struct(),'stateData',struct(),'stageKey',cell(1));
 
 
 blocks = strsplit(params.block{:},',');
@@ -39,10 +41,13 @@ blocks = strsplit(params.block{:},',');
 conditions = strsplit(params.conditions{:},',');
 
 % step 2: load in the data0 files representing each block
-for i = 1:size(blocks,2)
-    file = [getPathGlobal('importedData') '20' blocks{i}(1:2) '\' blocks{i} '\'  blocks{i} '_data0'];
-    disp(['Loading ' blocks{i}]);
+fixParamsOnce = 1;
+for iFile = 1:size(blocks,2)
+    file = [getPathGlobal('importedData') '20' blocks{iFile}(1:2) '\' blocks{iFile} '\'  blocks{iFile} '_data0'];
+    disp(['Loading ' blocks{iFile}]);
     load(file);
+    
+    thisBlock = ['blk' strrep(blocks{iFile},'-','_')];
     
     % this is for the bipolar subtraction channels - toggled in analysisOptions
     if subtractionFlag
@@ -53,13 +58,22 @@ for i = 1:size(blocks,2)
         end
         ephysData = newArray;
         clear newArray;
-        %  TODO!!   NEED TO CORRECT ROIs IF WE CHANGED THE CHANNEL COUNT!
-        % DO THAT HERE
+        % we only need to adjust the params once
+        if fixParamsOnce
+            newArrayIterator = 1;
+            for ii = 1:2:size(ephysData,1)   
+                newECoGchannels(newArrayIterator) = params.ECoGchannels{1}(ii);
+                newECoGchannels(newArrayIterator).chanNum = newArrayIterator;
+                newArrayIterator = newArrayIterator+1;
+            end
+            params.ECoGchannels = {newECoGchannels};
+            fixParamsOnce = 0;
+        end
     end
     
-    loadedData.(['blk' strrep(blocks{i},'-','_')]) = ephysData';
-    clear ephysData;
     
+    loadedData.(['blk' strrep(blocks{iFile},'-','_')]) = ephysData';
+    clear ephysData;
     fs = 1/dT;
     rescaleFS = 1;
 
@@ -88,13 +102,27 @@ for i = 1:size(blocks,2)
     end
     fs = round(fs);
     for iChan = 1:nChan
+        
+        
+%         chanDataNames = params.ECoGchannels{1};
+%         params.dataPrefix
+%         double(loadedData.(chanDataNames(iChan,:)).dat(t));
+        
         if decimate
-            loadedData.(thisBlock){iFile,iChan} = resample(extractFcn(iChan,:),fsres,fsorig);
+            tempLoadedData.(thisBlock)(:,iChan) = resample(double(loadedData.(thisBlock)(:,iChan)),fsres,fsorig);
         else
-            loadedData.(thisBlock){iFile,iChan} = extractFcn(iChan,:);
+            tempLoadedData.(thisBlock)(:,iChan) = double(loadedData.(thisBlock)(:,iChan));
         end
     end
-
+    
+    loadedData.(thisBlock) = tempLoadedData.(thisBlock);
+    
+    if ~isnat(params.blockTime{1}(iFile))
+        metaData.blockTime.(thisBlock) = params.blockTime{1}(iFile);% + seconds(params.startMin * 60);
+    else
+        metaData.blockTime.(thisBlock) = NaT;
+    end
+    
 end
 
 
@@ -103,16 +131,5 @@ end
 
 
 
-
-
-
-
-
-
-
-
-
-
-metaData = params;
 
 
