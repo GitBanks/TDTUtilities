@@ -28,9 +28,9 @@ animalName = getAnimalByDateIndex(exptDate,exptIndex);
 outPath2 = ['M:\PassiveEphys\AnimalData\' animalName '\'];
 FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
 thisFigure = figure('Name',FigName);
-nROIs = size(peakData.ROILabels,1);
+nROIs = 1 %size(peakData.ROILabels,1);
 % plotting begins
-for iROI = 1:nROIs
+for iROI = 1 %1:nRoi
     % Plot avg traces
     subPlt(iROI) = subplot(2,nROIs,iROI);
     hold on
@@ -38,7 +38,7 @@ for iROI = 1:nROIs
         plot(plotTimeArray,avgTraces(iStim).stimSet(iROI,:));
     end
     for iUI = 1:length(peakData.pkSearchData(iROI).tPk)
-        plot(peakData.pkSearchData(iROI).tPk(iUI),peakData.pkSearchData(iROI).yPk(iUI),'+r','MarkerSize',12);
+        %plot(peakData.pkSearchData(iROI).tPk(iUI),peakData.pkSearchData(iROI).yPk(iUI),'+r','MarkerSize',12);
         if plotCalculatedPeaks
             for iStim = 1:length(avgTraces)
                 plot(peakData.pkVals(iROI).peakTimeCalc(iUI,iStim),peakData.pkVals(iROI).data(iUI,iStim),'+b','MarkerSize',8);
@@ -47,7 +47,7 @@ for iROI = 1:nROIs
     end
     ax = gca;
     ax.XLim = [plotTimeArray(1),plotTimeArray(end)];
-    ax.YLim = [1.05*peakData.plotMin(iROI),1.05*peakData.plotMax(iROI)];
+    ax.YLim = [-6.0e-05, 8.0e-05]%[1.05*peakData.plotMin(iROI),1.05*peakData.plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
         ax.YLabel.String = 'avg dataSub (V)';
@@ -64,7 +64,7 @@ for ii = 1:size(avgTraces,2)
 end
 
 hold off
-for iROI = 1:nROIs
+for iROI = 1 %1:nROIs
     subplot(2,nROIs,nROIs+iROI)
     legendLabs = [];
     nPks = size(peakData.pkVals(iROI).data,1);
