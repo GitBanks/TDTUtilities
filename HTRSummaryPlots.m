@@ -73,10 +73,28 @@ function HTRSummaryPlots(treatment,selection,acceptedPermutations)
 % acceptedPermutations = [1,2]; 
 
 
+treatment = 'Anlg_4_AcO_DMT';
+%treatment = '4-AcO-DMT';
+selection = 1;
+acceptedPermutations = [1,2];
+
 dateTable = getDateAnimalUniqueByTreatment(treatment);
+oldFormatOverride = false;
 
 excludeAnimal = 'ZZ09'; % there should really be a 'hasMagnet' flag in the database
 dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
+
+% dateTable = dateTable(1:8,:);
+
+
+% for Zarmeen's data set =================================================
+% treatment = 'Anlg_4_AcO_DMT';
+% selection = 1;
+% acceptedPermutations = [1,4,5,6,7];
+% dateTable = getDateAnimalUniqueByTreatment(treatment);
+% dateTable = dateTable(17:18,:);
+% oldFormatOverride = true
+
 
 plotsToMake = unique(dateTable.DrugList);
 subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
@@ -88,7 +106,7 @@ subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
 animalData = struct();
 for iList = 1:size(subTable,1)
     disp(['Loading session ' num2str(iList) ' of ' num2str(size(subTable,1))]);
-    animalData(iList).data = getHTRExperimentInfoFromDateName(subTable.Date{iList},subTable.AnimalName{iList}); 
+    animalData(iList).data = getHTRExperimentInfoFromDateName(subTable.Date{iList},subTable.AnimalName{iList},oldFormatOverride); 
 end
 
 % This standalone function will merge experiments that happen 24 hours

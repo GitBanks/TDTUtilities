@@ -12,17 +12,18 @@ while length(magTime) > length(magData) %sometimes time is a mystery
     magTime = magTime(1:end-1);
 end
         
-data.label{1,1} = 'Mag-Ch1'; % data.label is a 1xnChans cell-array containing string labels for each channel
-data.fsample = 1/magDT; % sampling frequency in Hz, single number
-data.sampleinfo = [1, size(magData)]; %n points
-data.trial{1} = magData; % cell-array containing a data matrix for each trial (1 X Ntrial), each data matrix is a Nchan*Nsamples matrix
-data.time{1} = magTime;
+dataIn.label{1,1} = 'Mag-Ch1'; % data.label is a 1xnChans cell-array containing string labels for each channel
+dataIn.fsample = 1/magDT; % sampling frequency in Hz, single number
+dataIn.sampleinfo = [1, size(magData)]; %n points
+dataIn.trial{1} = magData; % cell-array containing a data matrix for each trial (1 X Ntrial), each data matrix is a Nchan*Nsamples matrix
+dataIn.time{1} = magTime;
 % Segment data into trials of length trialLength with overlap
 cfg         = [];
 cfg.length  = windowLength;
 cfg.overlap = windowOverlap;
-data = ft_redefinetrial(cfg, data);
-
+%data2 = ft_redefinetrial(cfg, dataIn);
+data = redefineTrial(cfg, dataIn);
+clear dataIn
 % get "middle" of the windowed time arrays
 nWindows = length(data.trial);
 for iTimes = 1:length(data.time)

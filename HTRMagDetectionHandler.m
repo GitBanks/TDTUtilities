@@ -1,6 +1,8 @@
 
 function [htrEventTimes] = HTRMagDetectionHandler(exptID,plotEnable)
 %plotEnable = true;
+
+%exptID = '21415-001'
 redoEventSelection = 0;
 
 saveLocation = ['M:\PassiveEphys\20' exptID(1:2) '\'  exptID '\' ];
@@ -11,7 +13,8 @@ else
     [magData,magDT] = HTRMagLoadData(exptID); 
     % window, then turn to variance
     warning('off','all');
-    [localVar,windowedVarTimes] = HTRMagConvertToVarWin(filterData_dbVer(magData,30,59,magDT),magDT); 
+    temp = filterData_dbVer(magData,30,59,magDT);
+    [localVar,windowedVarTimes] = HTRMagConvertToVarWin(temp,magDT); 
     warning('on','all');
     %light cleaning of var over time
     nearDiff = localVar;

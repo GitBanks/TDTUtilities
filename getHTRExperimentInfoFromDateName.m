@@ -1,7 +1,15 @@
-function timeStruct = getHTRExperimentInfoFromDateName(thisDate,thisName)
+function timeStruct = getHTRExperimentInfoFromDateName(thisDate,thisName,oldFormatOverride)
 
 %thisDate = '21318'
 %thisName = 'EEG181'
+
+%thisDate = '21910'
+%thisName = 'ZZ09'
+
+if ~exist('oldFormatOverride','var')
+    oldFormatOverride = false;
+end
+
 
 timeStruct = struct();
 %timeStruct.TimeArray(1) = 0;
@@ -16,12 +24,18 @@ for iFile = 1:size(outputList,1)
     [DBexptID] = getIDfromDateIndex(exptID(1:5),exptID(7:9));
     notebookDescText = fetchAdjust(dbConn,['SELECT notebookDesc FROM masterexpt WHERE exptID=' num2str(DBexptID)]);
     close(dbConn);
-    textIndex = strfind(notebookDescText,'a Spon');
-    hourOfRecording = str2num(notebookDescText{:}(textIndex{1}-2:textIndex{1}-1)); 
     timeStruct.desc(iFile) = notebookDescText;
-    if isempty(hourOfRecording)
-        error('only ''spontaneous hour''  recording is supported');
+    
+    if oldFormatOverride == false 
+        textIndex = strfind(notebookDescText,'a Spon');
+        hourOfRecording = str2num(notebookDescText{:}(textIndex{1}-2:textIndex{1}-1)); 
+        if isempty(hourOfRecording)
+            error('only ''spontaneous hour''  recording is supported');
+        end
+    else
+        hourOfRecording = iFile;
     end
+    
     timeStruct.hourOfRecording(iFile) = hourOfRecording;
     fileLocation = ['M:\PassiveEphys\20' exptID(1:2) '\'  exptID '\' ];
     [~,timeStruct.timeOfDay{iFile}] = getTimeAndDurationFromIndex(exptID(1:5),exptID(7:9));
@@ -31,7 +45,12 @@ for iFile = 1:size(outputList,1)
     timeStruct.timeDT(iFile) = magDT;
     clear magData magDT
     % - load in HTRevents
-    load([fileLocation exptID '-HTRevents.mat'],'htrEventTimes');
+    try
+        load([fileLocation exptID '-HTRevents.mat'],'htrEventTimes');
+    catch
+        [~] = HTRMagDetectionHandler(exptID,true);
+        load([fileLocation exptID '-HTRevents.mat'],'htrEventTimes');
+    end
     % - arrange into cleanedEventTimes
    
     timeStruct.eventArray(iFile).events =htrEventTimes(:);
