@@ -4,6 +4,8 @@ function [operationList] = getExperimentsByAnimalAndDate(animalName,exptDate,fin
 % are the two columns
 % animalName = 'DREADD07';
 % exptDate = '18907';
+% animalName = 'EEG190';
+% exptDate = '22331';
 % findExptType = 'Spon';
 % Calls: [outputList] = getExperimentsByAnimal(animalName,findExptType);
 % (and just sorts / selects by day)
