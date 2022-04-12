@@ -46,7 +46,6 @@ varNames = {'block','conditions','electrodeSheet','dataPrefix','dateTime','start
 metaData = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 implantDate = getImplantDate(animalName);
 
-implantDate = convertvars(implantDate, @isdatetime, @(t) datetime(t, 'TimeZone', 'local'));
 
 doOnce = 1;
 for i = 1:size(listOfAnimalExpts,1)
@@ -63,29 +62,31 @@ for i = 1:size(listOfAnimalExpts,1)
     
     % ======= drug, stim, etc. for condition =======    
    [conditionsDescription,electrodeType,drugDesc,timeInj,exptType] = getConditionsDescription(exptDate,exptIndex);
-    metaData.conditions(i) = [drugDesc '.' timeInj '.' exptType];
+    metaData.conditions(i) = [drugDesc '_' timeInj '_' exptType];
     
     % ======= date and time ========================
-    [indexDur,timeOfDay] = getTimeAndDurationFromIndex(exptDate,exptIndex);
-%     metaData.startMin(i) = timeOfDay;
-%     metaData.stopMin(i) = timeOfDay+indexDur;
+    metaData.refTime.TimeZone = 'local';
+    metaData.refTime(i) = datetime(implantDate.implantDate{1},'TimeZone','local')+hours(12);
+    [indexDur,exptDatetime] = getTimeAndDurationFromIndex(exptDate,exptIndex);
+    [exptDate_dbForm] = houseConvertDateTo_dbForm(exptDate);
+
 
     % ======= time since implant ===================
-    metaData.timePostOp(i) = implantDate.implantDate{1}; %todo: subtract recording date from implant date for this number
+    
+
+    metaData.timePostOp(i) = exptDatetime- metaData.refTime(i); %todo: subtract recording date from implant date for this number
     
     % ======= animal name ==========================
     metaData.patientID(i) = animalName;
     
     % ======= if we ever hold multiple blocks in one line, expand this to represent block times
+    % It turns out this is important for any analysis that segments data.
 %     metaData.blockTime(i) = timeOfDay; %this will need to be expanded if we ever break an index into chunks
-      metaData.blockTime(i) = ''; 
-
+    metaData.blockTime.TimeZone = 'local';
+    metaData.blockTime(i) = datetime(datetime(exptDate_dbForm)+timeofday(exptDatetime),'TimeZone','local'); 
+   
     % ======= create channel map and info structure ======= 
-    
     % check each channel from the electrode info 
-    
-%     for ii = 1:size(electrodeLocation,1)
-
     iterate = 1;
     for ii = 1:16
         if ~isempty(electrodeLocation{ii})
@@ -98,7 +99,6 @@ for i = 1:size(listOfAnimalExpts,1)
     metaData.ECoGchannels(i) = {ECoGchannels}; % do we need these as a structure?
     
     % ======= misc stuff just to make the tables similar (do we need any of these?) ===============
-    metaData.refTime(i) = '';
     metaData.electrodeRev(i) = '';
     metaData.startMin(i) = '';
     metaData.stopMin(i) = '';

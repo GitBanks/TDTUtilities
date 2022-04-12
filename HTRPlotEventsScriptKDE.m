@@ -200,7 +200,8 @@ for iCond = 1:size(plotsToMake,1)
                 lastTime = 1;
             end
             timeGiven = timeSteps(lastTime); 
-            treatmentText = [treatments.pars{iTreatment,treatGiven} ' ' num2str(doseGiven)];
+            %treatmentText = [treatments.pars{iTreatment,treatGiven} ' ' num2str(doseGiven)];
+            treatmentText = [treatments.pars{iTreatment,treatGiven}]; %changing it to only show the first three characters of treatment
             treatmentDisplay = treatmentText;
             if contains(treatmentText,'_vol')
                 treatmentDisplay = strrep(treatmentDisplay,'_vol','');
@@ -214,6 +215,9 @@ for iCond = 1:size(plotsToMake,1)
             if contains(treatmentText,'_')
                 treatmentDisplay = strrep(treatmentDisplay,'_','-');
             end
+            treatmentDisplay = [treatmentDisplay(1:3) ' ' num2str(doseGiven)];
+            
+            
             %may need to handle cases where we record a day later with no
             %obvious 'timepoint' in the system (for that day)
             if ~isempty(timeGiven) 
@@ -241,10 +245,13 @@ for iCond = 1:size(plotsToMake,1)
 % %         end
 %         hold off
         ylabel(subTable.AnimalName{iList});
-        if iList == 1
-            title(fullTreatmentSchedule,'Interpreter', 'none');
-        end
         
+        % don't display a title for now
+%         if iList == 1
+%             title(fullTreatmentSchedule,'Interpreter', 'none');
+%         end
+        
+
         
 
         xlabel('Minutes')

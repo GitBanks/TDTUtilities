@@ -38,6 +38,8 @@ switch str
         p = [M 'Ziyad\Psychedelics\EEG\DataTables\'];
     case 'figures'
         p = [M 'Ziyad\Psychedelics\EEG\Figures'];
+    case 'animalSaves'
+        p = [M 'PassiveEphys\AnimalData\'];
         
     % for specific file paths (old)
     case 'masterLog'
