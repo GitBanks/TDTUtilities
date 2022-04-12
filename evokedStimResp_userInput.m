@@ -1,4 +1,4 @@
-function evokedStimResp_userInput(exptDate,exptIndex)
+function [peakData] = evokedStimResp_userInput(exptDate,exptIndex)
 
 %%
 % User-defined parameters
@@ -6,8 +6,6 @@ function evokedStimResp_userInput(exptDate,exptIndex)
 if ~exist('exptDate','var') || ~exist('exptIndex','var')
 %     exptDate = '21601'; 
 %     exptIndex = '009';
-    exptDate = '21d21'; 
-    exptIndex = '008';
     
 %     exptIndex = '008'; noTank = false;
 %	exptIndex = '004'; noTank = false;
@@ -169,7 +167,7 @@ for iROI = 1:nROIs
     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [1.05*plotMin(iROI),1.05*plotMax(iROI)];
+    ax.YLim = [-6.0e-05, 18.0e-05]%[1.05*plotMin(iROI),1.05*plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
         ax.YLabel.String = 'avg dataSub (V)';
@@ -270,6 +268,12 @@ plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
 
 
 %%
+for iStim = 1:length(stimSet)
+    avgTraces(iStim).stimSet = stimSet(iStim).subMean;
+    avgTraces(iStim).stimArrayNumeric = stimArrayNumeric(iStim);
+    avgTraces(iStim).ampLabel = ampLabel{iStim};
+
+end
 % we will save 
 % Time of peak re stim time
 % Response magnitude (pk, inner product)
@@ -282,13 +286,12 @@ peakData.pkVals = pkVals; % Response magnitude
 peakData.stimTimes = stimTimes; % Time of stim relative to start of file
 peakData.plotMin = plotMin;
 peakData.plotMax = plotMax;
-    
-for iStim = 1:length(stimSet)
-    avgTraces(iStim).stimSet = stimSet(iStim).subMean;
-    avgTraces(iStim).stimArrayNumeric = stimArrayNumeric(iStim);
-    avgTraces(iStim).ampLabel = ampLabel{iStim};
+peakData.plotTimeArray = plotTimeArray; 
+peakData.avgTraces = avgTraces;
+peakData.stimSet = stimSet;
 
-end
+    
+
 save([outPath fileString '_peakData'],'peakData','plotTimeArray','avgTraces');
 
 
@@ -305,11 +308,12 @@ save([outPath2 animal '_peakDataOverTime'],'peakDataOverTime');
 
 
 %% 
-% plotting now contained here (so we can call it from other programs)
+%plotting now contained here (so we can call it from other programs)
 sendToSlack = true;
 plotCalculatedPeaks = false;
 plotStimRespByDateIndex(exptDate,exptIndex,sendToSlack,plotCalculatedPeaks)
 
+%%
 % %
 % % plotting
 % FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];

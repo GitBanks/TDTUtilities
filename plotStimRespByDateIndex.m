@@ -28,9 +28,10 @@ animalName = getAnimalByDateIndex(exptDate,exptIndex);
 outPath2 = ['M:\PassiveEphys\AnimalData\' animalName '\'];
 FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
 thisFigure = figure('Name',FigName);
-nROIs = 1 %size(peakData.ROILabels,1);
+
+nROIs = 1:size(peakData.ROILabels,1);
 % plotting begins
-for iROI = 1 %1:nRoi
+for iROI = 1:nROIs
     % Plot avg traces
     subPlt(iROI) = subplot(2,nROIs,iROI);
     hold on
@@ -64,7 +65,7 @@ for ii = 1:size(avgTraces,2)
 end
 
 hold off
-for iROI = 1 %1:nROIs
+for iROI = 1:nROIs
     subplot(2,nROIs,nROIs+iROI)
     legendLabs = [];
     nPks = size(peakData.pkVals(iROI).data,1);
