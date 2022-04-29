@@ -175,7 +175,7 @@ end
 %% Export as CSV for prism
 
 outPath = ['C:\Users\Grady\Documents\Zarmeen Data\PeakMax'];
-tableOutPath = fullfile(outPath, 'stimPeakTablevCA1.csv')
+tableOutPath = fullfile(outPath, 'stimPeakTable.csv')
 writetable(stimPeakTable,tableOutPath)
 
 %% Plotting bar plot for summary and average traces at each time point
