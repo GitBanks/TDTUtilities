@@ -13,6 +13,7 @@ W = '\\128.104.83.123\BanksData\Data\';
 M = '\\144.92.237.185\Data\';
 REC = '144.92.237.183'; % Gilgamesh % avoid network formatting \\ and \ for REC because some input requires just the numbers here
 %REC = '144.92.237.187'; % Nessus
+SQL = '144.92.237.180';
 
 switch str
     % root level locations, multiple reference options
@@ -28,6 +29,8 @@ switch str
         p = M;
     case 'REC'
         p = REC;
+    case 'SQL'
+        p = SQL;
         
     % for directories
     case 'importedData'
