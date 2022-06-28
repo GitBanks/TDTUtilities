@@ -10,7 +10,7 @@ function batchAssemblerForMCStim(date,index)
 
 %date = '21601';
 %index = '002';
-nTrialsPerStim = 25;
+nTrialsPerStim = 5;
 %stimArray = [200,300,400,500,600,700];
 stimArray =  {'1-1','50-50','100-100','150-150','200-200','300-300','400-400', '500-500','600-600'};
 % stimArray =  {'1-1','50-50','200-200','300-300','500-500','800-800','900-900','1000-1000'};

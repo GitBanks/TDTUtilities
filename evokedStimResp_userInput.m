@@ -4,10 +4,10 @@ function evokedStimResp_userInput(exptDate,exptIndex)
 % User-defined parameters
 
 if ~exist('exptDate','var') || ~exist('exptIndex','var')
-%     exptDate = '21601'; 
-%     exptIndex = '009';
-    exptDate = '21d21'; 
-    exptIndex = '008';
+    %exptDate = '22415'; 
+    %exptIndex = '002';
+%     exptDate = '21d21'; 
+%     exptIndex = '008';
     
 %     exptIndex = '008'; noTank = false;
 %	exptIndex = '004'; noTank = false;
@@ -62,6 +62,10 @@ if ~exist(outPath,'dir')
 end
 animalName = getAnimalByDateIndex(exptDate,exptIndex);
 [electrodeLocs,map,~] = getElectrodeLocationFromDateIndex(exptDate,exptIndex);
+if isempty(map)
+    mapLocations = [getPathGlobal('W') 'PassiveEphys\Metadata\' animal '.csv'];
+    error(['Please create a map file for this animal.  Check here: ' mapLocations]);   
+end
 
 electrodeLocs = electrodeLocs(map);
 %%%%NOTE: The following assumes that channels are arranged in pairs and
@@ -169,7 +173,7 @@ for iROI = 1:nROIs
     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [1.05*plotMin(iROI),1.05*plotMax(iROI)];
+    ax.YLim = [-80e-5,80e-5];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
         ax.YLabel.String = 'avg dataSub (V)';
