@@ -15,8 +15,8 @@ function [allF,allX,quietF,quietX,activeF,activeX] = getECDFActiveOrQuietByDateI
 % account for that.
 % exptIndex = '003';
 
-exptDate = '21d28';
-exptIndex = '006';
+% exptDate = '21d28';
+% exptIndex = '006';
 
 % user defined parameters
 windowLength = 7; % movement window around stim, in seconds

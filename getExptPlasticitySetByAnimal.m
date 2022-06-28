@@ -7,12 +7,14 @@ listOfAnimalExpts = getExperimentsByAnimal(animal);
 descOfAnimalExpts = listOfAnimalExpts(:,2);
 listOfAnimalExpts = listOfAnimalExpts(:,1);
 
-sz = [length(listOfAnimalExpts) 6];
-varTypes = {'string','string','logical','logical','logical','logical'};
-varNames = {'DateIndex','Description','stimResp','preLTP','postLTP','postLTD'};
+sz = [length(listOfAnimalExpts) 6] + 1;
+varTypes = {'string','string','string','logical','logical','logical','logical'};
+varNames = {'Animal','DateIndex','Description','stimResp','preLTP','postLTP','postLTD'};
 exptTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 
+
 for iList = 1:length(listOfAnimalExpts)
+    exptTable.Animal(iList) = [animal];
     exptTable.Description(iList) = descOfAnimalExpts{iList}{1};
     date = listOfAnimalExpts{iList}(1:5);
     index = listOfAnimalExpts{iList}(7:9);
