@@ -9,7 +9,7 @@ function [p] = getPathGlobal(str)
 % this version: SG Jan 2022
 
 % W = '\\144.92.218.131\Data\Data\';
-W = '\\128.104.83.123\BanksData\Data\';
+W = '\\128.104.83.123\BanksData\Data\'; %Username: ANESFS3\BanksLab %Password: WIb3cZFbXR
 M = '\\144.92.237.185\Data\';
 REC = '144.92.237.183'; % Gilgamesh % avoid network formatting \\ and \ for REC because some input requires just the numbers here
 %REC = '144.92.237.187'; % Nessus
