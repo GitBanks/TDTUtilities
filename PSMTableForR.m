@@ -37,6 +37,8 @@ sz = [length(listOfSegments),length(varNames)];
 PSMTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 
 %3) Start pulling in data
+%The frequency band allocation is done based on our previously defined
+%frequency bands found in freqBands
 iChans = 1:2;
 delta = 1:4;
 theta = 4:8;
@@ -46,8 +48,6 @@ gamma = 15:19;
 highGamma = 19:24;
 for iSegment = 1:size(listOfSegments,1)
 thisSeg = listOfSegments{iSegment};
-PSMTable.date(iSegment) = thisDate;
-PSMTable.drug(iSegment) = thisDrug;
 PSMTable.AvgTotalPow(iSegment) = mean(mean(out.specAnalysis{1,1}.(thisSeg).powspctrm(iChans,:),1));
 PSMTable.delta(iSegment) = mean(mean(out.specAnalysis{1,1}.(thisSeg).powspctrm(iChans,delta),1));
 PSMTable.theta(iSegment) = mean(mean(out.specAnalysis{1,1}.(thisSeg).powspctrm(iChans,theta),1));
@@ -102,6 +102,15 @@ preInj = contains(listOfSegments,'PostInj');
 PSMTable.isPeak = preInj;
 PSMTable.animalName(:,1) = animalName;
 PSMTable.index(:,1) = out.block;
+PSMTable.date (:,1)= thisDate;
+PSMTable.drug (:,1)= thisDrug;
+
+%% CSV Saving
+
+fileName = strcat(animalName,'',thisDate,'',thisDrug,'','.csv')
+outPath = ['M:\mouseLFP\MatlabCSV'];
+tableOutPath = fullfile(outPath, fileName)
+writetable(PSMTable,tableOutPath)
 
 
 
