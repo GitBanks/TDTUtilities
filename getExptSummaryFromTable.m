@@ -1,4 +1,4 @@
-function movementDataStruct = getMoveExptSummaryFromTable(tname)
+function dataStruct = getExptSummaryFromTable(tname)
 % movementDataStruct = getMoveExptSummaryFromTable(tname)
 % GIVEN: a table containing animal names (string pointing to xlsx file.
 % Looks for animalName column)
