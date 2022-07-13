@@ -6,7 +6,7 @@ function [S] = getMoveTimeDrugbyAnimalDate(animalName,exptDate)
 % 2. a corresponding time array
 % 3. the injection time(s)
 % 4. drug(s) injected
-% 5. sample rate
+% 5. sample rate of movement samples
 % 6. drug injected in datetime format
 % 7. time array in datetime format
 % other notes
