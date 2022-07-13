@@ -7,11 +7,12 @@ library(lmerTest)
 # Propensity matching approach for mouse EEG
 # adapted from earlier code from Bryan
 # 8/28/20 can now be run as a function
+# Further adapted from Ziyad's work to be run with new pipeline 06/27/22-ZZ  
     
 
 # load window by window file
-csv_path <- "M:/mouseEEG/Power/Tables/bandPowerTable_combPeakEffect_allWindows_avgChans_20904.csv"
-# fname <- "M:/mouseEEG/Power vs activity/test22615.csv"
+csv_path <- "M:/mouseLFP/MatlabCSV/ZZ1422120psilocybin.csv"
+fname <- "M:/mouseEEG/Power vs activity/test22629.csv"
 
 
 
@@ -22,9 +23,10 @@ fname <- args[2] # set the name of the output file
 # read dataframe into environment  
 dToMatch <- read.csv(csv_path)
 
-dToMatch <- dToMatch %>% mutate(group = factor(group,levels=c("Sham","Low LPS","PXM + Low LPS","Saline + Low LPS","CAFc + Low LPS","Aged Low LPS","High LPS")))
+#dToMatch <- dToMatch %>% mutate(group = factor(group,levels=c("Sham","Low LPS","PXM + Low LPS","Saline + Low LPS","CAFc + Low LPS","Aged Low LPS","High LPS")))
 dToMatch <- dToMatch %>% mutate(sqrtMovt=sqrt(meanMovement)) # TAKE SQUARE ROOT OF MOVEMENT (can't take log so this is how to get a normal distribution)
-dToMatch <- dToMatch %>% dplyr::select(animalName,group,age,date,isPeak,sqrtMovt,delta) # filter for only these variables
+#dToMatch <- dToMatch %>% dplyr::select(animalName,group,age,date,isPeak,sqrtMovt,delta) # filter for only these variables
+dToMatch <- dToMatch %>% dplyr::select(animalName,date,drug,isPeak,sqrtMovt,delta) # filter for only these variables
 dToMatch <- na.omit(dToMatch) # remove nan entries? does this actually remove nans? why are there nans
 dToMatch <- dToMatch %>% filter(sqrtMovt>0) # KEEP ONLY NON-ZERO MOVEMENT VALUES
 
@@ -36,39 +38,41 @@ matchMovement <- function(d) {
   
   summary(match.it)
   
-  # plot(match.it, type="jitter",interactive=FALSE)
+ plot(match.it, type="jitter",interactive=FALSE)
   match.data(match.it)
 }
 
-mvtMatched <- dToMatch %>% group_by(animalName,group) %>% do(matchMovement(.))
+mvtMatched <- dToMatch %>% group_by(animalName,drug) %>% do(matchMovement(.))
 
 # Write CSV
-# fname = "M:/mouseEEG/Power vs activity/Slope Tables/deltaPower_movementPropensityScoresMatched_caffeine_20325_summariesFULL.csv"
-# write.csv(allSummaries, file = fname)
+fname = "M:/mouseLFP/Power vs Activity/Tables/deltaPower_movementPropensityScoresMatched_ZZ1422120psilocybin_summariesFULL.csv"
+write.csv(allSummaries, file = fname)
 
 # SAVE window by window output of PSM
-# fname = "M:/mouseEEG/Power vs activity/Slope Tables/deltaPropScoreMatching-20416.csv"
-# write.csv(mvtMatched, file = fname)
+fname = "M:/mouseLFP/Power vs Activity/Tables/deltaPropScoreMatching-ZZ1422120psilocybin.csv"
+write.csv(mvtMatched, file = fname)
 
 # summarize data
-meanT <- mvtMatched %>% group_by(animalName,isPeak,age,group) %>% summarise(weightedMean = weighted.mean(delta,weights), weightedMvt = weighted.mean(sqrtMovt,weights))
+#meanT <- mvtMatched %>% group_by(animalName,isPeak,group) %>% summarise(weightedMean = weighted.mean(delta,weights), weightedMvt = weighted.mean(sqrtMovt,weights))
+ meanT <- mvtMatched %>% group_by(animalName,isPeak,drug) %>% summarise(weightedMean = weighted.mean(delta,weights), weightedMvt = weighted.mean(sqrtMovt,weights))
 
 # check how well the movement distributions were matched
-paired <- inner_join(meanT %>% filter(isPeak==0) %>% mutate(baseMvt = weightedMvt) %>% ungroup() %>% dplyr::select(animalName,baseMvt,group),meanT %>% filter(isPeak==1) %>% mutate(peakMvt = weightedMvt) %>% ungroup() %>% dplyr::select(animalName,peakMvt,group))
+paired <- inner_join(meanT %>% filter(isPeak==0) %>% mutate(baseMvt = weightedMvt) %>% ungroup() %>% dplyr::select(animalName,baseMvt,drug),meanT %>% filter(isPeak==1) %>% mutate(peakMvt = weightedMvt) %>% ungroup() %>% dplyr::select(animalName,peakMvt,drug))
 paired <- mutate(paired, mvtDiff = abs(peakMvt - baseMvt)/(baseMvt) ) %>% arrange(mvtDiff)
 view(paired) 
 
 # SAVE matching criteria
-# fname = "M:/mouseEEG/Power vs activity/Slope Tables/deltaPSM_matchingCriteria_20624.csv"
-# write.csv(paired, file = fname)
+fname = "M:/mouseEEG/Power vs activity/Tables/deltaPSM_matchingCriteria_20624.csv"
+write.csv(paired, file = fname)
 
 # Exclude ones we don't like. This should be based on the "paired" analysis which compares the weighted movement means; large differences (means >=1% different) = failed matching
-meanT <- meanT %>% filter(!(animalName %in% c('EEG11','EEG34','EEG48','EEG66','EEG80','EEG131','EEG134')))
+#meanT <- meanT %>% filter(!(animalName %in% c('EEG11','EEG34','EEG48','EEG66','EEG80','EEG131','EEG134')))
+meanT <- meanT %>% filter(!(animalName %in% c()))
 
-meanT <- meanT %>% mutate(group = factor(group,levels=c("Sham","Low LPS","PXM + Low LPS","Saline + Low LPS","CAFc + Low LPS","Aged Low LPS","High LPS"))) 
+#meanT <- meanT %>% mutate(group = factor(group,levels=c("Sham","Low LPS","PXM + Low LPS","Saline + Low LPS","CAFc + Low LPS","Aged Low LPS","High LPS"))) 
 
 # summary data
-# gd <- meanT %>% group_by(group,isPeak) %>% summarize(grandMean = mean(weightedMean)) 
+gd <- meanT %>% group_by(drug,isPeak) %>% summarize(grandMean = mean(weightedMean)) 
 
 # plot 
 #ggplot(data=meanT,aes(x=isPeak,y=weightedMean,group=animalName)) +
