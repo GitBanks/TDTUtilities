@@ -1,14 +1,5 @@
 function plotWPLIEEG(animalName,exptDate,bandOfInterest)
 
-% =============================  WPLI ===========================
-% Load saved data
-% final save location will be something like M:\PassiveEphys\AnimalData\initial\ZZ14\
-% Full load command will be something like:
-
-% folder = 'M:\PassiveEphys\AnimalData\initial\ZZ14\';
-% file = 'ZZ14_22120-000,22120-003,22120-004,22120-005,22120-006 wPLI_dbt-ZZMouseOptionsNoSubSegLength20';
-% nChans = 6;
-
 % animalName = 'EEG210';
 % exptDate = '22629';
 if ~exist('bandOfInterest','var')
@@ -33,22 +24,15 @@ for iFile = 1:size(dataFolder,1)
     end
 end
 
-% plotText = 'with Psilocbyin Ipsi mPFC x contra mPFC';
 plotText = ''; % this will go into the plot title.  Get this from the database.
-
-% can probably automate this, but need to find the right file.  Maybe we
-% want to turn this into a function where it's 'animalName' and 'exptDate'
-% and we look in the animalName folder for this dated file (and if specific to wpli, then 'wpli') 
-
 
 load([folder file]);
 
 % load and plot - edit for specific recording type and channels
 listOfSegments = fields(out.wPLI_dbt{1,1});
 
-
 % For EEG, we want to compare anterior electrodes to posterior
-plottingArray = nan(nChans,nChans,size(listOfSegments,1));
+%plottingArray = nan(nChans,nChans,size(listOfSegments,1));
 for iSegment = 1:size(listOfSegments,1)
     thisSeg = listOfSegments{iSegment};
     %plottingArray(:,:,iSegment) = out.wPLI_dbt{1,1}.(thisSeg).wPLI_debias.(bandOfInterest);
@@ -63,26 +47,22 @@ windowTimes = out.segmentTimeOfDay{1,1};
 [exptDate_dbForm] = houseConvertDateTo_dbForm(exptDate);
 windowTimes = datetime(exptDate_dbForm)+windowTimes;
 
-
 [S] = getMoveTimeDrugbyAnimalDate(animalName,exptDate);
 moveTimes = S.fullTimeArrayTOD;
 moveArray = S.fullMoveStream;
 TheseDrugs = S.drugTOD;
 
-
-
-
 figure();
 
 subplot(2,1,1)
 plot(windowTimes,ChannelPairDisplay);
-title([animalName 'WPLI ' bandOfInterest ' Band Connectivity' plotText]);
+title([animalName ' WPLI ' bandOfInterest ' Band Connectivity' plotText]);
 legend(legendLabels);
 xlim([windowTimes(1),windowTimes(end)]);
 
 subplot(2,1,2)
 plot(moveTimes, moveArray);
-title([animalName 'Movement Across Time'])
+title([animalName ' Movement Across Time'])
 xlim([moveTimes(1),moveTimes(end)]);
 ylim([0,max(moveArray)*1.2]);
 
@@ -91,7 +71,7 @@ for iDrugInj = 1:size(TheseDrugs,2)
     thisDrugTime = TheseDrugs(iDrugInj).time;
     thisDrugName = [TheseDrugs(iDrugInj).what ' ' num2str(TheseDrugs(iDrugInj).amount)];
 %     subplot(2,1,1);
-%     xline(thisDrugTime,'-',thisDrugName);
+%     xline(thisDrugTime,'-',thisDrugName);  % TODO Fix this datetime misalignment
     subplot(2,1,2);
     xline(thisDrugTime,'-',thisDrugName);
 end
