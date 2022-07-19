@@ -18,21 +18,21 @@ thisDate = '22120';
 
 
 folder = ['M:\PassiveEphys\AnimalData\initial\' animalName '\'];
-file = 'ZZ14_22120-000,22120-003,22120-004,22120-005,22120-006 specAnalysis';
+file = 'ZZ14_22120-000,22120-003,22120-004,22120-005,22120-006 specAnalysis-ZZMouseOptionsSpec';
 treatments = getTreatmentInfo(animalName,thisDate);
 DOB = getBirthDate(animalName);
 % to get animal age for this table, just subtract DOB from thisDate (after
 % formatting)
-formatDateFive(thisDate)
-[newDate,~] = fixDateIndexToFiveForSynapse(thisDate,'000');
+%formatDateFive(thisDate)
+%[newDate,~] = fixDateIndexToFiveForSynapse(thisDate,'000');
 
 thisDrug = treatments.pars{1};
 load([folder file]);
 listOfSegments = fields(out.specAnalysis{1,1});
 
 %2) Preallocate empty table
-varTypes = {'string','string','string','string','double', 'double', 'double', 'double','double', 'double','double','double', 'double','double'};
-varNames = {'animalName', 'date','drug', 'index', 'isPeak', 'win', 'meanMovement', 'AvgTotalPow', 'delta', 'theta', 'alpha', 'beta','gamma','highGamma' };
+varTypes = {'string','string','string','string','double', 'double','double', 'double', 'double','double', 'double','double','double', 'double','double'};
+varNames = {'animalName', 'date','drug', 'index', 'isPeak', 'win', 'winTime','meanMovement', 'AvgTotalPow', 'delta', 'theta', 'alpha', 'beta','gamma','highGamma' };
 sz = [length(listOfSegments),length(varNames)];
 PSMTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 
@@ -98,6 +98,11 @@ end
 PSMTable.meanMovement = meanMove'
 
 %% Other info
+segTimes ={out.segmentTimes{1,1}}
+oldSegTimes = cellfun(@(x) x - segTimes{1,1}(1), segTimes, 'un', 0)
+newSegTimes = duration(0,0,oldSegTimes{1,1}, 'Format','hh:mm:ss')
+
+PSMTable.winTime = newSegTimes
 preInj = contains(listOfSegments,'PostInj');
 PSMTable.isPeak = preInj;
 PSMTable.animalName(:,1) = animalName;
@@ -108,11 +113,6 @@ PSMTable.drug (:,1)= thisDrug;
 %% CSV Saving
 
 fileName = strcat(animalName,'',thisDate,'',thisDrug,'','.csv')
-outPath = ['M:\mouseLFP\MatlabCSV'];
+outPath = ['M:PassiveEphys\mouseLFP\MatlabCSV'];
 tableOutPath = fullfile(outPath, fileName)
 writetable(PSMTable,tableOutPath)
-
-
-
-
-
