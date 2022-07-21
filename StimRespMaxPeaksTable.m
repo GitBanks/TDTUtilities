@@ -3,7 +3,7 @@
 %% Define animal and subset
 
 
-animal = {'ZZ06','ZZ09','ZZ10','ZZ14', 'ZZ15'};
+animal = {'ZZ19'};
 % subset={'21804','22117','22203'};
 % drug =;
 
@@ -117,7 +117,7 @@ stimRespExptTable = tempTable;
 exptList = stimRespExptTable.DateIndex;
 
 nIndex = size(exptList,1);
-nROI = 3;
+nROI = 1;
 data = struct();
 for iList = 1:nIndex
     exptDate = exptList{iList}(1:5);
@@ -160,7 +160,7 @@ nROI = 1;
 sz = [length(exptList)*nROI length(varNames)];
 stimPeakTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 
-for iROI = 3
+for iROI = 1
     for iList = 1:nIndex
         indexList = ((iROI-1)*nIndex)+iList;
         stimPeakTable.Animal(indexList) = data(iList).Animal(iList);
