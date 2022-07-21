@@ -6,7 +6,7 @@ function plotSpectraEEG(animalName,exptDate)
 legLabels = {'Ch1','Ch2','Ch3','Ch4','Ch5','Ch6'};
 
 folder = ['M:\PassiveEphys\AnimalData\initial\' animalName '\'];
-
+saveFolder = 'M:\PassiveEphys\AnimalData\';
 
 
 % the file will be some crazy thing like this:
@@ -67,20 +67,20 @@ else
     titletext = [animalName ' average spectral power for ' exptDate ' ' TheseDrugs(1).what];
 end
 
-figure(); 
+avgspectra = figure(); 
 loglog(freqLabels,avgSpectra); 
 legend(legLabels); 
 title(titletext,'Interpreter', 'none'); 
 ylabel('Power (mV^2)'); 
 xlabel('Freq');
 
-
-
+saveas(avgspectra,[saveFolder 'avgspectra\' animalName '-' exptDate '.fig']);
+saveas(avgspectra,[saveFolder 'avgspectra\' animalName '-' exptDate '.jpg']);
 
 
 
 % plotting now
-figure();
+spectrogramFig = figure();
 
 for iChan = 1:nChans
     subtightplot(nChans+1,1,iChan);
@@ -110,7 +110,8 @@ for iDrugInj = 1:size(TheseDrugs,2)
     xline(thisDrugTime,'-',thisDrugName);
 end
 
-
+saveas(spectrogramFig,[saveFolder 'spectrogram\' animalName '-' exptDate '.fig']);
+saveas(spectrogramFig,[saveFolder 'spectrogram\' animalName '-' exptDate '.jpg']);
 
 
 
