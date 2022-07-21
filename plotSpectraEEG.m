@@ -3,12 +3,11 @@ function plotSpectraEEG(animalName,exptDate)
 % animalName = 'EEG210';
 % exptDate = '22629';
 
-% nChans = 4;
-% NOTE: a better way to do this would be to pull channel labels since they
-% may vary by animal
-%legendLabels = {'Anterior R vs Posterior R','Anterior R vs Posterior L','Anterior L vs Posterior R','Anterior L vs Posterior L'};
+legLabels = {'Ch1','Ch2','Ch3','Ch4'};
 
 folder = ['M:\PassiveEphys\AnimalData\initial\' animalName '\'];
+
+
 
 % the file will be some crazy thing like this:
 % 'EEG210_22629-001,22629-003,22629-005,22629-007,22629-009,22629-011 wPLI_dbt'; 
@@ -20,111 +19,103 @@ for iFile = 1:size(dataFolder,1)
     end
 end
 
-plotText = ''; % this will go into the plot title.  Get this from the database.
-
-load([folder file]);
+load([folder file]); %careful! what if there's another file with a similar name?  as written, the code will just load the last one it found, but that's not certainly the correct one...
 
 % load and plot - edit for specific recording type and channels
 listOfSegments = fields(out.specAnalysis{1,1});
-
-
-
-
+% grab the labels / values for the frequencies
+freqLabels = out.specAnalysis{1,1}.(listOfSegments{1}).freq;
 % For EEG, we want to compare anterior electrodes to posterior
 %plottingArray = nan(nChans,nChans,size(listOfSegments,1));
+nChans = size(out.specAnalysis{1,1}.(listOfSegments{1}).powspctrm,1);
 for iSegment = 1:size(listOfSegments,1)
     thisSeg = listOfSegments{iSegment};
-    Ch1(iSegment,:) = log2(out.specAnalysis{1,1}.(thisSeg).powspctrm(1,:));
-    Ch2(iSegment,:) = log2(out.specAnalysis{1,1}.(thisSeg).powspctrm(2,:));
-    Ch3(iSegment,:) = log2(out.specAnalysis{1,1}.(thisSeg).powspctrm(3,:));
-    Ch4(iSegment,:) = log2(out.specAnalysis{1,1}.(thisSeg).powspctrm(4,:));
+    for iChan = 1:nChans
+        specdata(iChan).data(iSegment,:) = log2(out.specAnalysis{1,1}.(thisSeg).powspctrm(iChan,:));
+    end
 end
-freqLabels = out.specAnalysis{1,1}.(thisSeg).freq;
-Ch1 = Ch1';
-Ch2 = Ch2';
-Ch3 = Ch3';
-Ch4 = Ch4';
+for iChan = 1:nChans
+    specdata(iChan).data = specdata(iChan).data';
+end
 
 windowTimes = out.segmentTimeOfDay{1,1};
 [exptDate_dbForm] = houseConvertDateTo_dbForm(exptDate);
-windowTimes = datetime(exptDate_dbForm)+windowTimes;
+windowTimes = datetime(exptDate_dbForm,'TimeZone','local')+windowTimes;
 
 [S] = getMoveTimeDrugbyAnimalDate(animalName,exptDate);
 moveTimes = S.fullTimeArrayTOD;
 moveArray = S.fullMoveStream;
 TheseDrugs = S.drugTOD;
 
+% t = 0 should be injection;  
+% WARNING!  this assumes that the last injection is the one to ref as t=0
+adjTimes = windowTimes-TheseDrugs(end).time;
+adjMoveTimes = moveTimes-TheseDrugs(end).time;
+for iDrugInj = 1:size(TheseDrugs,2)
+    TheseDrugs(iDrugInj).adjTime = TheseDrugs(iDrugInj).time-TheseDrugs(end).time;
+end
 
-figure()
+% find average spectra here
+for iChan = 1:nChans
+    avgSpectra(:,iChan) = mean(specdata(iChan).data,2);
+end
+
+titletext = [animalName ' average spectral power for ' exptDate ' ' TheseDrugs(1).what ' & ' TheseDrugs(2).what];
+figure(); 
+loglog(freqLabels,avgSpectra); 
+legend(legLabels); 
+title(titletext,'Interpreter', 'none'); 
+ylabel('Power (mV^2)'); 
+xlabel('Freq');
 
 
 
 
 
-% Matt's suggestion
 
+% plotting now
+figure();
 
-subtightplot(5,1,1);
-colormap('jet')
-pcolor(windowTimes,log2(freqLabels),Ch1)
-shading flat
-axis xy;colorbar('eastoutside');
-ylim([log2(freqLabels(1)) log2(freqLabels(end))]);
-set(gca,'fontsize',10);
-set(gca,'ytick',log2([2 4 8 16 30 50]),'yticklabel',string([2 4 8 16 30 50]));
-ylabel('Hz');
-xlabel('time')
-%caxis([-15 10]);
-
-subtightplot(5,1,2);
-colormap('jet')
-pcolor(windowTimes,log2(freqLabels),Ch2)
-shading flat
-axis xy;colorbar('eastoutside');
-ylim([log2(freqLabels(1)) log2(freqLabels(end))]);
-set(gca,'fontsize',10);
-set(gca,'ytick',log2([2 4 8 16 30 50]),'yticklabel',string([2 4 8 16 30 50]));
-ylabel('Hz');
-xlabel('time')
-%caxis([-15 10]);
-
-subtightplot(5,1,3);
-colormap('jet')
-pcolor(windowTimes,log2(freqLabels),Ch3)
-shading flat
-axis xy;colorbar('eastoutside');
-ylim([log2(freqLabels(1)) log2(freqLabels(end))]);
-set(gca,'fontsize',10);
-set(gca,'ytick',log2([2 4 8 16 30 50]),'yticklabel',string([2 4 8 16 30 50]));
-ylabel('Hz');
-xlabel('time')
-%caxis([-15 10]);
-
-subtightplot(5,1,4);
-colormap('jet')
-pcolor(windowTimes,log2(freqLabels),Ch4)
-shading flat
-axis xy;colorbar('eastoutside');
-ylim([log2(freqLabels(1)) log2(freqLabels(end))]);
-set(gca,'fontsize',10);
-set(gca,'ytick',log2([2 4 8 16 30 50]),'yticklabel',string([2 4 8 16 30 50]));
-ylabel('Hz');
-xlabel('time')
-%caxis([-15 10]);
+for iChan = 1:nChans
+    subtightplot(nChans+1,1,iChan);
+    colormap('jet')
+    pcolor(adjTimes,log2(freqLabels),specdata(iChan).data)
+    shading flat
+    axis xy; %colorbar('east');
+    if iChan == nChans; colorbar('east'); end
+    ylim([log2(freqLabels(1)) log2(freqLabels(end))]);
+    set(gca,'fontsize',10);
+    set(gca,'ytick',log2([2 4 8 16 30 50]),'yticklabel',string([2 4 8 16 30 50]));
+    ylabel('Hz');
+    xlabel('time');
+end
 
 % Movement here (loaded previously)
-subtightplot(5,1,5);
-plot(moveTimes, moveArray);
+subtightplot(nChans+1,1,nChans+1);
+plot(adjMoveTimes, moveArray);
 ylabel('Movement');
-xlim([moveTimes(1),moveTimes(end)]);
+xlim([adjMoveTimes(1),adjMoveTimes(end)]);
 ylim([0,max(moveArray)*1.2]);
 % indicate where manipulations took place.
 % loop through drug injections here
 for iDrugInj = 1:size(TheseDrugs,2)
-    thisDrugTime = TheseDrugs(iDrugInj).time;
+    thisDrugTime = TheseDrugs(iDrugInj).adjTime;
     thisDrugName = [TheseDrugs(iDrugInj).what ' ' num2str(TheseDrugs(iDrugInj).amount)];
     xline(thisDrugTime,'-',thisDrugName);
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
