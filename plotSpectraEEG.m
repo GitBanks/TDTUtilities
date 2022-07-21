@@ -3,7 +3,7 @@ function plotSpectraEEG(animalName,exptDate)
 % animalName = 'EEG210';
 % exptDate = '22629';
 
-legLabels = {'Ch1','Ch2','Ch3','Ch4'};
+legLabels = {'Ch1','Ch2','Ch3','Ch4','Ch5','Ch6'};
 
 folder = ['M:\PassiveEphys\AnimalData\initial\' animalName '\'];
 
@@ -55,12 +55,18 @@ for iDrugInj = 1:size(TheseDrugs,2)
     TheseDrugs(iDrugInj).adjTime = TheseDrugs(iDrugInj).time-TheseDrugs(end).time;
 end
 
+
 % find average spectra here
 for iChan = 1:nChans
     avgSpectra(:,iChan) = mean(specdata(iChan).data,2);
 end
 
-titletext = [animalName ' average spectral power for ' exptDate ' ' TheseDrugs(1).what ' & ' TheseDrugs(2).what];
+if size(TheseDrugs,2) > 1
+    titletext = [animalName ' average spectral power for ' exptDate ' ' TheseDrugs(1).what ' & ' TheseDrugs(2).what];
+else
+    titletext = [animalName ' average spectral power for ' exptDate ' ' TheseDrugs(1).what];
+end
+
 figure(); 
 loglog(freqLabels,avgSpectra); 
 legend(legLabels); 
