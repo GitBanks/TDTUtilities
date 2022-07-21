@@ -15,7 +15,8 @@ warning off all
 % javaaddpath('Z:\DataBanks\mysql-connector-java-5.1.14-bin.jar'); %old
 % javaaddpath('\\SERVER1\Data\DataBanks\mysql-connector-java-5.1.14-bin.jar'); %edited JK 16331 for more robust access over networks
 % javaaddpath('\\144.92.237.180\Users\Matt Banks\Documents\Code\TDTUtilities\mysql-connector-java-5.1.14-bin.jar'); % 21512 - Z drive is out
-javaaddpath('\\144.92.237.180\Users\zsultan\Documents\Code\TDTUtilities\mysql-connector-java-5.1.14-bin.jar');
+% javaaddpath(['\\' getPathGlobal('SQL') '\Users\zsultan\Documents\Code\TDTUtilities\mysql-connector-java-5.1.14-bin.jar']);
+javaaddpath(['\\' getPathGlobal('SQL') '\Users\zsultan\Documents\Code\TDTUtilities\mysql-connector-java-5.1.14-bin.jar']);
 
 
 warning on all
