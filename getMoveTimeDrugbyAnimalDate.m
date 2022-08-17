@@ -68,10 +68,27 @@ while length(fullTimeArrayTOD) > length(fullMoveStream) %sometimes time is a mys
 end
 %updated dt
 dt = downsampleFactor*magDT;
-% figure
-% plot(fullTimeArray,fullMagStream)
-% figure
-% plot(fullTimeArrayTOD,fullMagStream)
+
+% clean up drug text from database
+for iDrug = 1:size(drug,2)
+    if contains(drug(iDrug).what,'_conc')
+        drug(iDrug).what = strrep(drug(iDrug).what,'_conc','');    
+    end
+    if contains(drug(iDrug).what,'Anlg')
+        drug(iDrug).what = treatments{iTreatment}(6:end);
+    end
+    if contains(drug(iDrug).what,'_vol')
+        drug(iDrug).what = strrep(drug(iDrug).what,'_vol','');
+    end
+    if contains(drug(iDrug).what,'_')
+        drug(iDrug).what = strrep(drug(iDrug).what,'_','-');
+    end
+    if contains(drug(iDrug).what,'0p9')
+        drug(iDrug).what = strrep(drug(iDrug).what,'0p9','');
+    end
+end
+
+
 S.dt = dt;
 S.fullTimeArray = fullTimeArray;
 S.fullTimeArrayTOD = fullTimeArrayTOD;
