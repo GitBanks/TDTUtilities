@@ -1,11 +1,17 @@
-
-function [htrEventTimes] = HTRMagDetectionHandler(exptID,plotEnable)
-%plotEnable = true;
-
-%exptID = '21415-001'
+function [htrEventTimes] = HTRMagDetectionHandler(exptID,plotEnable,localSave)
+% exptID = '21415-001'
+% plotEnable = true;
+if ~exist("localSave","var")
+    localSave = false;
+end
+% adding a feature for local saves for Cody's lab (or others)
+if localSave
+    saveLocation = [getPathGlobal('CodyLocalHTRData') '20' exptID(1:2) '\'  exptID '\' ];
+else
+    saveLocation = [getPathGlobal('importedData') '20' exptID(1:2) '\'  exptID '\' ];
+    % saveLocation = ['M:\PassiveEphys\20' exptID(1:2) '\'  exptID '\' ];
+end
 redoEventSelection = 0;
-
-saveLocation = ['M:\PassiveEphys\20' exptID(1:2) '\'  exptID '\' ];
 if exist([saveLocation exptID '-HTRevents.mat'],'file') == 2 && redoEventSelection == 0
     load([saveLocation exptID '-HTRevents.mat'],'htrEventTimes');
 else
@@ -25,7 +31,7 @@ else
         nearDiff(nearDiff<0) = 0;
     end
     %output detected times
-    HTRMagFindEventTimes(localVar,windowedVarTimes,plotEnable,magData,magDT,exptID);
+    HTRMagFindEventTimes(localVar,windowedVarTimes,plotEnable,magData,magDT,exptID,localSave);
     load([saveLocation exptID '-HTRevents.mat'],'htrEventTimes');
 end
 
