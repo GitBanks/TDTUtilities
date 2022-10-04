@@ -1,13 +1,20 @@
 %function [htrEventTimes,detectedIndex] = HTRMagFindEventTimes(localVar,windowedVarTimes,plotEnable,magData,magDT,exptID)
 
-function HTRMagFindEventTimes(localVar,windowedVarTimes,plotEnable,magData,magDT,exptID)
+function HTRMagFindEventTimes(localVar,windowedVarTimes,plotEnable,magData,magDT,exptID,localSave,animalName)
 %global detectedIndex htrEventTimes
+if ~exist("localSave","var")
+    localSave = false;
+end
+if ~exist("animalName","var")
+    animalName = '';
+end
+S.localSave = localSave;
 S.localVar = localVar;
+S.animalName = animalName;
 S.windowedVarTimes = windowedVarTimes;
 S.magData = magData;
 S.magDT = magDT;
 S.exptID = exptID;
-
 S.fh = figure('units','pixels',...
     'position',[100 100 1050 700],...
     'menubar','none',...
@@ -19,13 +26,9 @@ S.fh = figure('units','pixels',...
 %     'position',[10 600 150 40],...
 %     'fontweight','bold',...
 %     'string','list of expts');
-
-
-
 [histCount,~] = hist(S.localVar,100);
 %thisMany = sum(histCount(bandpowerHTRThreshold:end));
 thisMany = sum(histCount(find(histCount==0,1):end)); % we're looking for rare events in the long tail, so take the first bin that has a zero value. 
-
 thisMany = min(thisMany,30); % don't take too many in case something went wrong
 [tempSort,sortedIndex] = sort(S.localVar);
 detected = tempSort(end-thisMany:end);
@@ -33,11 +36,9 @@ S.detectedIndex = sortedIndex(end-thisMany:end);
 detectedTimes = S.windowedVarTimes(S.detectedIndex);
 detected(detectedTimes < 1) =[];
 detectedTimes(detectedTimes < 1) =[];
-
 magTimeArray = 0:S.magDT:length(S.magData)*S.magDT;
 detected(magTimeArray(end-round(1/S.magDT))<detectedTimes)=[];
-detectedTimes(magTimeArray(end-round(1/S.magDT))<detectedTimes) =[];
-    
+detectedTimes(magTimeArray(end-round(1/S.magDT))<detectedTimes) =[];   
 % find the corresponding matched HTR raw traces
 for indexRaw = 1:length(detected)
     warning('off','all');
@@ -52,9 +53,6 @@ for indexRaw = 1:length(detected)
         S.htrEventTimes(indexRaw) = detectedRawTimes(eventIndex,indexRaw);
 %    end
 end
-
-
-
 % === find and eliminate redundant events === 
 % % remove the nonunique from the total distribution
 S.normalizedBandwindowsForDetectedPlot = S.localVar;
@@ -63,9 +61,7 @@ S.normalizedBandwindowsForDetectedPlot(S.detectedIndex) = [];
 [~,uniqueIndex,~]= unique(round(S.htrEventTimes));
 S.htrEventTimes = S.htrEventTimes(uniqueIndex);
 S.detectedIndex = S.detectedIndex(uniqueIndex);
-
 S = plotNow(S);
-
 S.pb = uicontrol('style','push',...
     'units','pix',...
     'posit',[430 650 100 30],... % we want to overwrite last button (to avoid repeating/changing a list) was% 'posit',[405 650 120 30],
@@ -78,23 +74,17 @@ S.pb = uicontrol('style','push',...
     'string', 'Use these',...
     'fontsize',10,...
     'callback',{@useThisSet,S});
-
-
 uiwait(S.fh);
 close(S.fh)
 
 
 
-
 function [S] = deleteFromList(varargin)
 [S] = varargin{3};
-
 S = HTRclicksubplot(S);
-
 S.htrEventTimes(S.removeThese) = [];
 S.detectedIndex(S.removeThese) = [];
 S = plotNow(S);
-
 S.pb = uicontrol('style','push',...
     'units','pix',...
     'posit',[430 650 100 30],... % we want to overwrite last button (to avoid repeating/changing a list) was% 'posit',[405 650 120 30],
@@ -113,18 +103,20 @@ function [S,detectedIndex,htrEventTimes] = useThisSet(varargin)
 [S] = varargin{3};
 detectedIndex = S.detectedIndex;
 htrEventTimes = S.htrEventTimes;
-
-saveLocation = ['M:\PassiveEphys\20' S.exptID(1:2) '\'  S.exptID '\' ];
-save([saveLocation S.exptID '-HTRevents'],'htrEventTimes','detectedIndex');
-
-
+%this is really ugly, but we need a way to save the streams from each
+%animal in the 'localsave' case which doesn't use a database.
+if S.localSave
+    saveLocation = [getPathGlobal('CodyLocalHTRData') '20' S.exptID(1:2) '\'  S.exptID '\' ];
+    save([saveLocation S.exptID '-HTRevents_' S.animalName],'htrEventTimes','detectedIndex');
+else
+    saveLocation = [getPathGlobal('importedData') '20' S.exptID(1:2) '\'  S.exptID '\' ];
+    save([saveLocation S.exptID '-HTRevents'],'htrEventTimes','detectedIndex');
+end
 uiresume
 
 
 function [S] = plotNow(varargin)
 [S] = varargin{1}; %var 1 when not a callback, 3 when a callback
-
-
 for indexRaw = 1:length(S.htrEventTimes)
     warning('off','all');
     startOfWindow = (S.htrEventTimes(indexRaw)-1)*(1/S.magDT);
@@ -136,7 +128,6 @@ for indexRaw = 1:length(S.htrEventTimes)
     end
     warning('on','all');
 end
-
 %figure('Name',[exptID ' Events above threshold']); %v2
 [htrValsHist,~] = sort(S.localVar(S.detectedIndex));
 subplot(5,4,17:20);
@@ -152,10 +143,8 @@ hold off
 %indexLimit = min(size(detectedRawCenteredFig,2),16);
 for indexPlot = 1:16
     subplot(5,4,indexPlot);
-
     timeX = 0:S.magDT:(length(detectedRawCenteredFig)-1)*S.magDT;
     timeX = timeX-1;
-
 %         [c,lags] = xcorr(detectedRawCenteredFig(:,indexPlot),wavFilt);
 %         c = c(length(rawTraces):end);
 %         figure(); plot(lags,c);
@@ -170,10 +159,6 @@ for indexPlot = 1:16
     xlim([-.5,.5]);
     set(gca,'tag',num2str(indexPlot)); 
 end
-
-
-
-    
 
 
 function [S] = HTRclicksubplot(varargin)

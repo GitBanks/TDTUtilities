@@ -10,7 +10,6 @@ function [p] = getPathGlobal(str)
 
 % W = '\\144.92.218.131\Data\Data\';
 W = '\\128.104.83.123\BanksData\Data\'; %Username: ANESFS3\BanksLab %Password: WIb3cZFbXR
-W = '\\128.104.83.123\BanksData\Data\';
 M = '\\144.92.237.185\Data\';
 REC = '144.92.237.183'; % Gilgamesh % avoid network formatting \\ and \ for REC because some input requires just the numbers here
 %REC = '144.92.237.187'; % Nessus
@@ -39,11 +38,13 @@ switch str
     case 'analyzedData'
         p = [W 'PassiveEphys\EEG animal data\'];
     case 'stats'
-        p = [M 'Ziyad\Psychedelics\EEG\DataTables\'];
+        p = [M 'Ziyad\Psychedelics\EEG\DataTables\']; % please don't code in specific project names like this
     case 'figures'
-        p = [M 'Ziyad\Psychedelics\EEG\Figures'];
+        p = [M 'Ziyad\Psychedelics\EEG\Figures']; % or this
     case 'animalSaves'
         p = [M 'PassiveEphys\AnimalData\'];
+    case 'pipelineSaves'
+        p = [M 'PassiveEphys\AnimalData\initial\'];
         
     % for specific file paths (old)
     case 'masterLog'

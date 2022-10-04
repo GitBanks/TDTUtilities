@@ -1,4 +1,4 @@
-function dataStruct = getExptSummaryFromTable(tname)
+function dataStruct = getExptSummaryFromTable(tname,showMove)
 % movementDataStruct = getMoveExptSummaryFromTable(tname)
 % GIVEN: a table containing animal names (string pointing to xlsx file.
 % Looks for animalName column)
@@ -35,18 +35,53 @@ function dataStruct = getExptSummaryFromTable(tname)
 % resolving this with what I did yesterday, I can reuse much of the code, 
 % but I should instead create a standalone time vector (instead of leaving
 % it to him to compute), and adjust it based on time of injection
+% test variables:
+% tname = 'M:\PassiveEphys\mouseEEG\FLVXGroupInfo.xlsx';
+% showMove = false
+
+% check for variables - input parameters
+if ~exist("showMove","var")
+    showMove = false;
+end
+%1. load this table
+workingTable = readtable(tname);
+% 
+% %T = T(1:end-2,:);
+% workingTable = table;
+% workingTable.animalList = T.animalName;
+% workingTable.Dates = T.Dates;
+% workingTable.chansToExclude = T.chansToExclude;
+
+
+for iExpt = 1:size(workingTable,1)
+    thisAnimal = workingTable.animalName{iExpt};
+    thisDate = workingTable.Dates{iExpt};
+    disp([thisAnimal ' ' thisDate]);
+    %2. get list of indices
+    % workingList = getExperimentsByAnimal(thisAnimal);
+    % workingList = getExperimentsByAnimalAndDate(thisAnimal,thisDate);
+    dataStruct(iExpt).Animal = thisAnimal;
+    dataStruct(iExpt).Date = thisDate;
+    dataStruct(iExpt).ChansToExclude = workingTable.chansToExclude(iExpt);
+    if showMove
+        [S] = getMoveTimeDrugbyAnimalDate(thisAnimal,thisDate);
+        dataStruct(iExpt).treatments = S.treatments;
+        dataStruct(iExpt).fullTimeArrayTOD = S.fullTimeArrayTOD;
+        dataStruct(iExpt).drugTOD = S.drugTOD;
+        dataStruct(iExpt).dt = S.dt;
+        dataStruct(iExpt).fullMoveStream = S.fullMoveStream;
+        dataStruct(iExpt).fullTimeArray = S.fullTimeArray;
+    end
+end
 
 
 
 
-%1. list of animals
-% tname = 'M:\mouseEEG\FLVXGroupInfo.xlsx'; % potentially make this a function with switches we can call from wherever
-T = readtable(tname);
 
-T = T(1:end-2,:);
-animalList = T.animalName;
-animalList = unique(animalList);
-dirstr1 = 'M:\PassiveEphys\20';
+
+
+
+% old work below
 
 % I wanted to use a table, but some of the array into cell formatting kept
 % complaining (I could not figure out syntax).  I'm going to leave this
@@ -58,53 +93,3 @@ dirstr1 = 'M:\PassiveEphys\20';
 % % varTypes = {'string','string','double','cell','cell','struct','cell','struct'};
 % % varNames = {'Animal','Date','dt','fullMoveStream','fullTimeArray','treatments','fullTimeArrayTOD','drugTOD'};
 % movementData = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
-
-trueIndex = 1;
-for i = 24:size(animalList,1)
-    thisAnimal = animalList{i};
-    %2. get list of indices
-    workingList = getExperimentsByAnimal(thisAnimal);
-    % are there unique dates?  
-    for ii = 1:size(workingList,1)
-        justDates(ii) = {workingList{ii,1}(1:5)};
-    end
-    uniqueDates = unique(justDates);
-    for ii = 1:size(uniqueDates,2)
-        thisDate = uniqueDates{ii};
-        [S] = getMoveTimeDrugbyAnimalDate(thisAnimal,thisDate);
-%         movementData(trueIndex,"Animal") = {thisAnimal};
-%         movementData(trueIndex,"Date") = thisDate;
-%         movementData(trueIndex,"dt") = {S.dt};
-%         movementData(trueIndex,"fullMoveStream") = {S.fullMoveStream};
-%         movementData(trueIndex,"fullTimeArray") = {S.fullTimeArray'};
-
-        movementDataStruct(trueIndex).Animal = thisAnimal;
-        movementDataStruct(trueIndex).Date = thisDate;
-        movementDataStruct(trueIndex).treatments = S.treatments;
-        movementDataStruct(trueIndex).fullTimeArrayTOD = S.fullTimeArrayTOD;
-        movementDataStruct(trueIndex).drugTOD = S.drugTOD;
-        movementDataStruct(trueIndex).dt = S.dt;
-        movementDataStruct(trueIndex).fullMoveStream = S.fullMoveStream;
-        movementDataStruct(trueIndex).fullTimeArray = S.fullTimeArray;
-
-        trueIndex = trueIndex+1;
-
-
-    end
-    clear uniqueDates workingList justDates
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

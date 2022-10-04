@@ -11,8 +11,17 @@ library(lmerTest)
     
 
 # load window by window file
-csv_path <- "M:/PassiveEphys/mouseLFP/MatlabCSV/ZZ1422120psilocybin.csv"
+csv_path <- "\\144.92.237.185\Data\PassiveEphys\AnimalData\EEG187"
+fname <- "M:/mouseEEG/Power vs activity/FLVXtest22819.csv"
 
+#csv_path <- "M:/mouseLFP/MatlabCSV/ZZ1422120psilocybin.csv"
+#fname <- "M:/mouseEEG/Power vs activity/test22629.csv"
+
+
+
+args <- commandArgs(TRUE)
+csv_path <- args[1] # csv file with all of the windows
+fname <- args[2] # set the name of the output file 
 
 # read dataframe into environment  
 dToMatch <- read.csv(csv_path)
@@ -20,9 +29,9 @@ dToMatch <- read.csv(csv_path)
 #dToMatch <- dToMatch %>% mutate(group = factor(group,levels=c("Sham","Low LPS","PXM + Low LPS","Saline + Low LPS","CAFc + Low LPS","Aged Low LPS","High LPS")))
 dToMatch <- dToMatch %>% mutate(sqrtMovt=sqrt(meanMovement)) # TAKE SQUARE ROOT OF MOVEMENT (can't take log so this is how to get a normal distribution)
 #dToMatch <- dToMatch %>% dplyr::select(animalName,group,age,date,isPeak,sqrtMovt,delta) # filter for only these variables
-dToMatch <- dToMatch %>% dplyr::select(animalName,win,winTime,date,drug,isPeak,sqrtMovt,delta) # filter for only these variables
+dToMatch <- dToMatch %>% dplyr::select(animalName,date,drug,isPeak,sqrtMovt,delta) # filter for only these variables
 dToMatch <- na.omit(dToMatch) # remove nan entries? does this actually remove nans? why are there nans
-dToMatch <- dToMatch %>% filter(sqrtMovt>0) #KEEP ONLY NON-ZERO MOVEMENT VALUES
+dToMatch <- dToMatch %>% filter(sqrtMovt>0) # KEEP ONLY NON-ZERO MOVEMENT VALUES
 
 allSummaries <- list() # preallocate
 
@@ -39,11 +48,11 @@ matchMovement <- function(d) {
 mvtMatched <- dToMatch %>% group_by(animalName,drug) %>% do(matchMovement(.))
 
 # Write CSV
-fname = "M:/PassiveEphys/mouseLFP/Power vs Activity/Tables/deltaPower_movementPropensityScoresMatched_ZZ1422120psilocybin_summariesFULL.csv"
+fname = "M:/mouseLFP/Power vs Activity/Tables/deltaPower_movementPropensityScoresMatched_ZZ1422120psilocybin_summariesFULL.csv"
 write.csv(allSummaries, file = fname)
 
 # SAVE window by window output of PSM
-fname = "M:/PassiveEphys/mouseLFP/Power vs Activity/Tables/deltaPropScoreMatching-ZZ1422120psilocybin.csv"
+fname = "M:/mouseLFP/Power vs Activity/Tables/deltaPropScoreMatching-ZZ1422120psilocybin.csv"
 write.csv(mvtMatched, file = fname)
 
 # summarize data
@@ -52,11 +61,11 @@ write.csv(mvtMatched, file = fname)
 
 # check how well the movement distributions were matched
 paired <- inner_join(meanT %>% filter(isPeak==0) %>% mutate(baseMvt = weightedMvt) %>% ungroup() %>% dplyr::select(animalName,baseMvt,drug),meanT %>% filter(isPeak==1) %>% mutate(peakMvt = weightedMvt) %>% ungroup() %>% dplyr::select(animalName,peakMvt,drug))
-paired <- mutate(paired, mvtDiff = abs(peakMvt - baseMvt)/(baseMvt) ) %>% arrange(mvtDiff) # if >0.01, check...
+paired <- mutate(paired, mvtDiff = abs(peakMvt - baseMvt)/(baseMvt) ) %>% arrange(mvtDiff)
 view(paired) 
 
 # SAVE matching criteria
-fname = "M:/PassiveEphys/mouseLFP/Power vs activity/Tables/deltaPSM_matchingCriteria_ZZ1422120psilocybin.csv"
+fname = "M:/mouseEEG/Power vs activity/Tables/deltaPSM_matchingCriteria_20624.csv"
 write.csv(paired, file = fname)
 
 # Exclude ones we don't like. This should be based on the "paired" analysis which compares the weighted movement means; large differences (means >=1% different) = failed matching
@@ -78,9 +87,7 @@ gd <- meanT %>% group_by(drug,isPeak) %>% summarize(grandMean = mean(weightedMea
 #  labs(y = 'mean log delta (weighted)',x = 'isPeak', title = "Movement Propensity Score Matching") # add labels 
 
 # Write CSV with meanT as output to plot in MATLAB
-fname = "M:/PassiveEphys/mouseLFP/Power vs activity/Tables/deltaPSM_matchedMovement_ZZ1422120psilocybin.csv"
-#write.csv(meanT, file = fname)
-write.csv(gd, file = fname)
+write.csv(meanT, file = fname)
 
 # weighted mean
 #ggplot(data=meanT, aes(x=group,y=weightedMean,color=factor(isPeak))) + geom_jitter()

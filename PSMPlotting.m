@@ -1,7 +1,10 @@
 %% Plot PSM corrected and uncorrected Band Power
 
-folder = ['M:PassiveEphys\mouseLFP\MatlabCSV\']
-file = 'ZZ0921804saline0p9_vol'
+
+
+% folder = ['M:PassiveEphys\mouseLFP\MatlabCSV\']
+% file = 'ZZ0921804saline0p9_vol'
+
 PSMTable = readtable([folder file]);
 
 folder = ['M:\PassiveEphys\mouseLFP\Power vs Activity\Tables\'];
