@@ -1,4 +1,4 @@
-function [exptTable] = getExptPlasticitySetByAnimal(animal)
+function [exptTable] = getExptTableByAnimal(animal)
 
 % === test parameters
  %animal = 'ZZ15';
@@ -7,9 +7,9 @@ listOfAnimalExpts = getExperimentsByAnimal(animal);
 descOfAnimalExpts = listOfAnimalExpts(:,2);
 listOfAnimalExpts = listOfAnimalExpts(:,1);
 
-sz = [length(listOfAnimalExpts) 6] + 1;
-varTypes = {'string','string','string','logical','logical','logical','logical'};
-varNames = {'Animal','DateIndex','Description','stimResp','preLTP','postLTP','postLTD'};
+sz = [length(listOfAnimalExpts) 6] + 2;
+varTypes = {'string','string','string','logical','logical','logical','logical','logical'};
+varNames = {'Animal','DateIndex','Description','spon','stimResp','preLTP','postLTP','postLTD'};
 exptTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 
 
@@ -19,9 +19,15 @@ for iList = 1:length(listOfAnimalExpts)
     date = listOfAnimalExpts{iList}(1:5);
     index = listOfAnimalExpts{iList}(7:9);
     exptTable.DateIndex(iList) = [date '-' index];
+    if contains(exptTable.Description(iList),'spon')
+        exptTable.spon(iList) = true;
+    else
+        exptTable.spon(iList) = false;
+    end
     if contains(exptTable.Description(iList),'stim/resp')
         exptTable.stimResp(iList) = true;
     else
+        exptTable.stimResp(iList) = false;
     end
     if contains(exptTable.Description(iList),'pre LTP/LTD')
         exptTable.preLTP(iList) = true;

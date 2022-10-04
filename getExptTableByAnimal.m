@@ -1,7 +1,7 @@
 function [exptTable] = getExptTableByAnimal(animal)
 
 % === test parameters
- %animal = 'ZZ15';
+ %animal = 'ZZ09';
 
 listOfAnimalExpts = getExperimentsByAnimal(animal);
 descOfAnimalExpts = listOfAnimalExpts(:,2);
@@ -19,16 +19,19 @@ for iList = 1:length(listOfAnimalExpts)
     date = listOfAnimalExpts{iList}(1:5);
     index = listOfAnimalExpts{iList}(7:9);
     exptTable.DateIndex(iList) = [date '-' index];
-    if contains(exptTable.Description(iList),'spon')
+    
+    pat1 = ["Spon" "spon"];
+    if contains(exptTable.Description(iList),pat1);
         exptTable.spon(iList) = true;
     else
         exptTable.spon(iList) = false;
     end
-    if contains(exptTable.Description(iList),'stim/resp')
+    pat2 = ["stimulus response curve" "Stimulus Response Curve" "stim/resp"]
+     if contains(exptTable.Description(iList),pat2);
         exptTable.stimResp(iList) = true;
     else
-        exptTable.stimResp(iList) = false;
-    end
+         exptTable.stimResp(iList) = false;
+     end
     if contains(exptTable.Description(iList),'pre LTP/LTD')
         exptTable.preLTP(iList) = true;
     else
