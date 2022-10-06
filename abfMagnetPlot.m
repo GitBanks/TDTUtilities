@@ -3,7 +3,7 @@ function abfMagnetPlot(exptDate)
 % example input
 % exptDate = '22o03';
 
-
+localSave = true; % local save will be what Cody uses
 
 % this is all stuff we should be getting from the xls sheet, and maybe we
 % want to think about where some of this goes
@@ -27,14 +27,13 @@ workingTable = workingTable(startsWith(workingTable.RecordingID,exptDate),:);
 allMice = unique(workingTable.AnimalName);
 nMice = size(allMice,1);
 summaryEvents = nan(nMice,80);
-figure
+thisFig = figure;
 maxTime = 0;
 minTime = 0;
 
 for iMouse = 1:nMice
     thisMouse = allMice{iMouse};
     plotEnable = true; % toggle plots
-    localSave = true; % local save will be what Cody uses
     injectionTime = []; % now handled by getTreatmentInfo
     fullTimeArray = [];
     fullMagStream = [];
@@ -49,6 +48,13 @@ for iMouse = 1:nMice
         [htrEventTimes,magData,magDT,metaData] = HTRMagDetectionHandlerABF(exptID,plotEnable,localSave,abfChannel,{thisMouse});
         % magData = magData(:,thisStream); % fixed this to be the only
         % channel from inside
+        
+        % let's downsample here.  the mag stream size is just silly
+        downsampleFactor = 10;
+        magData = magData(1:downsampleFactor:end);
+        magDT = magDT*downsampleFactor;
+
+
         timeArray = 0:magDT:length(magData)*magDT;
         while length(timeArray) > length(magData) %sometimes time is a mystery
             timeArray = timeArray(1:end-1);
@@ -82,7 +88,7 @@ for iMouse = 1:nMice
     maxTime = max(fullTimeArray(end),maxTime);
     minTime = min(fullTimeArray(1)/60,minTime);
     % quick grab just the events
-    summaryEvents(iMouse,1:length(fullEventTimes)) = fullEventTimes-timeGiven;
+    summaryEvents(iMouse,1:length(fullEventTimes)) = fullEventTimes;
 end
 
 % might want to do the plot limits as another step through subplots if
@@ -97,60 +103,24 @@ end
 xlabel('Minutes')
 
 
+% quick add a save summaryEvents by date here
+if localSave
+    pathToFiles = [getPathGlobal('CodyLocalHTRDataSave') '20' exptDate(1:2) '\'];
+else
+    pathToFiles = [getPathGlobal('importedData') '20' exptDate(1:2) '\'];
+end
+fileAndPathA = [pathToFiles 'Summary\' exptDate '-HTRSummary.mat'];
+fileAndPathB = [pathToFiles 'Summary\' exptDate '-HTRSummary.csv'];
+fileAndPathC = [pathToFiles 'Summary\' exptDate '-HTRSummaryFig.fig'];
+fileAndPathD = [pathToFiles 'Summary\' exptDate '-HTRSummaryFig.jpg'];
+save(fileAndPathA,'summaryEvents');
+writematrix(summaryEvents,fileAndPathB);
+saveas(thisFig,fileAndPathC);
+saveas(thisFig,fileAndPathD);
 
 
 
 
 
 
-
-
-
-
-
-
-
-% summary plots
-binSize = 5; % minutes
-% summary plot 
-
-reshapedSummary = reshape(summaryEvents,[1,size(summaryEvents,1)*size(summaryEvents,2)]);
-
-minuteSummaryEvents = reshapedSummary;
-
-
-
-minuteSummaryEvents = sort(minuteSummaryEvents);
-minuteTimeArray = fullTimeArray/60;
-
-% = (0:hourData(thisHour).dt:hourData(iHour).maxLength*hourData(thisHour).dt);
-edges = minuteTimeArray(1):binSize:minuteTimeArray(end);
-centers = edges+(binSize/2);
-centers = centers(1:end-1);
-Y = discretize(minuteSummaryEvents,edges);
-nBins = length(edges)-1;    
-
-
-% figure;
-[counts,centers] = hist(minuteSummaryEvents,nBins);
-
-
-%hacky adjustment: 
-centers = centers+1.5
-
-figure;
-bar(centers,counts/3);
-xlabel('Time, Mins');
-ylabel('average events');
-hold on
-xline(0,'r','LineWidth',3)
-title('DMT 5 mg/kg, n=3');
-
-
-figure
-histogram(Y,nBins)
-xticks(1:32);
-xticklabels(centers);
-xlabel('Time, Mins');
-ylabel('Cumulative events')
 
