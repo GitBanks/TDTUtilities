@@ -1,8 +1,9 @@
-%   CHANGE THIS NAME - this code is for plotting so call it plotting
-%   something
+function abfMagnetPlot(exptDate)
+
+% example input
+% exptDate = '22o03';
 
 
-clear all % just for now
 
 % this is all stuff we should be getting from the xls sheet, and maybe we
 % want to think about where some of this goes
@@ -19,12 +20,17 @@ opts = detectImportOptions(thisFile);
 opts = setvartype(opts, "RecordingID", 'string');
 workingTable = readtable(thisFile,opts);
 
+% for this function we're going to filter by exptDate
+workingTable = workingTable(startsWith(workingTable.RecordingID,exptDate),:);
+
+
 allMice = unique(workingTable.AnimalName);
 nMice = size(allMice,1);
 summaryEvents = nan(nMice,80);
 figure
 maxTime = 0;
 minTime = 0;
+
 for iMouse = 1:nMice
     thisMouse = allMice{iMouse};
     plotEnable = true; % toggle plots
@@ -71,14 +77,12 @@ for iMouse = 1:nMice
        xline(minuteFullEventTimes(iPlot),'r');
     end
 
-    
     xline(minuteTimeGiven,'.',treatmentText,'DisplayName',treatmentText,'LineWidth',4);
     ylabel(thisMouse);
     maxTime = max(fullTimeArray(end),maxTime);
     minTime = min(fullTimeArray(1)/60,minTime);
     % quick grab just the events
     summaryEvents(iMouse,1:length(fullEventTimes)) = fullEventTimes-timeGiven;
-
 end
 
 % might want to do the plot limits as another step through subplots if
@@ -107,7 +111,7 @@ xlabel('Minutes')
 
 
 % summary plots
-binSize = 5; %min
+binSize = 5; % minutes
 % summary plot 
 
 reshapedSummary = reshape(summaryEvents,[1,size(summaryEvents,1)*size(summaryEvents,2)]);

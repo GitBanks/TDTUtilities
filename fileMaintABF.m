@@ -52,7 +52,8 @@ for iMagData = 1:size(workingTable,1)
 end
 
 
-abfMagnetAnalysis
+
+
 
 
 
