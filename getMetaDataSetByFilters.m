@@ -21,23 +21,13 @@ function finalOutputTable = getMetaDataSetByFilters(o)
 % animalName = 'ZZ14';
 % overWrite = false;
 
-
 % instead of this full range, we want to allow a single parameter/structure
 % as input
-
 % drugSelection,recordingSelection,animalName,overWrite
 
 
+
 animalName = o.Subjects; %only set to run one mouse - runAnalysis is set to run on multiple
-if ~isempty(o.Blocks)
-    error('Not presently configured to handle blocks')    
-end
-    
-
-%o.Conditions %e.g.
-
-
-
 if iscell(animalName)
     animalName = animalName{1};
 end
@@ -46,23 +36,33 @@ overWrite = false; % toggle this if we've added recordings to animals
 [metaDataMouse] = getMetaDataByAnimal(animalName,overWrite);
 
 
-% !!!!!!!!!!!!!! TODO:  add a way to parse these arbitrarily instead of
-% fixed 
-recordingSelection = o.Conditions(1);  %shitty hardcode for now.  TODO
-drugSelection = o.Conditions(2);
+if ~isempty(o.Blocks) && ~isempty(o.Conditions)
+    error('use either Conditions or Blocks, but not both for mouse data')
+    %error(['Subjects'',{''EEG220''},''Conditions'',{''saline','Inj''}'])
+end
 
-
-tempTableIteration = 1;
-for i = 1:size(metaDataMouse,1)
-    if contains(metaDataMouse.conditions(i),recordingSelection)
-        for ii = 1:size(drugSelection,2)
-            if contains(metaDataMouse.conditions(i),drugSelection(ii))
-                tempTable(tempTableIteration,:) = metaDataMouse(i,:);
-                tempTableIteration = tempTableIteration + 1;
+if ~isempty(o.Blocks)
+    useThese = contains(metaDataMouse.block,o.Blocks);
+    tempTable = metaDataMouse(useThese,:);
+end
+    
+if ~isempty(o.Conditions)
+    recordingSelection = o.Conditions(1);  %shitty hardcode for now.  TODO fix this!
+    drugSelection = o.Conditions(2);
+    tempTableIteration = 1;
+    for i = 1:size(metaDataMouse,1)
+        if contains(metaDataMouse.conditions(i),recordingSelection)
+            for ii = 1:size(drugSelection,2)
+                if contains(metaDataMouse.conditions(i),drugSelection(ii))
+                    tempTable(tempTableIteration,:) = metaDataMouse(i,:);
+                    tempTableIteration = tempTableIteration + 1;
+                end
             end
         end
     end
 end
+
+
 
 % now that we have newTable with just the selection of interest, we need to
 % combine indices on the same row (each row should represent an experiment
