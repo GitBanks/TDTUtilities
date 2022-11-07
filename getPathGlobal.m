@@ -45,7 +45,8 @@ switch str
         p = [M 'PassiveEphys\AnimalData\'];
     case 'pipelineSaves'
         p = [M 'PassiveEphys\AnimalData\initial\'];
-        
+    case 'CodyLocalHTRData'
+        p = ['C:\Users\Matt Banks\Documents\Molecular Devices\pCLAMP\Data\'];
     % for specific file paths (old)
     case 'masterLog'
         p = [W 'PassiveEphys\EEG animal data\Mouse Psychedelics Master Log.xlsx'];
@@ -56,6 +57,10 @@ switch str
     case 'wPLI'
         p = [W 'PassiveEphys\EEG animal data\mouseEphys_conn_dbt_noParse_20sWin_0p5sTrial_psychedelics.mat'];
     
+
+    case 'CodyLocalHTRData'
+        p = ['C:\Users\Matt Banks\Documents\Molecular Devices\pCLAMP\Data\'];
+
     otherwise
         disp('wtf nothing assigned');
 end
