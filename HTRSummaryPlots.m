@@ -73,18 +73,44 @@ function HTRSummaryPlots(treatment,selection,acceptedPermutations)
 % acceptedPermutations = [1,2]; 
 
 
-treatment = 'Anlg_4_AcO_DMT';
+% treatment = 'Anlg_4_AcO_DMT';
 %treatment = '4-AcO-DMT';
-selection = 1;
-acceptedPermutations = [1,2];
+%selection = 1;
+%acceptedPermutations = [1,2];
+
+
+
+% treatment = 'Anlg_6_FDET'; 
+% selection = 1;
+% acceptedPermutations = [1,2];
+
+% treatment = 'saline0p9_vol'; 
+% selection = 6; % reflecting on this, this is pretty stupid.  need to better select from the combinations here...
+% acceptedPermutations = [1,2];
+
+% treatment = 'psilocybin'; 
+% selection = 6;
+% acceptedPermutations = [1,2];
+
+
 
 dateTable = getDateAnimalUniqueByTreatment(treatment);
+
+% treatment = 'Anlg_6_FDET'; 
+% dateTable = dateTable(1:8,:);
+
+% treatment = 'saline0p9_vol'; 
+% dateTable = dateTable(150:end,:); %get rid of early stuff
+
+% treatment = 'psilocybin'; 
+% dateTable = dateTable(25:end,:);
+
 oldFormatOverride = false;
 
 excludeAnimal = 'ZZ09'; % there should really be a 'hasMagnet' flag in the database
 dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
 
-% dateTable = dateTable(1:8,:);
+
 
 
 % for Zarmeen's data set =================================================
@@ -99,6 +125,11 @@ dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
 plotsToMake = unique(dateTable.DrugList);
 subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
 
+% treatment = 'saline0p9_vol'; 
+% subTable = subTable(1:8,:); %get rid of ZZ stuff
+
+% treatment = 'psilocybin'; 
+% subTable = subTable(1:12,:); %get rid of ZZ stuff
 
 
 % loop through expts of interest.  Create a structure animalData that 
@@ -168,16 +199,15 @@ for iList = 1:size(animalData,2)
 end
 
 
-
-
-
+fileString = [getPathGlobal('animalSaves') 'HTRsummary\HTRsummary-' treatment '.mat'];
+save(fileString,"animalData","hourData");
 
 
 % Finally, we plot
 figure();
 nHours = size(acceptedPermutations,2);
 plotIndex = 1;
-binSize = 5;  %in minutes
+binSize = 10;  %in minutes
 clear meanHist
 maxHistY = 0;
 maxMeanY = 0;
@@ -216,8 +246,9 @@ for iHour = 1:size(hourData,2)
             err(iError) = std(smoothedMean)/(sqrt(counts(iError)));
             %err(iError) = std(counts)/(sqrt(counts(iError)));
         end
-        %errorbar(centers/60,smoothedMean,err,'*r');
-        plot(centers/60,smoothedMean,'*r');
+        
+        plot(centers/60,smoothedMean,'ro');
+        errorbar(centers/60,smoothedMean,err,'r-o');
         
         xlim([edges(1)/60,edges(end)/60]);
         if iHour ~=1; yticklabels([]); end
