@@ -52,7 +52,7 @@ selection = 1; % selection is a choice of drug combinations - we may need
 acceptedPermutations = [1,2]; % this is a selection of hours to use
 HTRSummaryPlots(treatment,selection,acceptedPermutations)
 
-
+'Anlg_6_FDET'; 
 
 
 
