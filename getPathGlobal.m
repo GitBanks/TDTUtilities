@@ -56,6 +56,14 @@ switch str
         p = [W 'PassiveEphys\EEG animal data\mouseEphys_out_ft_4secPSD'];
     case 'wPLI'
         p = [W 'PassiveEphys\EEG animal data\mouseEphys_conn_dbt_noParse_20sWin_0p5sTrial_psychedelics.mat'];
+
+    % Cody's lab paths    
+    case 'CodyLocalHTRDataSource'
+        p = 'C:\Users\soplab\Documents\Molecular Devices\pCLAMP\Data\';
+    case 'CodyLocalHTRDataSave'
+        p = 'C:\WenthurLab\Data\';
+    case 'CodyLocalMetaDataSave'
+        p = 'C:\WenthurLab\Data\HTR-2022-mouse-DMT.xlsx';
     
 
     case 'CodyLocalHTRData'

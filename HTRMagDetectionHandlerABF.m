@@ -1,8 +1,14 @@
 function [htrEventTimes,magData,magDT,metaData] = HTRMagDetectionHandlerABF(exptID,plotEnable,localSave,abfChannel,thisMouse)
 % had to add a mouse specific feature for these ABF data
 
+% we are  adding 1 to the channelID (abfChannel) to account for
+% how digidata channels start count at 0, and matlab doesn't.  Note we're
+% doing that here and not elsewhere!!!!!
+abfChannel = abfChannel+1;
+thisMouse = thisMouse{:};
+
 if localSave
-    pathToFiles = [getPathGlobal('CodyLocalHTRData') '20' exptID(1:2) '\'  exptID '\' ];
+    pathToFiles = [getPathGlobal('CodyLocalHTRDataSave') '20' exptID(1:2) '\'  exptID '\' ];
 else
     pathToFiles = [getPathGlobal('importedData') '20' exptID(1:2) '\'  exptID '\' ];
     % pathToFiles = ['M:\PassiveEphys\20' exptID(1:2) '\'  exptID '\' ];
@@ -14,12 +20,12 @@ redoEventSelection = 0;
 
 rawDataFile = [exptID '.abf'];
 % abf files are stored here:
-ORIGpathAndFileName = [getPathGlobal('CodyLocalHTRData') rawDataFile];
+% ORIGpathAndFileName = [getPathGlobal('CodyLocalHTRData') rawDataFile];
 % %
 % % % COPY RAW DATA TO CORRECT DIRECTORY HERE
 % % 
 % we will move them to here:
-pathToFiles = [getPathGlobal('CodyLocalHTRData') '20' exptID(1:2) '\'  exptID '\' ];
+% pathToFiles = [getPathGlobal('CodyLocalHTRData') '20' exptID(1:2) '\'  exptID '\' ];
 pathAndFileName = [pathToFiles rawDataFile];
 % load the data here
 [magData,magDT,metaData] = abfload(pathAndFileName); 

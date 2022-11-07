@@ -4,8 +4,8 @@ function [peakData] = evokedStimResp_userInput(exptDate,exptIndex)
 % User-defined parameters
 
 if ~exist('exptDate','var') || ~exist('exptIndex','var')
-%     exptDate = '21601'; 
-%     exptIndex = '009';
+      %exptDate = '22826'; 
+      %xptIndex = '003';
     
 %     exptIndex = '008'; noTank = false;
 %	exptIndex = '004'; noTank = false;
@@ -23,7 +23,7 @@ if ~exist('exptDate','var') || ~exist('exptIndex','var')
 %     exptDate = '21515';
 %     exptIndex = '002';
 end
-relevantROIs = {'PFC','CA1','Hipp'}; % labels in database can be any of these
+relevantROIs = {'mPFC'}; % labels in database can be any of these
 % Window for analysis and plotting, relative to stim time
 tPreStim = 0.02; %sec
 tPostStim = 0.2; %sec
@@ -51,9 +51,6 @@ end
 [~,indexOut,isTank] = getIsTank(exptDate,exptIndex);
 [stimSet,dTRec,stimArray,stimTimes] = getSynapseStimSetData(exptDate,indexOut,tPreStim,tPostStim,isTank);
 
-
-
-
 %% commands to process some of these parameters
 if ~exist(outPath,'dir')
     mkdir(outPath);
@@ -67,7 +64,7 @@ electrodeLocs = electrodeLocs(map);
 ROILabels = electrodeLocs(contains(electrodeLocs,relevantROIs,'IgnoreCase',true));
 ROILabels = unique(ROILabels,'stable');
 nStims = length(stimSet);
-nROIs = size(stimSet(1).sub,1); %number of regions with recording electrodes
+nROIs = 1; %size(stimSet(1).sub,1); %number of regions with recording electrodes
 preStimIndex = floor(tPreStim/dTRec);
 postStimIndex = ceil(tPostStim/dTRec);
 
@@ -137,9 +134,6 @@ if isfile([outPath2 animal '_peakDataOverTime.mat'])
     end
 end
 
-
-
-
 %% Plot average traces
 ampLabel = [];
 for iStim = 1:nStims
@@ -167,12 +161,13 @@ for iROI = 1:nROIs
     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [-6.0e-05, 18.0e-05]%[1.05*plotMin(iROI),1.05*plotMax(iROI)];
+    ax.YLim = [-40.0e-05, 18.0e-05]%[1.05*plotMin(iROI),1.05*plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
+        
         ax.YLabel.String = 'avg dataSub (V)';
     end
-    ax.Title.String = ROILabels{iROI};
+    %ax.Title.String = ROILabels(1);
     if iROI == nROIs
         legend(ampLabel,'FontSize',6,'Location','NorthEast');
         legend('boxoff');
@@ -309,70 +304,8 @@ save([outPath2 animal '_peakDataOverTime'],'peakDataOverTime');
 
 %% 
 %plotting now contained here (so we can call it from other programs)
-sendToSlack = true;
+sendToSlack = false;
 plotCalculatedPeaks = false;
 plotStimRespByDateIndex(exptDate,exptIndex,sendToSlack,plotCalculatedPeaks)
 
-%%
-% %
-% % plotting
-% FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
-% thisFigure = figure('Name',FigName);
-% for iROI = 1:nROIs
-%     % Plot avg traces
-%     subPlt(iROI) = subplot(2,nROIs,iROI);
-%     hold on
-%     for iStim = 1:length(stimSet)
-%         plot(plotTimeArray,stimSet(iStim).subMean(iROI,:));
-%     end
-%     for iUI = 1:length(pkSearchData(iROI).tPk)
-%         plot(pkSearchData(iROI).tPk(iUI),pkSearchData(iROI).yPk(iUI),'+r','MarkerSize',12);
-%         for iStim = 1:length(stimSet)
-%             plot(pkSearchData(iROI).peakTimeCalc(iUI,iStim),pkVals(iROI).data(iUI,iStim),'+b','MarkerSize',8);
-%         end
-%     end
-%     ax = gca;
-%     ax.XLim = [-tPreStim,tPostStim];
-%     ax.YLim = [1.05*plotMin(iROI),1.05*plotMax(iROI)];
-%     ax.XLabel.String = 'time(sec)';
-%     if iROI == 1
-%         ax.YLabel.String = 'avg dataSub (V)';
-%     end
-%     ax.Title.String = peakData.ROILabels{iROI};
-%     if iROI == nROIs
-%         %legend(ampLabel,'FontSize',6,'Location','NorthEast');
-%         %legend('boxoff');
-%     end
-% end
-% 
-% for iROI = 1:nROIs
-%     subplot(2,nROIs,nROIs+iROI)
-%     hold on
-%     legendLabs = [];
-%     nPks = size(pkVals(iROI).data,1);
-%     for iPk = 1:nPks
-%         legendLabs{iPk} = ['Pk ' num2str(iPk)];
-%     end
-%     for iPk = 1:nPks
-%         plot(stimArrayNumeric,pkSearchData(iROI).pkSign(iPk)*pkVals(iROI).data(iPk,:),'-o');
-%     end
-%     ax = gca;
-%     ax.XLabel.String = 'Stim intensity (\muA)';
-%     if iROI == 1
-%         ax.YLabel.String = 'Pk resp (V)';
-%     end
-%     legend(legendLabs,'FontSize',6,'Location','NorthWest');
-%     legend('boxoff');
-% end
-% saveas(thisFigure,[outPath FigName]);
-% saveas(thisFigure,[outPath2 FigName]);
-% 
-% fileName = ['M:\PassiveEphys\AnimalData\' animal '\' FigName];
-% print('-painters',fileName,'-r300','-dpng');
-% try
-%     desc = [FigName '  @Zarmeen Zahid'];
-%     sendSlackFig(desc,[fileName '.png']);
-% catch
-%     disp(['failed to upload ' fileName ' to Slack']);
-% end
 
