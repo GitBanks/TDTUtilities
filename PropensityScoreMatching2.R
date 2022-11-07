@@ -16,8 +16,8 @@ library(optmatch)
 # Further adapted from Ziyad's work to be run with new pipeline 06/27/22-ZZ  
 
 
-#animalName <- "EEG200"
-#exptDate <- "22614"
+animalName <- "EEG200"
+exptDate <- "22614"
 
 calc_prop_score <- 
 function(
@@ -65,6 +65,7 @@ write.csv(mvtMatched, file = fnameWindowByWindow)
 meanTA <- mvtMatched %>% group_by(animalName,isPeak,drug) %>% summarise(weightedMean = weighted.mean(deltaA,weights), weightedMvt = weighted.mean(sqrtMovt,weights))
 meanTP <- mvtMatched %>% group_by(animalName,isPeak,drug) %>% summarise(weightedMean = weighted.mean(deltaP,weights), weightedMvt = weighted.mean(sqrtMovt,weights))
 
+mvtMatched %>% group_by(animalName, isPeak, drug) %>% summarize(weightedMean
 
 # check how well the movement distributions were matched
 paired <- inner_join(meanTA %>% filter(isPeak==0) %>% mutate(baseMvt = weightedMvt) %>% ungroup() %>% dplyr::select(animalName,baseMvt,drug),meanTA %>% filter(isPeak==1) %>% mutate(peakMvt = weightedMvt) %>% ungroup() %>% dplyr::select(animalName,peakMvt,drug))

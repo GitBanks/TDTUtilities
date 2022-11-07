@@ -17,8 +17,8 @@ function PSMTableForR(animalName,thisDate,analysisType)
 % analysisType = 'specAnalysis';
 
 % input examples:
-% animalName = 'EEG200';
-% thisDate = '22120';
+% animalName = 'EEG187';
+% thisDate = '22331';
 % analysisType = 'specAnalysis';
 
 
@@ -43,7 +43,8 @@ for ii=1:size(checkFolder,1)
 end
 % TODO: Zarmeen requested adding multiple days to a PSM file.  We can do
 % that by making workingFileName a list and stepping through it (then
-% concatenating the outputs)
+% concatenating the outputs) *OR* by running this on each animal, then
+% combining the .csv files as desired.
 % now fix up the metadata path loaded below (Thanks Daleep!);
 metadataPath = [getPathGlobal('animalSaves') animalName '\metadata.mat'];
 
