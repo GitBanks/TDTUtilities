@@ -1,4 +1,4 @@
-function mattsData = plotSpectraEEG(animalName,exptDate,chansToExclude)
+function summaryData = plotSpectraEEG(animalName,exptDate,chansToExclude)
 % test params
 % animalName = 'EEG200';
 % exptDate = '22614';
@@ -6,7 +6,7 @@ function mattsData = plotSpectraEEG(animalName,exptDate,chansToExclude)
 % chansToExclude = 4;
 
 % save some specific data for Matt
-mattsData = struct;
+summaryData = struct;
 
 
 %legLabels = {'Ch1','Ch2','Ch3','Ch4','Ch5','Ch6'};
@@ -105,6 +105,9 @@ end
 
 % combine front and rear for bandpower analysis
 % warning!  hardcoded channels for now!!!  fix this via database!!!!
+% I don;t like the way I wrote this, but if either of a front/rear pair is
+% naned out, just make the final 'combined' data to good channel.  I don't
+% know if anything needs to be done otherwise (like error / scaling thing)
 if any(any(isnan(specdata(1).data))) || any(any(isnan(specdata(4).data)))
     if any(any(isnan(specdata(1).data))) 
         combSpecdata(1).data = specdata(4).data;
@@ -132,11 +135,11 @@ for iHour = 1:size(avgSpectraBreakIndex,2)-1
     iStart = avgSpectraBreakIndex(iHour);
     iStop = avgSpectraBreakIndex(iHour+1)-1;
     for iChan = 1:nChans % for average spectra
-        hourSt(iHour).avgSpectra(:,iChan) = mean(specdata(iChan).data(:,iStart:iStop),2,'omitnan');
+        dataSet(iHour).avgSpectra(:,iChan) = mean(specdata(iChan).data(:,iStart:iStop),2,'omitnan');
     end
-    hourSt(iHour).movement = moveArray(movementBreakIndex(iHour):movementBreakIndex(iHour+1)-1);
-    hourSt(iHour).movementTimes = adjMoveTimes(movementBreakIndex(iHour):movementBreakIndex(iHour+1)-1);
-    hourSt(iHour).time = adjTimes(iStart:iStop);
+    dataSet(iHour).movement = moveArray(movementBreakIndex(iHour):movementBreakIndex(iHour+1)-1);
+    dataSet(iHour).movementTimes = adjMoveTimes(movementBreakIndex(iHour):movementBreakIndex(iHour+1)-1);
+    dataSet(iHour).time = adjTimes(iStart:iStop);
     for iChan = 1:2 % bandpower only uses front and rear. this should be done better, but...
         % also break spectra into bands like the undergrad homework assignment:
         % will be much better to break this out into a function so we're
@@ -144,46 +147,52 @@ for iHour = 1:size(avgSpectraBreakIndex,2)-1
         % Delta
         bounds(1) = find(freqLabels>=FreqBands.Limits.delta(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.delta(2),1);
-        hourSt(iHour).delta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        hourSt(iHour).avgDelta(:,iChan) = mean(hourSt(iHour).delta(:,iChan));
+        dataSet(iHour).delta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
+        dataSet(iHour).avgDelta(:,iChan) = mean(dataSet(iHour).delta(:,iChan));
         % Theta
         bounds(1) = find(freqLabels>=FreqBands.Limits.theta(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.theta(2),1);
-        hourSt(iHour).theta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        hourSt(iHour).avgTheta(:,iChan) = mean(hourSt(iHour).theta(:,iChan));
+        dataSet(iHour).theta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
+        dataSet(iHour).avgTheta(:,iChan) = mean(dataSet(iHour).theta(:,iChan));
         % Alpha
         bounds(1) = find(freqLabels>=FreqBands.Limits.alpha(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.alpha(2),1);
-        hourSt(iHour).alpha(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        hourSt(iHour).avgAlpha(:,iChan) = mean(hourSt(iHour).alpha(:,iChan));
+        dataSet(iHour).alpha(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
+        dataSet(iHour).avgAlpha(:,iChan) = mean(dataSet(iHour).alpha(:,iChan));
         % Beta
         bounds(1) = find(freqLabels>=FreqBands.Limits.beta(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.beta(2),1);
-        hourSt(iHour).beta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        hourSt(iHour).avgBeta(:,iChan) = mean(hourSt(iHour).beta(:,iChan));
+        dataSet(iHour).beta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
+        dataSet(iHour).avgBeta(:,iChan) = mean(dataSet(iHour).beta(:,iChan));
         % Gamma
         bounds(1) = find(freqLabels>=FreqBands.Limits.gamma(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.highGamma(2),1);
-        hourSt(iHour).gamma(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        hourSt(iHour).avgGamma(:,iChan) = mean(hourSt(iHour).gamma(:,iChan));
+        dataSet(iHour).gamma(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
+        dataSet(iHour).avgGamma(:,iChan) = mean(dataSet(iHour).gamma(:,iChan));
     end
 end
 
 
+% this is really ugly hardcoding.  FIX THIS!
+summaryData.pre.move = mean(dataSet(1).movement);
+summaryData.post.move = mean(dataSet(4).movement);
+summaryData.pre.avgDelta = dataSet(1).avgDelta;
+summaryData.pre.avgTheta = dataSet(1).avgTheta;
+summaryData.pre.avgAlpha = dataSet(1).avgAlpha;
+summaryData.pre.avgBeta = dataSet(1).avgBeta;
+summaryData.pre.avgGamma = dataSet(1).avgGamma;
+summaryData.post.avgDelta = dataSet(4).avgDelta;
+summaryData.post.avgTheta = dataSet(4).avgTheta;
+summaryData.post.avgAlpha = dataSet(4).avgAlpha;
+summaryData.post.avgBeta = dataSet(4).avgBeta;
+summaryData.post.avgGamma = dataSet(4).avgGamma;
+summaryData.TheseDrugs = TheseDrugs;
 
-mattsData.pre.move = mean(hourSt(1).movement);
-mattsData.post.move = mean(hourSt(4).movement);
-mattsData.pre.avgDelta = hourSt(1).avgDelta;
-mattsData.pre.avgTheta = hourSt(1).avgTheta;
-mattsData.pre.avgAlpha = hourSt(1).avgAlpha;
-mattsData.pre.avgBeta = hourSt(1).avgBeta;
-mattsData.pre.avgGamma = hourSt(1).avgGamma;
-mattsData.post.avgDelta = hourSt(4).avgDelta;
-mattsData.post.avgTheta = hourSt(4).avgTheta;
-mattsData.post.avgAlpha = hourSt(4).avgAlpha;
-mattsData.post.avgBeta = hourSt(4).avgBeta;
-mattsData.post.avgGamma = hourSt(4).avgGamma;
-mattsData.TheseDrugs = TheseDrugs;
+
+
+save([saveFolder animalName '_' exptDate '_bandpowerSet.mat'],"dataSet");
+
+
 
 
 % % normalize (Bryan is working on this)
@@ -203,36 +212,36 @@ else
 end
 
 bandPower = figure('Name',titletext); 
-for iHour = 1:size(hourSt,2)
+for iHour = 1:size(dataSet,2)
     subtightplot(6,1,1);
     title(titletext);
-    plot(hourSt(iHour).time,hourSt(iHour).delta(:,1),"Color",'r');
+    plot(dataSet(iHour).time,dataSet(iHour).delta(:,1),"Color",'r');
     hold on
-    plot(hourSt(iHour).time,hourSt(iHour).delta(:,2),"Color",'b');
+    plot(dataSet(iHour).time,dataSet(iHour).delta(:,2),"Color",'b');
     ylabel('delta power');
 
     subtightplot(6,1,2);
-    plot(hourSt(iHour).time,hourSt(iHour).theta(:,1),"Color",'r');
+    plot(dataSet(iHour).time,dataSet(iHour).theta(:,1),"Color",'r');
     hold on
-    plot(hourSt(iHour).time,hourSt(iHour).theta(:,2),"Color",'b');
+    plot(dataSet(iHour).time,dataSet(iHour).theta(:,2),"Color",'b');
     ylabel('theta power');
 
     subtightplot(6,1,3);
-    plot(hourSt(iHour).time,hourSt(iHour).alpha(:,1),"Color",'r');
+    plot(dataSet(iHour).time,dataSet(iHour).alpha(:,1),"Color",'r');
     hold on
-    plot(hourSt(iHour).time,hourSt(iHour).alpha(:,2),"Color",'b');
+    plot(dataSet(iHour).time,dataSet(iHour).alpha(:,2),"Color",'b');
     ylabel('alpha power');
 
     subtightplot(6,1,4);
-    plot(hourSt(iHour).time,hourSt(iHour).beta(:,1),"Color",'r');
+    plot(dataSet(iHour).time,dataSet(iHour).beta(:,1),"Color",'r');
     hold on
-    plot(hourSt(iHour).time,hourSt(iHour).beta(:,2),"Color",'b');
+    plot(dataSet(iHour).time,dataSet(iHour).beta(:,2),"Color",'b');
     ylabel('beta power')
 
     subtightplot(6,1,5);
-    plot(hourSt(iHour).time,hourSt(iHour).gamma(:,1),"Color",'r');
+    plot(dataSet(iHour).time,dataSet(iHour).gamma(:,1),"Color",'r');
     hold on
-    plot(hourSt(iHour).time,hourSt(iHour).gamma(:,2),"Color",'b');
+    plot(dataSet(iHour).time,dataSet(iHour).gamma(:,2),"Color",'b');
     ylabel('gamma power');
 
     subtightplot(6,1,6);
@@ -266,17 +275,17 @@ end
 
 getYMax = nan;
 getYMin = nan;
-for iHour = 1:size(hourSt,2)
-    getYMax = max(max(max(hourSt(iHour).avgSpectra)),getYMax);
-    getYMin = max(min(min(hourSt(iHour).avgSpectra)),getYMin);
+for iHour = 1:size(dataSet,2)
+    getYMax = max(max(max(dataSet(iHour).avgSpectra)),getYMax);
+    getYMin = max(min(min(dataSet(iHour).avgSpectra)),getYMin);
 end
 
 avgspectra = figure('Name',titletext); 
 for iChan = 1:nChans
     subplot(2,2,chanEEGRemap(iChan));
 %     subtightplot(2,2,chanEEGRemap(iChan),[0.04,0.01]);
-    for iHour = 1:size(hourSt,2)
-        loglog(freqLabels,hourSt(iHour).avgSpectra(:,iChan)); 
+    for iHour = 1:size(dataSet,2)
+        loglog(freqLabels,dataSet(iHour).avgSpectra(:,iChan)); 
         hold on
     end
     
