@@ -3,8 +3,13 @@ function plotBandPowerSummaries(setName)
 switch setName
     case 'FLVX'
         saveFileName = 'M:\PassiveEphys\mouseEEG\FLVXBandpowerData.mat';
+
     case 'LPS2020'
         saveFileName = 'M:\PassiveEphys\mouseEEG\LPS2020BandpowerData.mat';
+
+    case '2020_PSYLOCYBIN_LPS'
+        saveFileName = 'M:\PassiveEphys\mouseEEG\2020PsilocybinLPSBandpowerData.mat';
+
     case 'ZZ'
         saveFileName = 'M:\PassiveEphys\mouseEEG\ZZBandpowerData.mat';
         disp('If you tried using ZZ here - if you see this message, be sure the xls file exists, then take out this disp and keyboard statements.  This entry here is only to show how to add ZZ data to this switch')
@@ -17,8 +22,8 @@ load(saveFileName);
 
 % Now assemble the different sets into a structure we can average across
 % groups with 
-nGroups = 3;
 workingTable = struct2table(workingTable);
+nGroups = size(unique(workingTable.group),1);
 %workingTable = sortrows(workingTable,'group'); %not strictly necessary, just looks better
 for iGroup = 1:nGroups
     tempT = workingTable(workingTable.group == iGroup,:);
@@ -39,6 +44,14 @@ for iGroup = 1:nGroups
         group(iGroup).avgGammaPost(ii,:) = tempT.data(ii,1).post.avgGamma;
         
     end
+    % also grab some sample text to auto-label things
+    nDrugs = size(tempT.drugTOD{ii,1},2);
+    xtickLabelstart{1,iGroup} = [];
+    legendText{1,iGroup} = [];
+    for iii = 1:nDrugs
+        xtickLabelstart{1,iGroup} = [xtickLabelstart{1,iGroup} tempT.drugTOD{ii,1}(iii).what(1:3) ' '];
+        legendText{1,iGroup} = [legendText{1,iGroup} tempT.drugTOD{ii,1}(iii).what ' '];
+    end
 end
 
 
@@ -48,7 +61,8 @@ end
 nColsForBoxPlot = 2*3*5+3; % number will be: front/rear (2) x treatments (3) x bands (5) + movement (3) 
 boxplotArray = nan(nColsForBoxPlot,10);
 indexT = 1;
-xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,LPS'}; % changed!
+% xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,LPS'}; % changed!
+% legendText = {'Saline Saline','Saline LPS','Fluvoxamine LPS'};
 colorCodeTreatment = {'k','r','b'};
 
 for iGroup = 1:nGroups
@@ -150,7 +164,8 @@ xline(15.5);
 xline(21.5);
 xline(27.5);
 a = findall(gca,'Tag','Box');
-legend([a(33) a(32) a(31)], {'Saline Saline','Saline LPS','Fluvoxamine LPS'});
+legend([a(33) a(32) a(31)], legendText);
+ylim([0,6])
 
 
 

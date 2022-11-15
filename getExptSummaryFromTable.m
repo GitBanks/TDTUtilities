@@ -55,11 +55,23 @@ workingTable = readtable(tname);
 
 for iExpt = 1:size(workingTable,1)
     thisAnimal = workingTable.animalName{iExpt};
-    thisDate = workingTable.Dates{iExpt};
+    if iscell(workingTable.Dates)
+        thisDate = workingTable.Dates{iExpt}; %if you've created a new table and are getting an error here, the data in the xls file needs to be text
+    end
+    if isnumeric(workingTable.Dates)
+        thisDate = num2str(workingTable.Dates(iExpt));
+    end
     disp([thisAnimal ' ' thisDate]);
     %2. get list of indices
     % workingList = getExperimentsByAnimal(thisAnimal);
     % workingList = getExperimentsByAnimalAndDate(thisAnimal,thisDate);
+
+    % you could add a dataStruct(iExpt).group = workingTable.group for a
+    % manually entered grouping - it would make
+    % collectSpectraDataFromExptList easier
+
+
+
     dataStruct(iExpt).Animal = thisAnimal;
     dataStruct(iExpt).Date = thisDate;
     dataStruct(iExpt).ChansToExclude = workingTable.chansToExclude(iExpt);

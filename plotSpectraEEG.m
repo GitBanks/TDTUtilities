@@ -1,13 +1,38 @@
-function summaryData = plotSpectraEEG(animalName,exptDate,chansToExclude)
+function summaryData = plotSpectraEEG(animalName,exptDate,chansToExclude,setName)
 % test params
 % animalName = 'EEG200';
 % exptDate = '22614';
 % chansToExclude = NaN;
 % chansToExclude = 4;
 
+switch setName
+    % keep in mind if you create a new setName you need to create the folder
+    % with subfolders: spectrogram\ bandpower\ and avgspectra\
+    case 'FLVX'
+        saveFolder = 'M:\PassiveEphys\AnimalData\Fluvoxamine-LPS\';
+    case 'PSY2020'
+        saveFolder = 'M:\PassiveEphys\AnimalData\psychedelics-2020\';
+    case '2020_PSYLOCYBIN_LPS'
+        saveFolder = 'M:\PassiveEphys\AnimalData\psyloLPS-2020\';
+
+    case 'ZZ'
+        error('Need to set this up - spectra might not apply for ZZ mice');
+    otherwise
+        error('Need an appropriate table name from a recognized list: ''FLVX'' or ''PSY2020'' so far ');
+end
+
+
+
+
+if iscell(chansToExclude)
+    chansToExclude = chansToExclude{:};
+end
+if ischar(chansToExclude)
+    chansToExclude = str2num(chansToExclude);
+end
+
 % save some specific data for Matt
 summaryData = struct;
-
 
 %legLabels = {'Ch1','Ch2','Ch3','Ch4','Ch5','Ch6'};
 legLabels = {'Pre inj 1','Pre inj 2','Post inj 1','Post inj 2','Post inj 3','Post inj 4'};
@@ -18,7 +43,6 @@ plotTitleLabels = {'R Anterior','R Posterior','L Posterior','L Anterior'};
 % which subplots to make on that...
 
 folder = ['M:\PassiveEphys\AnimalData\initial\' animalName '\']; % data from the pipeline 
-saveFolder = 'M:\PassiveEphys\AnimalData\Fluvoxamine-LPS\';
 chanEEGRemap = [2,4,3,1]; % direct channels to specific subplots so that channels line up with their physical locations
 % the file will be some crazy thing like this:
 % 'EEG210_22629-001,22629-003,22629-005,22629-007,22629-009,22629-011 wPLI_dbt'; 
@@ -257,6 +281,10 @@ for i = 1:6
 end
 
 
+
+if ~exist([saveFolder 'bandpower\'],"dir")
+    mkdir([saveFolder 'bandpower\']);
+end
 saveas(bandPower,[saveFolder 'bandpower\' animalName '-' exptDate '-' savetext '.fig']);
 saveas(bandPower,[saveFolder 'bandpower\' animalName '-' exptDate '-' savetext '.jpg']);
 
@@ -318,6 +346,9 @@ for iChan = 1:nChans
 end
 sgtitle([animalName '-' exptDate '-' savetext],'Interpreter', 'none');
 
+if ~exist([saveFolder 'avgspectra\'],"dir")
+    mkdir([saveFolder 'avgspectra\']);
+end
 saveas(avgspectra,[saveFolder 'avgspectra\' animalName '-' exptDate '-' savetext '.fig']);
 saveas(avgspectra,[saveFolder 'avgspectra\' animalName '-' exptDate '-' savetext '.jpg']);
 
@@ -365,6 +396,9 @@ for iDrugInj = 1:size(TheseDrugs,2)
 end
 sgtitle([animalName '-' exptDate '-' savetext],'Interpreter', 'none');
 
+if ~exist([saveFolder 'spectrogram\'],"dir")
+    mkdir([saveFolder 'spectrogram\']);
+end
 saveas(spectrogramFig,[saveFolder 'spectrogram\' animalName '-' exptDate '-' savetext '.fig']);
 saveas(spectrogramFig,[saveFolder 'spectrogram\' animalName '-' exptDate '-' savetext '.jpg']);
 
