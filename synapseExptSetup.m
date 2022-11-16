@@ -33,7 +33,17 @@ if contains(animalName,'ZZ')
     end
     Experiment.exptDescriptionText = {
         [experimentDrugManipulation ' Baseline / spon - pre manipulation' ]
-        [experimentDrugManipulation ' stim/resp' ]
+        [experimentDrugManipulation ' stim/resp test' ]
+        [experimentDrugManipulation ' stim/resp hour -1' ]
+        [experimentDrugManipulation ' stim/resp hour 1' ]
+        [experimentDrugManipulation ' stim/resp hour 2' ]
+        [experimentDrugManipulation ' stim/resp hour 3' ]
+        [experimentDrugManipulation ' stim/resp hour 4' ]
+        [experimentDrugManipulation ' stim/resp hour 24' ]
+        [experimentDrugManipulation ' stim/resp hour 48' ]
+        [experimentDrugManipulation ' stim/resp hour 72' ]
+        [experimentDrugManipulation ' stim/resp hour 96' ]
+        [experimentDrugManipulation ' stim/resp hour 120' ]
         [experimentDrugManipulation ' Baseline / stim - pre LTP/LTD' ]
         [experimentDrugManipulation ' LTP / stim ' ]
         [experimentDrugManipulation ' Post LTP / stim ' ]
