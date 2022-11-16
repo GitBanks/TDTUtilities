@@ -32,7 +32,6 @@ if contains(animalName,'ZZ')
         Experiment.nStimsIndexArray(iStep) = indexStimCountSequence(rem(iStep,length(indexDescriptionRECtype))+1);
     end
     Experiment.exptDescriptionText = {
-        [experimentDrugManipulation ' Baseline / spon - pre manipulation' ]
         [experimentDrugManipulation ' stim/resp test' ]
         [experimentDrugManipulation ' stim/resp hour -1' ]
         [experimentDrugManipulation ' stim/resp hour 1' ]
@@ -44,17 +43,18 @@ if contains(animalName,'ZZ')
         [experimentDrugManipulation ' stim/resp hour 72' ]
         [experimentDrugManipulation ' stim/resp hour 96' ]
         [experimentDrugManipulation ' stim/resp hour 120' ]
-        [experimentDrugManipulation ' Baseline / stim - pre LTP/LTD' ]
-        [experimentDrugManipulation ' LTP / stim ' ]
-        [experimentDrugManipulation ' Post LTP / stim ' ]
-        [experimentDrugManipulation ' LTD / stim ' ]
-        [experimentDrugManipulation ' Post LTD / stim ' ]
-        [experimentDrugManipulation ' Post LTD / stim ' ]
+        [experimentDrugManipulation ' Baseline / spon - pre manipulation' ]
         [experimentDrugManipulation ' Baseline / spon - post injection 1' ]
         [experimentDrugManipulation ' Baseline / spon - post injection 2' ]
         [experimentDrugManipulation ' Baseline / spon - post injection 3' ]
         [experimentDrugManipulation ' Baseline / spon - post injection 4' ]
     };
+%         [experimentDrugManipulation ' Baseline / stim - pre LTP/LTD' ]
+%         [experimentDrugManipulation ' LTP / stim ' ]
+%         [experimentDrugManipulation ' Post LTP / stim ' ]
+%         [experimentDrugManipulation ' LTD / stim ' ]
+%         [experimentDrugManipulation ' Post LTD / stim ' ]
+%         [experimentDrugManipulation ' Post LTD / stim ' ]
 else
 
     indexSubdivisions = {'a','b','c','d'};
