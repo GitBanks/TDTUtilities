@@ -95,6 +95,8 @@ function HTRSummaryPlots(treatment,selection,acceptedPermutations)
 
 
 dateTable = getDateAnimalUniqueByTreatment(treatment);
+% treatment = 'DOI_conc';
+% selection = 2;
 
 % treatment = 'Anlg_6_FDET'; 
 % dateTable = dateTable(1:8,:);
@@ -109,7 +111,8 @@ oldFormatOverride = false;
 
 excludeAnimal = 'ZZ09'; % there should really be a 'hasMagnet' flag in the database
 dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
-
+excludeAnimal = 'ZZ05'; % there should really be a 'hasMagnet' flag in the database
+dateTable = dateTable(excludeAnimal~=dateTable.AnimalName,:);
 
 
 
@@ -126,7 +129,7 @@ plotsToMake = unique(dateTable.DrugList);
 subTable = dateTable(plotsToMake(selection)==dateTable.DrugList,:);
 
 % treatment = 'saline0p9_vol'; 
-% subTable = subTable(1:8,:); %get rid of ZZ stuff
+subTable = subTable(1:8,:); %get rid of ZZ stuff
 
 % treatment = 'psilocybin'; 
 % subTable = subTable(1:12,:); %get rid of ZZ stuff

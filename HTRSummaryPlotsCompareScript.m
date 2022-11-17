@@ -9,15 +9,29 @@ treatment = {
 'Anlg_6_FDET'; 
 'saline0p9_vol'; 
 'psilocybin'; 
+'DMT';
+'Anlg_5_MeO_DET';
+'Anlg_Pyr_T'; 
+'Anlg_5_MeO_MiPT'; 
+'Anlg_4_AcO_DMT'; 
+'Anlg_5_MeO_pyrT';
+'Anlg_5_6_DiMeO_MiPT';
 }; % needs to be in format of database
 
 treatmentLegend = {
 '6F-DET'; 
 'Saline'; 
 'Psilocybin';
+'DMT';
+'5-MeO-DET';
+'Pyr-T'; 
+'5-MeO-MiPT'; 
+'4-AcO-DMT'; 
+'5-MeO-pyrT';
+'5-6-DiMeO-MiPT';
 }; 
 binSize = 5;  %in minutes
-
+nTreatments = size(treatment,1);
 
 
 acceptedPermutations = [1,2];
@@ -103,21 +117,38 @@ end
 
 % summary figure with all drugs listed in treatment array
 figure
-symbolArray = {'b-o','c-d','r-s'};
+%symbolArray = {'b-o','c-d','r-s','k-o','b-o','c-d','r-s','k-o','b-o','c-d','r-s','k-o','b-o','c-d','r-s','k-o','b-o','c-d','r-s','k-o','b-o','c-d','r-s','k-o'};
 for iTreatment = 1:size(treatment,1)
     centers = S(iTreatment).fullCenters;
     smoothedMean = S(iTreatment).fullSmoothedMean;
     err = S(iTreatment).fullErr;
     %plot(centers/60,smoothedMean,symbolArray{iTreatment});
-    errorbar(centers/60,smoothedMean,err,symbolArray{iTreatment});
+    errorbar(centers/60,smoothedMean,err)%,symbolArray{iTreatment});
     hold on
 end
-legend(treatmentLegend{1:3,:},'interpreter','none');
+legend(treatmentLegend{1:nTreatments,:},'interpreter','none');
 xlim([-60,60]);
 ylim([0,4]);
 ylabel('average HTR rate');
 xlabel('minutes');
 
+
+for iTreatment = 1:size(treatment,1)
+    postDrugChange(iTreatment) = S(iTreatment).fullSmoothedMean(13)-S(iTreatment).fullSmoothedMean(8);
+end
+
+
+
+[sortedPostDrugChange,indexPostDrugSorted] = sort(postDrugChange);
+
+figure
+bar(postDrugChange);
+xticklabels(treatmentLegend);
+
+
+figure
+bar(sortedPostDrugChange);
+xticklabels(treatmentLegend(indexPostDrugSorted));
 
 
 
