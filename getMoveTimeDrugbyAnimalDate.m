@@ -19,6 +19,8 @@ function [S] = getMoveTimeDrugbyAnimalDate(animalName,exptDate)
 % exptDate = '22622';
 % animalName = 'EEG187';
 % exptDate = '22222';
+% animalName = thisAnimal;
+% exptDate = thisDate;
 
 disp(['Loading info for: ' exptDate]);
 workingList = getExperimentsByAnimalAndDate(animalName,exptDate);
@@ -36,14 +38,22 @@ for ii = 1:size(workingList,1)
     thisDate = workingList{ii,1}(1:5);
     thisIndex = workingList{ii,1}(7:9);
     [indexDur,timeOfDay] = getTimeAndDurationFromIndex(thisDate,thisIndex);
-    [magData,magDT] = HTRMagLoadData(workingList{ii,1});
+    try
+        [magData,magDT] = HTRMagLoadData(workingList{ii,1});
+    catch
+        % instead of faking plots w a bunch of nans, load in the old
+        % movement data, like: M:\PassiveEphys\2019\19621-001\19621-001-movementBinary
+        magData = nan(1,3600*3052);
+        magDT = 3.2768e-04;
+    end
     timeArray = 0:magDT:length(magData)*magDT;
     while length(timeArray) > length(magData) %sometimes time is a mystery - this is in case the sample points are one longer than what we calculated by dT
         timeArray = timeArray(1:end-1);
     end
     timeArray = downsample(timeArray,downsampleFactor);
-    magData = smooth(abs(magData-mean(magData)),(1/magDT)*4,'sgolay',2);
     magData = downsample(magData,downsampleFactor);
+    magData = smooth(abs(magData-mean(magData)),(1/magDT)*4,'sgolay',2);
+    
     timeArrayTOD = (timeOfDay : seconds(1) : timeOfDay+indexDur);
     % quick grab and calculate the actual injection time
     if sum(treatments.injIndex(:,ii)) > 0
