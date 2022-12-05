@@ -3,7 +3,7 @@
 %% Define animal and subset
 
 
-animal = {'ZZ21'};
+animal = {'ZZ19' 'ZZ20' 'ZZ21' 'ZZ22'};
 % subset={'21804','22117','22203'};
 % drug =;
 
@@ -47,7 +47,7 @@ stimRespExptTable = exptTableComplete(exptTableComplete.stimResp == true,:);
 
 %% If we want to toggle for a certain drug do that here
 
-drug1 = '6-FDET'
+drug1 = 'Psilocybin'
 drug2 = 'Stim alone'
 stimRespExptTable1 = stimRespExptTable(contains(stimRespExptTable.Description,drug1),:);
 stimRespExptTable2 = stimRespExptTable(contains(stimRespExptTable.Description,drug2),:);
@@ -67,18 +67,17 @@ for iList = 1:nIndex
     dirStrAnalysis = [ getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
     data(iList).index = exptList{iList};
     data(iList).Animal = stimRespExptTableNew.Animal;
-    data(iList).Drug = stimRespExptTableNew.Description;
-    %Here rewrite the drug description using drugsToUse and doing a
-    %contains if it contains the drug then say drug - baseline if it does
-    %not say drug 24hr post
+    data(iList).Drug = stimRespExptTableNew.Description{iList};
     try 
         load([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData');
         for iROI = 1:size(peakData.ROILabels,1)
             % this is where we grab the calculated peaks.
-            [data(iList).ROI(iROI).maxPeaks,peakIndex] = max(peakData.pkVals(iROI).data,[],2);
+            %[data(iList).ROI(iROI).maxPeaks] = max(peakData.pkVals(iROI).data,[],2);
+            peakAbs = abs(peakData.pkVals.data);
+            [peakMax, peakIndex] = max(peakAbs);
             for ii = 1:size(peakData.pkVals.data) %(iROI).peakTimeCalc,1)
-                data(iList).ROI(iROI).peakTimes(ii) = peakData.pkVals(iROI).peakTimeCalc(1,peakIndex(2));
-                data(iList).ROI(iROI).maxPeaks(ii) = peakData.pkVals(iROI).data(1,peakIndex(2));
+                data(iList).ROI(iROI).peakTimes(ii) = peakData.pkVals.peakTimeCalc(1,peakIndex);
+                data(iList).ROI(iROI).maxPeaks(ii) = peakMax;
             end        
 %             data(iList).ROI(iROI).peakTimes = peakData.pkSearchData(iROI).tPk; % this will change
             if isempty(data(iList).ROI(iROI).maxPeaks) % if someone didn't select a peak
@@ -107,7 +106,7 @@ for iROI = 1
     for iList = 1:nIndex
         indexList = ((iROI-1)*nIndex)+iList;
         stimPeakTable.Animal(indexList) = data(iList).Animal(iList);
-        stimPeakTable.Drug(indexList) = data(iList).Drug(iList);
+        stimPeakTable.Drug(indexList) = data(iList).Drug;
         stimPeakTable.ROI(indexList) = [peakData.ROILabels(iROI)];
         stimPeakTable.File(indexList) = data(iList).index;
         stimPeakTable.MaxPeak(indexList) = data(iList).ROI(iROI).maxPeaks(1,1);
@@ -119,102 +118,9 @@ end
 %% Export as CSV for prism
 
 outPath = ['C:\Users\Grady\Documents\Zarmeen Data\PeakMax'];
-tableOutPath = fullfile(outPath, 'stimPeakTable.csv')
-writetable(stimPeakTable,tableOutPath)
-
-%% Plotting bar plot for summary and average traces at each time point
-
-% 1. step through the list weve made based on drugsToUse 
-
-% drugsToUse = {'Saline','Psilocybin','DOI','4-AcO-DMT','6-FDET'};
-% figure;
-% 
-%  
-% for idrug = 1:size(drugsToUse,2)
-%     subplot(1,size(drugsToUse,2),idrug)
-%     title([drugsToUse{idrug}]);
-%     useThese = contains(stimPeakTable.Drug,drugsToUse{idrug});
-%     peaksIndexBaselineToUse = find(useThese==true);
-%     peaksIndexPostToUse = peaksIndexBaselineToUse+1;
-%     
-%     plotArray(1,:) = stimPeakTable.MaxPeak(peaksIndexBaselineToUse);
-%     plotArray(2,:) = stimPeakTable.MaxPeak(peaksIndexPostToUse);
-%     
-%     plot(plotArray);
-%     xlim([0.9,2.1]);
-%     ylim([15*10^-5]);
-%     
-% %     scatter(ones(1,size(plotArray,2)),plotArray(1,:));
-% %     hold on
-% %     scatter(ones(1,size(plotArray,2))+1,plotArray(2,:));
-% %     xlim([0,3]);
-%     clear plotArray
-%     title([drugsToUse{idrug}]);
-% end
-% %%
-% %%
-% %list of drugs
-% drugsToUse = {'Saline','Psilocybin','DOI','4-AcO-DMT','6-FDET'};
-% 
-% % we need to step through the list of drugs; find the days with the named
-% % drug in the description, then grab the *next* valid experiment, which
-% % will be the 24 hour timepoint.
-% tempTable = table();
-% for idrug = 1:size(drugsToUse,2)
-%     stimRespExptTable = exptTableComplete(exptTableComplete.stimResp == true,:);
-%     % create a logical of matching experiments
-%     logicalTests(1,:) = contains(stimRespExptTable.Description,drugsToUse{idrug}); % include
-%     logicalTests(2,:) = ~contains(stimRespExptTable.Description,'Mifepristone'); % exclude
-%     foundTheseExpts = all(logicalTests);
-% 
-%     % now, a dead simple way to grab the next one would be to make every
-%     % entry *after* a valid experiment to true (may be redundant for
-%     % consecutive experiments that are true) 
-%     indexOfFoundExpt = find(foundTheseExpts==true);
-%     iiExpt = 1;
-%     for iExpt = 1:size(indexOfFoundExpt,2)
-%         useThisIndex = indexOfFoundExpt(iExpt);
-%         fullListOfExpts(iiExpt) = useThisIndex;
-%         iiExpt = iiExpt+1;
-%         fullListOfExpts(iiExpt) = useThisIndex+1;
-%         iiExpt = iiExpt+1;
-%     end
-%     fullListOfExpts = unique(fullListOfExpts);
-%     
-%     % we're only interested in the pre injection and the 24 hour later.  we
-%     % need to step through each day and be sure there's only one.
-%     
-%     % the following  will fail if there's only one entry.  we need to look at each
-%     % day to be sure.
-% %     killList = diff(fullListOfExpts);
-% %     killList(end+1) = 2;
-% %     killList = find(killList>1)-1;
-% %     fullListOfExpts(killList) = [];
-%     moreDates = true;
-%     iExpt = 1;
-%     while moreDates
-%         thisDate = char(stimRespExptTable(fullListOfExpts(iExpt),:).DateIndex);
-%         nextDate = char(stimRespExptTable(fullListOfExpts(iExpt+1),:).DateIndex);
-%         if contains(thisDate(1:5),nextDate(1:5))
-%             % if this date and the next are the same, get rid of the next date
-%             fullListOfExpts(iExpt+1) = [];
-%         else
-%             %otherwise, move on to the next date
-%             iExpt = iExpt+1;
-%         end
-%         if iExpt > size(fullListOfExpts,2)-1
-%             % since we're using a while loop, need to be careful to get
-%             % out.
-%             moreDates = false;
-%         end
-%     end
-%     stimRespExptTable = stimRespExptTable(fullListOfExpts,:);
-%     tempTable = [tempTable;stimRespExptTable];
-% end
-% 
-% stimRespExptTable = tempTable;
+tableOutPath = fullfile(outPath, 'stimResp3.csv')
+writetable(stimRespExptTable,tableOutPath)
 
 
-%Change relative to baseline values across drugs 
 
 

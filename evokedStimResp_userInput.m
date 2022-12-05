@@ -4,8 +4,8 @@ function [peakData] = evokedStimResp_userInput(exptDate,exptIndex)
 % User-defined parameters
 
 if ~exist('exptDate','var') || ~exist('exptIndex','var')
-      %exptDate = '22826'; 
-      %xptIndex = '003';
+      exptDate = '21805'; 
+      exptIndex = '004';
     
 %     exptIndex = '008'; noTank = false;
 %	exptIndex = '004'; noTank = false;
@@ -23,7 +23,7 @@ if ~exist('exptDate','var') || ~exist('exptIndex','var')
 %     exptDate = '21515';
 %     exptIndex = '002';
 end
-relevantROIs = {'mPFC'}; % labels in database can be any of these
+relevantROIs = {'mPFC', 'LFP R PFC'}; % labels in database can be any of these
 % Window for analysis and plotting, relative to stim time
 tPreStim = 0.02; %sec
 tPostStim = 0.2; %sec
@@ -56,11 +56,13 @@ if ~exist(outPath,'dir')
     mkdir(outPath);
 end
 animalName = getAnimalByDateIndex(exptDate,exptIndex);
+    
 [electrodeLocs,map,~] = getElectrodeLocationFromDateIndex(exptDate,exptIndex);
 
 electrodeLocs = electrodeLocs(map);
 %%%%NOTE: The following assumes that channels are arranged in pairs and
 %%%%that the channels are ordered in Synapse as they are in eNotebook
+%You NEED to have a CSV made!
 ROILabels = electrodeLocs(contains(electrodeLocs,relevantROIs,'IgnoreCase',true));
 ROILabels = unique(ROILabels,'stable');
 nStims = length(stimSet);
@@ -68,7 +70,7 @@ nROIs = 1; %size(stimSet(1).sub,1); %number of regions with recording electrodes
 preStimIndex = floor(tPreStim/dTRec);
 postStimIndex = ceil(tPostStim/dTRec);
 
-% 
+
 %% Ugly kludge alert!
 % Need to account for delay between stim times as saved by Synapse and stim
 % times as they appear in data. Do this by averaging across stimuli and
@@ -81,7 +83,7 @@ for iStim = 1:nStims
 end
 % figure()
 saveIndex = zeros(1,nROIs);
-for iROI = 1:nROIs
+for iROI = 1 %:nROIs
 %     subplot(1,nROIs,iROI);
 %     plot(abs(tempData(iROI,:)));
 %     [tempPks,tempIndex] = findpeaks(abs(tempData(iROI,preStimIndex:end)),'Threshold',pkThresh);
@@ -108,7 +110,7 @@ end
 startSearchIndex = actualStimIndex+ceil(artifactDur/dTRec); %Start search for plot min and max after artifact
 stimSet(iStim).dataMean = squeeze(mean(stimSet(iStim).data,2));
 stimSet(iStim).subMean = squeeze(mean(stimSet(iStim).sub,2));
-for iROI = 1:nROIs
+for iROI = 1 %:nROIs
     plotMax(iROI) = -1.e10;
     plotMin(iROI) = 1.e10;
     for iStim = 1:nStims
@@ -122,7 +124,7 @@ if isfile([outPath2 animal '_peakDataOverTime.mat'])
     load([outPath2 animal '_peakDataOverTime'],'peakDataOverTime');
     structureList = fields(peakDataOverTime);
     p = struct;
-    for iROI = 1:nROIs
+    for iROI = 1 %:nROIs
         tPkList = [];
         yPkList = [];
         for iii = 1:length(structureList)
@@ -149,7 +151,7 @@ end
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
 FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
 thisFigure = figure('Name',FigName);
-for iROI = 1:nROIs
+for iROI = 1 %:nROIs
     % Plot avg traces
     subPlt(iROI) = subplot(1,nROIs,iROI);
     hold on
@@ -161,7 +163,7 @@ for iROI = 1:nROIs
     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [-40.0e-05, 18.0e-05]%[1.05*plotMin(iROI),1.05*plotMax(iROI)];
+    ax.YLim = [-40.0e-05, 40.0e-05]%[1.05*plotMin(iROI),1.05*plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
         
@@ -174,9 +176,6 @@ for iROI = 1:nROIs
     end
 end
 
-% do we want to load in peaks from other experiments here?
-
-
 
 %% Have user click on peaks in each subplot to inform peak search windows
 msgFig = msgbox({'Click once in each subplot to indicate approximate location of peaks.';...
@@ -188,7 +187,7 @@ opts.Interpreter = 'Tex'; % Apparently it is necessary to set this option
 if exist('pkSearchData','var')
     clear pkSearchData;
 end
-for iROI = 1:nROIs
+for iROI = 1 %:nROIs
     subplot(subPlt(iROI));
     proceed = 0;
     while ~proceed
@@ -215,7 +214,7 @@ close(thisFigure);
 avgWinIndex = floor(avgWinTime/dTRec);
 baseWinIndex = floor(baseWin/dTRec);
 pkVals = struct();
-for iROI = 1:nROIs
+for iROI = 1 %:nROIs
     pkVals(iROI).data = zeros(length(pkSearchData(iROI).tPk),nStims);
     for iPk = 1:length(pkSearchData(iROI).tPk)
         %Start and stop indices of time window re stim time to search for peak minimum resp

@@ -7,12 +7,12 @@
 %2)You need to change the titles for the drug you are using- these are
 %hardcoded
 
-animal = 'ZZ15';
-subset={'22216','22217'};
+animal = 'ZZ10';
+subset={'21804','21805'};
 
 
 %Make a table of the expts we want to pull
-[exptTable] = getExptPlasticitySetByAnimal(animal);
+[exptTable] = getExptTableByAnimal(animal);
 
 %We now want to make a table that pulls data from indices from the subset we give it
 stimRespExptTable = exptTable(contains(exptTable.DateIndex,subset(:)),:);
@@ -21,7 +21,7 @@ stimRespExptTable = stimRespExptTable(stimRespExptTable.stimResp == true,:);
 %Only grab the first one
 drugsToUse = {'Saline','Psilocybin','DOI','4-AcO-DMT','6-FDET'};
 tempTable = table();
-for idrug = 2
+for idrug = 1
     % create a logical of matching experiments
     logicalTests(1,:) = contains(stimRespExptTable.Description,drugsToUse{idrug}); % include
     logicalTests(2,:) = ~contains(stimRespExptTable.Description,'Mifepristone'); % exclude
@@ -115,7 +115,7 @@ for iExpt = 1:nExpts
        end
        ax = gca;
        ax.XLim = [peakData.date.expt(iExpt).data.plotTimeArray(1),peakData.date.expt(iExpt).data.plotTimeArray(end)];
-       ax.YLim = [-5.0e-05, 10.0e-05]%[1.05*peakData.plotMin(iROI),1.05*peakData.plotMax(iROI)];
+       ax.YLim = [-0.2e-03, 0.6e-03]%[1.05*peakData.plotMin(iROI),1.05*peakData.plotMax(iROI)];
        ax.XLabel.String = 'time(sec)','FontSize',10;
        if iROI == 1
            ax.YLabel.String = 'avg dataSub (V)','FontSize',10;
@@ -141,12 +141,12 @@ for iExpt = 1:nExpts
        end
        ax = gca;
        ax.XLim = [peakData.date.expt(iExpt).data.plotTimeArray(1),peakData.date.expt(iExpt).data.plotTimeArray(end)];
-       ax.YLim = [-5.0e-05, 10.0e-05]%[1.05*peakData.plotMin(iROI),1.05*peakData.plotMax(iROI)];
+       ax.YLim = [-0.2e-03, 0.6e-03]%[1.05*peakData.plotMin(iROI),1.05*peakData.plotMax(iROI)];
        ax.XLabel.String = 'time(sec)','FontSize',10;
        if iROI == 1
            ax.YLabel.String = 'avg dataSub (V)','FontSize',10;
        end
-         ax.Title.String = 'Example Response Traces 24hr Post Psilocybin','FontSize',25;
+         ax.Title.String = 'Example Response Traces 24hr Post Saline','FontSize',25;
        for ii = 1:size(peakData.date.expt(iExpt).data.avgTraces,2)
              stimArrayNumeric(ii) = peakData.date.expt(iExpt).data.avgTraces(ii).stimArrayNumeric;
              hold off
@@ -173,8 +173,8 @@ for iExpt = 1:nExpts
         if iROI == 1
         ax.YLabel.String = 'Pk resp (V)','FontSize',10;
         end
-        ax.Title.String = 'Psilocybin Stimulus Response Curves','FontSize',25;
-         ax.XLim = [0,400];
+        ax.Title.String = 'Saline Stimulus Response Curves','FontSize',25;
+        %ax.XLim = [0,400];
         %ax.YLim = [0,7e-05];
         legendLabs = [];
     for iExpt = 1
