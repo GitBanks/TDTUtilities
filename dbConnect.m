@@ -57,5 +57,11 @@ catch
     success = 0;
 end
 
+if isempty(dbConn)
+    warning('If you can ping the database IP, and everything else checks out, try rebooting.');
+    warning('There may be too many unclosed dbConnects() in the background.');
+    pause(4);
+end
+
 end
 

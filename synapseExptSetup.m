@@ -32,19 +32,29 @@ if contains(animalName,'ZZ')
         Experiment.nStimsIndexArray(iStep) = indexStimCountSequence(rem(iStep,length(indexDescriptionRECtype))+1);
     end
     Experiment.exptDescriptionText = {
+        [experimentDrugManipulation ' stim/resp test' ]
+        [experimentDrugManipulation ' stim/resp hour -1' ]
+        [experimentDrugManipulation ' stim/resp hour 1' ]
+        [experimentDrugManipulation ' stim/resp hour 2' ]
+        [experimentDrugManipulation ' stim/resp hour 3' ]
+        [experimentDrugManipulation ' stim/resp hour 4' ]
+        [experimentDrugManipulation ' stim/resp hour 24' ]
+        [experimentDrugManipulation ' stim/resp hour 48' ]
+        [experimentDrugManipulation ' stim/resp hour 72' ]
+        [experimentDrugManipulation ' stim/resp hour 96' ]
+        [experimentDrugManipulation ' stim/resp hour 120' ]
         [experimentDrugManipulation ' Baseline / spon - pre manipulation' ]
-        [experimentDrugManipulation ' stim/resp' ]
-        [experimentDrugManipulation ' Baseline / stim - pre LTP/LTD' ]
-        [experimentDrugManipulation ' LTP / stim ' ]
-        [experimentDrugManipulation ' Post LTP / stim ' ]
-        [experimentDrugManipulation ' LTD / stim ' ]
-        [experimentDrugManipulation ' Post LTD / stim ' ]
-        [experimentDrugManipulation ' Post LTD / stim ' ]
         [experimentDrugManipulation ' Baseline / spon - post injection 1' ]
         [experimentDrugManipulation ' Baseline / spon - post injection 2' ]
         [experimentDrugManipulation ' Baseline / spon - post injection 3' ]
         [experimentDrugManipulation ' Baseline / spon - post injection 4' ]
     };
+%         [experimentDrugManipulation ' Baseline / stim - pre LTP/LTD' ]
+%         [experimentDrugManipulation ' LTP / stim ' ]
+%         [experimentDrugManipulation ' Post LTP / stim ' ]
+%         [experimentDrugManipulation ' LTD / stim ' ]
+%         [experimentDrugManipulation ' Post LTD / stim ' ]
+%         [experimentDrugManipulation ' Post LTD / stim ' ]
 else
 
     indexSubdivisions = {'a','b','c','d'};

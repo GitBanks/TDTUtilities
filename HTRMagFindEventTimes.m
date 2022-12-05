@@ -106,7 +106,7 @@ htrEventTimes = S.htrEventTimes;
 %this is really ugly, but we need a way to save the streams from each
 %animal in the 'localsave' case which doesn't use a database.
 if S.localSave
-    saveLocation = [getPathGlobal('CodyLocalHTRData') '20' S.exptID(1:2) '\'  S.exptID '\' ];
+    saveLocation = [getPathGlobal('CodyLocalHTRDataSave') '20' S.exptID(1:2) '\'  S.exptID '\' ];
     save([saveLocation S.exptID '-HTRevents_' S.animalName],'htrEventTimes','detectedIndex');
 else
     saveLocation = [getPathGlobal('importedData') '20' S.exptID(1:2) '\'  S.exptID '\' ];
