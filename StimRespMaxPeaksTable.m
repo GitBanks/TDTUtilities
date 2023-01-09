@@ -3,31 +3,10 @@
 %% Define animal and subset
 
 
-animal = {'ZZ19' 'ZZ20' 'ZZ21' 'ZZ22'};
+%animal = {'ZZ09','ZZ10','ZZ14','ZZ15','ZZ19' 'ZZ20' 'ZZ21' 'ZZ22'};
+animal = {'ZZ16'}
 % subset={'21804','22117','22203'};
 % drug =;
-
-if contains(animal,'ZZ10')
-    manualPeakEntry = [2,1,1];
-end
-if contains(animal,'ZZ09')
-    manualPeakEntry = [2,2,1];
-end
-if contains(animal,'ZZ14')
-    manualPeakEntry = [2,2,1];
-end
-if contains(animal,'ZZ15')
-    manualPeakEntry = [2,1,1];
-end
-if contains(animal,'ZZZZexample')
-    manualPeakEntry = [1,1,1];
-end
-if ~exist('manualPeakEntry','var')
-    warning('The peaks haven''t been set for this animal.');
-    warning('We''ll show you a table but then error out.')
-end
-
-
 % % ========= Set up the list of animals to run ===============
 
 %This will loop through the cell array of animals we create above and pull
@@ -44,19 +23,10 @@ end
 
 %% This is to prune without subset
 stimRespExptTable = exptTableComplete(exptTableComplete.stimResp == true,:);
-
-%% If we want to toggle for a certain drug do that here
-
-drug1 = 'Psilocybin'
-drug2 = 'Stim alone'
-stimRespExptTable1 = stimRespExptTable(contains(stimRespExptTable.Description,drug1),:);
-stimRespExptTable2 = stimRespExptTable(contains(stimRespExptTable.Description,drug2),:);
-stimRespExptTableNew = [stimRespExptTable1; stimRespExptTable2];
-
 %%
 % % % ========= step through the new list and pull data ========
 
-exptList = stimRespExptTableNew.DateIndex;
+exptList = [stimRespExptTable.DateIndex stimRespExptTable.Animal];
 
 nIndex = size(exptList,1);
 nROI = 1;
@@ -66,30 +36,52 @@ for iList = 1:nIndex
     exptIndex = exptList{iList}(7:9);
     dirStrAnalysis = [ getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
     data(iList).index = exptList{iList};
-    data(iList).Animal = stimRespExptTableNew.Animal;
-    data(iList).Drug = stimRespExptTableNew.Description{iList};
+    data(iList).Animal = stimRespExptTable.Animal;
+    data(iList).Drug = stimRespExptTable.Description{iList};
+    if contains(exptList{iList,2},'ZZ09')
+    manualPeakEntry = [2];
+    end
+    if contains(exptList{iList,2},'ZZ10')
+        manualPeakEntry = [2];
+    end
+    if contains(exptList{iList,2},'ZZ14')
+        manualPeakEntry = [1];
+    end
+    if contains(exptList{iList,2},'ZZ15')
+        manualPeakEntry = [1];
+    end
+    if contains(exptList{iList,2},'ZZ19')
+        manualPeakEntry = [2];
+    end
+    if contains(exptList{iList,2},'ZZ20')
+        manualPeakEntry = [1];
+    end
+    if contains(exptList{iList,2},'ZZ21')
+        manualPeakEntry = [1];
+    end
     try 
         load([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData');
-        for iROI = 1:size(peakData.ROILabels,1)
+        %for iROI = 1:size(peakData.ROILabels,1) %look to remove this for loop
             % this is where we grab the calculated peaks.
             %[data(iList).ROI(iROI).maxPeaks] = max(peakData.pkVals(iROI).data,[],2);
-            peakAbs = abs(peakData.pkVals.data);
-            [peakMax, peakIndex] = max(peakAbs);
-            for ii = 1:size(peakData.pkVals.data) %(iROI).peakTimeCalc,1)
-                data(iList).ROI(iROI).peakTimes(ii) = peakData.pkVals.peakTimeCalc(1,peakIndex);
-                data(iList).ROI(iROI).maxPeaks(ii) = peakMax;
-            end        
+            peakAbs = abs(peakData.pkVals(1).data);
+            [peakMax, peakIndex] = max(peakAbs,[],2);
+            peakIndexUse = peakIndex(manualPeakEntry,1);
+            %for ii = 1:size(peakData.pkVals.data,1) %(iROI).peakTimeCalc,1)
+                data(iList).ROI(1).peakTimes(1) = peakData.pkVals(1).peakTimeCalc(manualPeakEntry,peakIndexUse);
+                data(iList).ROI(1).maxPeaks(1) = peakMax(manualPeakEntry,1);
+            %end        
 %             data(iList).ROI(iROI).peakTimes = peakData.pkSearchData(iROI).tPk; % this will change
             if isempty(data(iList).ROI(iROI).maxPeaks) % if someone didn't select a peak
                 error('The program requires the number of peaks selected to be the same, every day, for an animal')
             end
-        end
+        %end
     catch
         
-        for iROI = 1:nROI
-            data(iList).ROI(iROI).maxPeaks = NaN;
-            data(iList).ROI(iROI).peakTimes = NaN;
-        end
+         for iROI = 1:nROI
+             data(iList).ROI(iROI).maxPeaks = NaN;
+             data(iList).ROI(iROI).peakTimes = NaN;
+         end
     end
 end
 
@@ -118,8 +110,8 @@ end
 %% Export as CSV for prism
 
 outPath = ['C:\Users\Grady\Documents\Zarmeen Data\PeakMax'];
-tableOutPath = fullfile(outPath, 'stimResp3.csv')
-writetable(stimRespExptTable,tableOutPath)
+tableOutPath = fullfile(outPath, 'stimRespAllAnimals10623.csv')
+writetable(stimPeakTable, tableOutPath)
 
 
 
