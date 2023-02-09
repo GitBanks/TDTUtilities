@@ -54,6 +54,9 @@ else
         if contains(drugDesc,'_')
             drugDesc = strrep(drugDesc,'_','-');
         end
+        if isstrprop(drugDesc(1),'digit') 
+            drugDesc = ['drug' drugDesc];
+        end
         conditionsDescription = [conditionsDescription '.' drugDesc];
     end
 end

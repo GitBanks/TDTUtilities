@@ -43,10 +43,15 @@ conditions = strsplit(params.conditions{:},',');
 % step 2: load in the data0 files representing each block
 fixParamsOnce = 1;
 for iFile = 1:size(blocks,2)
-    file = [getPathGlobal('importedData') '20' blocks{iFile}(1:2) '\' blocks{iFile} '\'  blocks{iFile} '_data0'];
     disp(['Loading ' blocks{iFile}]);
-    load(file);
-    
+    try  % We need to account for both 'regular' and EEG data.  I tried using isfile, but it wouldn't correctly report back if it's a file or not
+        fileA = [getPathGlobal('importedData') '20' blocks{iFile}(1:2) '\' blocks{iFile} '\'  blocks{iFile} '_data0'];
+        load(fileA);
+    catch
+        fileA = [getPathGlobal('importedData') '20' blocks{iFile}(1:2) '\' blocks{iFile} '\'  blocks{iFile} '_EEGdata0'];
+        load(fileA);
+    end
+
     thisBlock = ['blk' strrep(blocks{iFile},'-','_')];
     
     % this is for the bipolar subtraction channels - toggled in analysisOptions

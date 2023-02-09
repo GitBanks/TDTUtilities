@@ -9,7 +9,7 @@ function [p] = getPathGlobal(str)
 % this version: SG Jan 2022
 
 % W = '\\144.92.218.131\Data\Data\';
-W = '\\128.104.83.123\BanksData\Data\';
+W = '\\128.104.83.123\BanksData\Data\'; %Username: ANESFS3\BanksLab %Password: WIb3cZFbXR
 M = '\\144.92.237.185\Data\';
 REC = '144.92.237.183'; % Gilgamesh % avoid network formatting \\ and \ for REC because some input requires just the numbers here
 %REC = '144.92.237.187'; % Nessus
@@ -38,12 +38,15 @@ switch str
     case 'analyzedData'
         p = [W 'PassiveEphys\EEG animal data\'];
     case 'stats'
-        p = [M 'Ziyad\Psychedelics\EEG\DataTables\'];
+        p = [M 'Ziyad\Psychedelics\EEG\DataTables\']; % please don't code in specific project names like this
     case 'figures'
-        p = [M 'Ziyad\Psychedelics\EEG\Figures'];
+        p = [M 'Ziyad\Psychedelics\EEG\Figures']; % or this
     case 'animalSaves'
         p = [M 'PassiveEphys\AnimalData\'];
-        
+    case 'pipelineSaves'
+        p = [M 'PassiveEphys\AnimalData\initial\'];
+    case 'CodyLocalHTRData'
+        p = ['C:\Users\Matt Banks\Documents\Molecular Devices\pCLAMP\Data\'];
     % for specific file paths (old)
     case 'masterLog'
         p = [W 'PassiveEphys\EEG animal data\Mouse Psychedelics Master Log.xlsx'];
@@ -53,7 +56,19 @@ switch str
         p = [W 'PassiveEphys\EEG animal data\mouseEphys_out_ft_4secPSD'];
     case 'wPLI'
         p = [W 'PassiveEphys\EEG animal data\mouseEphys_conn_dbt_noParse_20sWin_0p5sTrial_psychedelics.mat'];
+
+    % Cody's lab paths    
+    case 'CodyLocalHTRDataSource'
+        p = 'C:\Users\soplab\Documents\Molecular Devices\pCLAMP\Data\';
+    case 'CodyLocalHTRDataSave'
+        p = 'C:\WenthurLab\Data\';
+    case 'CodyLocalMetaDataSave'
+        p = 'C:\WenthurLab\Data\HTR-2022-mouse-DMT.xlsx';
     
+
+    case 'CodyLocalHTRData'
+        p = ['C:\Users\Matt Banks\Documents\Molecular Devices\pCLAMP\Data\'];
+
     otherwise
         disp('wtf nothing assigned');
 end

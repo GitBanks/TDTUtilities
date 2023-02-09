@@ -33,7 +33,7 @@ path.dirStrAnalysisROOT = [mousePaths.M 'PassiveEphys\']; % 'M' drive
 path.dirStrRecSourceAROOT = ['\\' getPathGlobal('REC') '\Data\PassiveEphys\']; % fake Gilgamesh (21708, it's broken today)
 path.dirStrRecSourceBROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
 path.dirStrRawDataROOT = [mousePaths.W 'PassiveEphys\']; %'W' drive
-path.dirStrServer = '\\144.92.237.186\Users\'; %Helmholz
+path.dirStrServer = '\\144.92.237.180\Users\'; %Helmholz
 
 % === check network connections
 % we often have network connection issues.  Handle that verification here,

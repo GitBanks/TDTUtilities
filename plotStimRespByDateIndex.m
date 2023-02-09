@@ -29,11 +29,11 @@ outPath2 = ['M:\PassiveEphys\AnimalData\' animalName '\'];
 FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
 thisFigure = figure('Name',FigName);
 
-nROIs = 1:size(peakData.ROILabels,1);
+nROIs = 1 %size(peakData.ROILabels,1);
 % plotting begins
-for iROI = 1:nROIs
+for iROI = 1 %:nROIs
     % Plot avg traces
-    subPlt(iROI) = subplot(2,nROIs,iROI);
+    subPlot(iROI) = subplot(2,nROIs,iROI);
     hold on
     for iStim = 1:length(avgTraces)
         plot(plotTimeArray,avgTraces(iStim).stimSet(iROI,:));
@@ -48,7 +48,7 @@ for iROI = 1:nROIs
     end
     ax = gca;
     ax.XLim = [plotTimeArray(1),plotTimeArray(end)];
-    ax.YLim = [-6.0e-05, 8.0e-05]%[1.05*peakData.plotMin(iROI),1.05*peakData.plotMax(iROI)];
+    ax.YLim = [-9.0e-05, 15.0e-05]%[1.05*peakData.plotMin(iROI),1.05*peakData.plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
         ax.YLabel.String = 'avg dataSub (V)';

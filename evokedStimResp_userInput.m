@@ -4,8 +4,8 @@ function [peakData] = evokedStimResp_userInput(exptDate,exptIndex)
 % User-defined parameters
 
 if ~exist('exptDate','var') || ~exist('exptIndex','var')
-%     exptDate = '21601'; 
-%     exptIndex = '009';
+      exptDate = '22421'; 
+      exptIndex = '014';
     
 %     exptIndex = '008'; noTank = false;
 %	exptIndex = '004'; noTank = false;
@@ -23,7 +23,7 @@ if ~exist('exptDate','var') || ~exist('exptIndex','var')
 %     exptDate = '21515';
 %     exptIndex = '002';
 end
-relevantROIs = {'PFC','CA1','Hipp'}; % labels in database can be any of these
+relevantROIs = {'mPFC', 'LFP R PFC'}; % labels in database can be any of these
 % Window for analysis and plotting, relative to stim time
 tPreStim = 0.02; %sec
 tPostStim = 0.2; %sec
@@ -53,25 +53,47 @@ end
 
 
 
+% first check if exptDate matches the problem date.
+
+% stimSet will have channel x sample data, so swap the channel dimension
+% around as needed.
+
+% thinking on this... Matt may say "why didn't you just fix the data".  If
+% we want to do that, you could load the problem day, swap the channels in
+% the array as I suggested above, then save.  Make sure there's a backup.-
+% can we do this?? i think that would be best 
+if contains(exptDate,'22705')
+    for i = 1:size(stimSet,2)
+        stimSet(i).data(1:2,:,:) = stimSet(i).data(5:6,:,:); % or whatever chan - 5:6?  
+        %yes
+        % and also 
+        stimSet(i).sub(1,:,:) = stimSet(i).sub(3,:,:);
+        stimSet(i).dataMean(1:2,:) = stimSet(i).dataMean(5:6,:);
+        stimSet(i).subMean(1,:) = stimSet(i).subMean(3,:);
+    end
+end
+
 
 %% commands to process some of these parameters
 if ~exist(outPath,'dir')
     mkdir(outPath);
 end
 animalName = getAnimalByDateIndex(exptDate,exptIndex);
+    
 [electrodeLocs,map,~] = getElectrodeLocationFromDateIndex(exptDate,exptIndex);
 
 electrodeLocs = electrodeLocs(map);
 %%%%NOTE: The following assumes that channels are arranged in pairs and
 %%%%that the channels are ordered in Synapse as they are in eNotebook
+%You NEED to have a CSV made!
 ROILabels = electrodeLocs(contains(electrodeLocs,relevantROIs,'IgnoreCase',true));
 ROILabels = unique(ROILabels,'stable');
 nStims = length(stimSet);
-nROIs = size(stimSet(1).sub,1); %number of regions with recording electrodes
+nROIs = 1; %size(stimSet(1).sub,1); %number of regions with recording electrodes
 preStimIndex = floor(tPreStim/dTRec);
 postStimIndex = ceil(tPostStim/dTRec);
 
-% 
+
 %% Ugly kludge alert!
 % Need to account for delay between stim times as saved by Synapse and stim
 % times as they appear in data. Do this by averaging across stimuli and
@@ -84,7 +106,7 @@ for iStim = 1:nStims
 end
 % figure()
 saveIndex = zeros(1,nROIs);
-for iROI = 1:nROIs
+for iROI = 1 %:nROIs
 %     subplot(1,nROIs,iROI);
 %     plot(abs(tempData(iROI,:)));
 %     [tempPks,tempIndex] = findpeaks(abs(tempData(iROI,preStimIndex:end)),'Threshold',pkThresh);
@@ -111,7 +133,7 @@ end
 startSearchIndex = actualStimIndex+ceil(artifactDur/dTRec); %Start search for plot min and max after artifact
 stimSet(iStim).dataMean = squeeze(mean(stimSet(iStim).data,2));
 stimSet(iStim).subMean = squeeze(mean(stimSet(iStim).sub,2));
-for iROI = 1:nROIs
+for iROI = 1 %:nROIs
     plotMax(iROI) = -1.e10;
     plotMin(iROI) = 1.e10;
     for iStim = 1:nStims
@@ -125,7 +147,7 @@ if isfile([outPath2 animal '_peakDataOverTime.mat'])
     load([outPath2 animal '_peakDataOverTime'],'peakDataOverTime');
     structureList = fields(peakDataOverTime);
     p = struct;
-    for iROI = 1:nROIs
+    for iROI = 1 %:nROIs
         tPkList = [];
         yPkList = [];
         for iii = 1:length(structureList)
@@ -136,9 +158,6 @@ if isfile([outPath2 animal '_peakDataOverTime.mat'])
         p(iROI).yPkList = yPkList;
     end
 end
-
-
-
 
 %% Plot average traces
 ampLabel = [];
@@ -155,7 +174,7 @@ end
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
 FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
 thisFigure = figure('Name',FigName);
-for iROI = 1:nROIs
+for iROI = 1 %:nROIs
     % Plot avg traces
     subPlt(iROI) = subplot(1,nROIs,iROI);
     hold on
@@ -167,20 +186,18 @@ for iROI = 1:nROIs
     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [-6.0e-05, 18.0e-05]%[1.05*plotMin(iROI),1.05*plotMax(iROI)];
+    ax.YLim = [-40.0e-05, 40.0e-05]%[1.05*plotMin(iROI),1.05*plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
+        
         ax.YLabel.String = 'avg dataSub (V)';
     end
-    ax.Title.String = ROILabels{iROI};
+    %ax.Title.String = ROILabels(1);
     if iROI == nROIs
         legend(ampLabel,'FontSize',6,'Location','NorthEast');
         legend('boxoff');
     end
 end
-
-% do we want to load in peaks from other experiments here?
-
 
 
 %% Have user click on peaks in each subplot to inform peak search windows
@@ -193,7 +210,7 @@ opts.Interpreter = 'Tex'; % Apparently it is necessary to set this option
 if exist('pkSearchData','var')
     clear pkSearchData;
 end
-for iROI = 1:nROIs
+for iROI = 1 %:nROIs
     subplot(subPlt(iROI));
     proceed = 0;
     while ~proceed
@@ -220,7 +237,7 @@ close(thisFigure);
 avgWinIndex = floor(avgWinTime/dTRec);
 baseWinIndex = floor(baseWin/dTRec);
 pkVals = struct();
-for iROI = 1:nROIs
+for iROI = 1 %:nROIs
     pkVals(iROI).data = zeros(length(pkSearchData(iROI).tPk),nStims);
     for iPk = 1:length(pkSearchData(iROI).tPk)
         %Start and stop indices of time window re stim time to search for peak minimum resp
@@ -309,70 +326,8 @@ save([outPath2 animal '_peakDataOverTime'],'peakDataOverTime');
 
 %% 
 %plotting now contained here (so we can call it from other programs)
-sendToSlack = true;
+sendToSlack = false;
 plotCalculatedPeaks = false;
 plotStimRespByDateIndex(exptDate,exptIndex,sendToSlack,plotCalculatedPeaks)
 
-%%
-% %
-% % plotting
-% FigName = ['Stim-Resp plot - ' animalName '_' exptDate '_' exptIndex];
-% thisFigure = figure('Name',FigName);
-% for iROI = 1:nROIs
-%     % Plot avg traces
-%     subPlt(iROI) = subplot(2,nROIs,iROI);
-%     hold on
-%     for iStim = 1:length(stimSet)
-%         plot(plotTimeArray,stimSet(iStim).subMean(iROI,:));
-%     end
-%     for iUI = 1:length(pkSearchData(iROI).tPk)
-%         plot(pkSearchData(iROI).tPk(iUI),pkSearchData(iROI).yPk(iUI),'+r','MarkerSize',12);
-%         for iStim = 1:length(stimSet)
-%             plot(pkSearchData(iROI).peakTimeCalc(iUI,iStim),pkVals(iROI).data(iUI,iStim),'+b','MarkerSize',8);
-%         end
-%     end
-%     ax = gca;
-%     ax.XLim = [-tPreStim,tPostStim];
-%     ax.YLim = [1.05*plotMin(iROI),1.05*plotMax(iROI)];
-%     ax.XLabel.String = 'time(sec)';
-%     if iROI == 1
-%         ax.YLabel.String = 'avg dataSub (V)';
-%     end
-%     ax.Title.String = peakData.ROILabels{iROI};
-%     if iROI == nROIs
-%         %legend(ampLabel,'FontSize',6,'Location','NorthEast');
-%         %legend('boxoff');
-%     end
-% end
-% 
-% for iROI = 1:nROIs
-%     subplot(2,nROIs,nROIs+iROI)
-%     hold on
-%     legendLabs = [];
-%     nPks = size(pkVals(iROI).data,1);
-%     for iPk = 1:nPks
-%         legendLabs{iPk} = ['Pk ' num2str(iPk)];
-%     end
-%     for iPk = 1:nPks
-%         plot(stimArrayNumeric,pkSearchData(iROI).pkSign(iPk)*pkVals(iROI).data(iPk,:),'-o');
-%     end
-%     ax = gca;
-%     ax.XLabel.String = 'Stim intensity (\muA)';
-%     if iROI == 1
-%         ax.YLabel.String = 'Pk resp (V)';
-%     end
-%     legend(legendLabs,'FontSize',6,'Location','NorthWest');
-%     legend('boxoff');
-% end
-% saveas(thisFigure,[outPath FigName]);
-% saveas(thisFigure,[outPath2 FigName]);
-% 
-% fileName = ['M:\PassiveEphys\AnimalData\' animal '\' FigName];
-% print('-painters',fileName,'-r300','-dpng');
-% try
-%     desc = [FigName '  @Zarmeen Zahid'];
-%     sendSlackFig(desc,[fileName '.png']);
-% catch
-%     disp(['failed to upload ' fileName ' to Slack']);
-% end
 
