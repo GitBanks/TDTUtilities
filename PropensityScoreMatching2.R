@@ -16,8 +16,8 @@ library(optmatch)
 # Further adapted from Ziyad's work to be run with new pipeline 06/27/22-ZZ  
 
 
-animalName <- "EEG200"
-exptDate <- "22614"
+animalName <- "EEG233"
+exptDate <- "23131"
 
 calc_prop_score <- 
 function(
