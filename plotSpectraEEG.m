@@ -1,9 +1,16 @@
-function summaryData = plotSpectraEEG(animalName,exptDate,chansToExclude,setName)
+function summaryData = plotSpectraEEG(animalName,exptDate,chansToExclude,setName,reportPlot,skipTheActualPlotting)
 % test params
 % animalName = 'EEG200';
 % exptDate = '22614';
 % chansToExclude = NaN;
 % chansToExclude = 4;
+if ~exist('reportPlot','var')
+    reportPlot = true;
+end
+if ~exist('reportPlot','var')
+    skipTheActualPlotting = false;
+end
+
 
 switch setName
     % keep in mind if you create a new setName you need to create the folder
@@ -14,7 +21,10 @@ switch setName
         saveFolder = 'M:\PassiveEphys\AnimalData\psychedelics-2020\';
     case '2020_PSYLOCYBIN_LPS'
         saveFolder = 'M:\PassiveEphys\AnimalData\psyloLPS-2020\';
-
+    case 'Sigma1'
+        saveFolder = 'M:\PassiveEphys\AnimalData\Sigma1DMT\';
+    case 'combined'
+        saveFolder = 'M:\PassiveEphys\AnimalData\combined\';
     case 'ZZ'
         error('Need to set this up - spectra might not apply for ZZ mice');
     otherwise
@@ -94,8 +104,7 @@ end
 windowTimes = out.segmentTimeOfDay{1,1};
 [exptDate_dbForm] = houseConvertDateTo_dbForm(exptDate);
 windowTimes = datetime(exptDate_dbForm,'TimeZone','local')+windowTimes;
-
-[moveTimeDrugStruct] = getMoveTimeDrugbyAnimalDate(animalName,exptDate);
+[moveTimeDrugStruct] = getMoveTimeDrugbyAnimalDate(animalName,exptDate,false);
 moveTimes = moveTimeDrugStruct.fullTimeArrayTOD;
 moveArray = moveTimeDrugStruct.fullMoveStream;
 TheseDrugs = moveTimeDrugStruct.drugTOD;
@@ -215,6 +224,12 @@ summaryData.TheseDrugs = TheseDrugs;
 
 
 save([saveFolder animalName '_' exptDate '_bandpowerSet.mat'],"dataSet");
+
+
+if skipTheActualPlotting
+    return
+end
+
 
 
 
@@ -349,9 +364,19 @@ sgtitle([animalName '-' exptDate '-' savetext],'Interpreter', 'none');
 if ~exist([saveFolder 'avgspectra\'],"dir")
     mkdir([saveFolder 'avgspectra\']);
 end
-saveas(avgspectra,[saveFolder 'avgspectra\' animalName '-' exptDate '-' savetext '.fig']);
-saveas(avgspectra,[saveFolder 'avgspectra\' animalName '-' exptDate '-' savetext '.jpg']);
+fileName = [saveFolder 'avgspectra\' animalName '-' exptDate '-' savetext];
+saveas(avgspectra,[fileName '.fig']);
+saveas(avgspectra,[fileName '.jpg']);
 
+
+print('-painters',fileName,'-r300','-dpng');
+if reportPlot
+    try
+        sendSlackFig([animalName '-' exptDate '-' savetext],[fileName '.png']);
+    catch
+        disp(['failed to upload ' fileName ' to Slack']);
+    end
+end
 
 
 

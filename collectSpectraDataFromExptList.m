@@ -5,6 +5,7 @@ function collectSpectraDataFromExptList(setName)
 % maybe we should make this a global reference in getPathGlobal instead of
 % these switches
 % setName = 'FLVX'
+% setName = 'combined'
 
 switch setName
     case 'FLVX' % working
@@ -19,6 +20,14 @@ switch setName
         tname = 'M:\PassiveEphys\mouseEEG\mouseGroupInfo.xlsx';
         saveFileName = 'M:\PassiveEphys\mouseEEG\LPS2020BandpowerData.mat';
 
+    case 'Sigma1' % untested - this is framework only
+        tname = 'M:\PassiveEphys\mouseEEG\Sigma1GroupInfo.xlsx';
+        saveFileName = 'M:\PassiveEphys\mouseEEG\Sigma1BandpowerData.mat';
+
+    case 'combined' % untested - this is framework only
+        tname = 'M:\PassiveEphys\mouseEEG\combinedGroupInfo.xlsx';
+        saveFileName = 'M:\PassiveEphys\mouseEEG\combinedBandpowerData.mat';
+
     case 'ZZ' % untested - this is framework only
         tname = 'M:\PassiveEphys\mouseEEG\ZZGroupInfo.xlsx';
         saveFileName = 'M:\PassiveEphys\mouseEEG\ZZBandpowerData.mat';
@@ -32,7 +41,8 @@ end
 
 % this will take a while since it loads movement for each day in addition
 % to the drug info, etc.
-workingTable = getExptSummaryFromTable(tname,true);
+disp('Loading movement for:');
+workingTable = getExptSummaryFromTable(tname);
 % Trim workingTable into just the 'approved' experiments
 
 switch setName
@@ -74,7 +84,21 @@ switch setName
         end
 
     case 'LPS2020'
-       
+
+    case 'Sigma1'
+%         for ii = 1:size(workingTable,2)
+%             workingTable(ii).group
+%         end
+        % we've added a .group assignment a few levels above this, so just
+        % pass those values along
+%         for ii = 1:size(workingTable,2)
+%             workingTable(ii).group = nan;
+%             if contains(workingTable(ii).drugTOD(1).what,'saline')
+%                 workingTable(ii).group = 1;
+%             end
+%         end
+    case 'combined'
+
     case 'ZZ'
        
     otherwise
@@ -82,11 +106,15 @@ switch setName
 end
 
 
+disp('Loading spectra data for:');
 for ii = 1:size(workingTable,2)
     animalName = workingTable(ii).Animal;
     exptDate = workingTable(ii).Date;
+    disp([animalName ' ' exptDate]);
     chansToExclude = workingTable(ii).ChansToExclude;
-    mattsData = plotSpectraEEG(animalName,exptDate,chansToExclude,setName);
+    reportPlot = false;
+    skipTheActualPlotting = true;
+    mattsData = plotSpectraEEG(animalName,exptDate,chansToExclude,setName,reportPlot,skipTheActualPlotting);
     workingTable(ii).data = mattsData;
 end
 

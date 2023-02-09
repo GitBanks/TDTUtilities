@@ -1,4 +1,4 @@
-function dataStruct = getExptSummaryFromTable(tname,showMove)
+function dataStruct = getExptSummaryFromTable(tname,showMove,overwriteMove)
 % movementDataStruct = getMoveExptSummaryFromTable(tname)
 % GIVEN: a table containing animal names (string pointing to xlsx file.
 % Looks for animalName column)
@@ -36,12 +36,15 @@ function dataStruct = getExptSummaryFromTable(tname,showMove)
 % but I should instead create a standalone time vector (instead of leaving
 % it to him to compute), and adjust it based on time of injection
 % test variables:
-% tname = 'M:\PassiveEphys\mouseEEG\FLVXGroupInfo.xlsx';
+% tname = 'M:\PassiveEphys\mouseEEG\combinedGroupInfo.xlsx';
 % showMove = false
 
 % check for variables - input parameters
 if ~exist("showMove","var")
-    showMove = false;
+    showMove = true;
+end
+if ~exist("overwriteMove","var")
+    overwriteMove = false;
 end
 %1. load this table
 workingTable = readtable(tname);
@@ -51,7 +54,6 @@ workingTable = readtable(tname);
 % workingTable.animalList = T.animalName;
 % workingTable.Dates = T.Dates;
 % workingTable.chansToExclude = T.chansToExclude;
-
 
 for iExpt = 1:size(workingTable,1)
     thisAnimal = workingTable.animalName{iExpt};
@@ -65,18 +67,17 @@ for iExpt = 1:size(workingTable,1)
     %2. get list of indices
     % workingList = getExperimentsByAnimal(thisAnimal);
     % workingList = getExperimentsByAnimalAndDate(thisAnimal,thisDate);
-
-    % you could add a dataStruct(iExpt).group = workingTable.group for a
-    % manually entered grouping - it would make
-    % collectSpectraDataFromExptList easier
-
-
-
     dataStruct(iExpt).Animal = thisAnimal;
     dataStruct(iExpt).Date = thisDate;
+    % added a way to grab manually entered groupings 
+    if any(ismember(workingTable.Properties.VariableNames,'groupID'))
+        dataStruct(iExpt).group = workingTable.groupID(iExpt);
+    end
     dataStruct(iExpt).ChansToExclude = workingTable.chansToExclude(iExpt);
     if showMove
-        [S] = getMoveTimeDrugbyAnimalDate(thisAnimal,thisDate);
+
+        [S] = getMoveTimeDrugbyAnimalDate(thisAnimal,thisDate,overwriteMove);
+        
         dataStruct(iExpt).treatments = S.treatments;
         dataStruct(iExpt).fullTimeArrayTOD = S.fullTimeArrayTOD;
         dataStruct(iExpt).drugTOD = S.drugTOD;
