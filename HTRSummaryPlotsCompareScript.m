@@ -66,20 +66,22 @@ for iTreatment = 1:size(treatment,1)
             timeSteps = [ 15 30 45 ];
             xticks(timeSteps/binSize); % 2 min
             xticklabels({'15' '30' '45' });
+            nMice = hourData(iHour).nMice;
             if iHour == 1
                 ylabel('Cumulative HTR');
-                title(['Pre inj  n=' num2str(hourData(iHour).nMice)]);
+                title(['Pre inj  n=' num2str(nMice)]);
             else
-                title(['Hour ' num2str(iHour) '  n=' num2str(hourData(iHour).nMice)]);
+                title(['Hour ' num2str(iHour) '  n=' num2str(nMice)]);
             end
             counts = hist(Y,nBins);
             maxHistY = max(maxHistY,max(counts));
-            meanHist(plotIndex,:) = counts/hourData(iHour).nMice;
+            meanHist(plotIndex,:) = counts/nMice;
             subtightplot(2,nHours,plotIndex+nHours);
-            smoothedMean = smooth(counts/hourData(iHour).nMice);
+            smoothedMean = smooth(counts/nMice);
             maxMeanY = max(maxMeanY,max(smoothedMean));
             for iError = 1:size(counts,2)
-                err(iError) = std(smoothedMean)/(sqrt(counts(iError)));
+%                 err(iError) = std(smoothedMean)/(sqrt(counts(iError)));
+                err(iError) = std(smoothedMean)/(sqrt(nMice));
             end
             plot(centers/60,smoothedMean,'ro');
             errorbar(centers/60,smoothedMean,err,'r-o');
@@ -125,6 +127,7 @@ for iTreatment = 1:size(treatment,1)
     %plot(centers/60,smoothedMean,symbolArray{iTreatment});
     errorbar(centers/60,smoothedMean,err)%,symbolArray{iTreatment});
     hold on
+
 end
 legend(treatmentLegend{1:nTreatments,:},'interpreter','none');
 xlim([-60,60]);
@@ -135,6 +138,7 @@ xlabel('minutes');
 
 for iTreatment = 1:size(treatment,1)
     postDrugChange(iTreatment) = S(iTreatment).fullSmoothedMean(13)-S(iTreatment).fullSmoothedMean(8);
+    postDrugChangeError(iTreatment) = postDrugChange(iTreatment)/(sqrt(nMice));
 end
 
 
@@ -147,9 +151,13 @@ xticklabels(treatmentLegend);
 
 
 figure
-bar(sortedPostDrugChange);
+b = bar(sortedPostDrugChange);
+xtips1 = b(1).XEndPoints;
+ytips1 = b(1).YEndPoints;
+labels1 = string(round(b(1).YData,1));
+text(xtips1,ytips1,labels1,'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom')
 xticklabels(treatmentLegend(indexPostDrugSorted));
-
 
 
 
