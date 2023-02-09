@@ -46,7 +46,7 @@ for iFile = 1:size(blocks,2)
     disp(['Loading ' blocks{iFile}]);
     try  % We need to account for both 'regular' and EEG data.  I tried using isfile, but it wouldn't correctly report back if it's a file or not
         fileA = [getPathGlobal('importedData') '20' blocks{iFile}(1:2) '\' blocks{iFile} '\'  blocks{iFile} '_data0'];
-        dataFile = load(fileA);
+        load(fileA);
     catch
         fileA = [getPathGlobal('importedData') '20' blocks{iFile}(1:2) '\' blocks{iFile} '\'  blocks{iFile} '_EEGdata0'];
         load(fileA);
