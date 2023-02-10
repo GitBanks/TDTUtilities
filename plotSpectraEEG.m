@@ -7,7 +7,7 @@ function summaryData = plotSpectraEEG(animalName,exptDate,chansToExclude,setName
 if ~exist('reportPlot','var')
     reportPlot = true;
 end
-if ~exist('reportPlot','var')
+if ~exist('skipTheActualPlotting','var')
     skipTheActualPlotting = false;
 end
 
