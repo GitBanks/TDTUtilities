@@ -104,7 +104,7 @@ if overwriteMove || ~isfile(movementFileName)
             drug(iDrug).what = strrep(drug(iDrug).what,'_conc','');    
         end
         if contains(drug(iDrug).what,'Anlg')
-            drug(iDrug).what = treatments{iTreatment}(6:end);
+            drug(iDrug).what = drug(iDrug).what(6:end);
         end
         if contains(drug(iDrug).what,'_vol')
             drug(iDrug).what = strrep(drug(iDrug).what,'_vol','');
