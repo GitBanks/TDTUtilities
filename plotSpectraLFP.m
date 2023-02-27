@@ -1,38 +1,12 @@
-function summaryData = plotSpectraEEG(animalName,exptDate,chansToExclude,setName,reportPlot,skipTheActualPlotting)
+function summaryData = plotSpectraLFP(animalName,exptDate,chansToExclude)
 % test params
-% animalName = 'EEG200';
-% exptDate = '22614';
-% chansToExclude = NaN;
-% chansToExclude = 4;
-if ~exist('reportPlot','var')
-    reportPlot = true;
-end
-if ~exist('skipTheActualPlotting','var')
-    skipTheActualPlotting = false;
-end
+% animalName = 'ZZ14';
+% exptDate = '22120';
+% exptDate = '22228';
+% chansToExclude = nan
 
-
-switch setName
-    % keep in mind if you create a new setName you need to create the folder
-    % with subfolders: spectrogram\ bandpower\ and avgspectra\
-    case 'FLVX'
-        saveFolder = 'M:\PassiveEphys\AnimalData\Fluvoxamine-LPS\';
-    case 'PSY2020'
-        saveFolder = 'M:\PassiveEphys\AnimalData\psychedelics-2020\';
-    case '2020_PSYLOCYBIN_LPS'
-        saveFolder = 'M:\PassiveEphys\AnimalData\psyloLPS-2020\';
-    case 'Sigma1'
-        saveFolder = 'M:\PassiveEphys\AnimalData\Sigma1DMT\';
-    case 'combined'
-        saveFolder = 'M:\PassiveEphys\AnimalData\combined\';
-    case 'ZZ'
-        error('Need to set this up - spectra might not apply for ZZ mice');
-    otherwise
-        error('Need an appropriate table name from a recognized list: ''FLVX'' or ''PSY2020'' so far ');
-end
-
-
-
+% this is just for Zarmeen's data
+saveFolder = 'M:\Zarmeen\data\spectra\';
 
 if iscell(chansToExclude)
     chansToExclude = chansToExclude{:};
@@ -44,16 +18,19 @@ end
 % save some specific data for Matt
 summaryData = struct;
 
-%legLabels = {'Ch1','Ch2','Ch3','Ch4','Ch5','Ch6'};
-legLabels = {'Pre inj 1','Pre inj 2','Post inj 1','Post inj 2','Post inj 3','Post inj 4'};
-plotTitleLabels = {'R Anterior','R Posterior','L Posterior','L Anterior'};
+
+
+% legLabels = {'Ch1','Ch2','Ch3','Ch4','Ch5','Ch6'};
+% legLabels = {'Pre inj','Post inj 1','Post inj 2','Post inj 3','Post inj 4','Post inj 5','Post inj 6','Post inj 7'};
+% plotTitleLabels = {'R Anterior','R Posterior','L Posterior','L Anterior'};
 % no, do better.  load this from database!
 % we're also going to run into trouble if this isn't the EEG.  What we need
 % to do is reference the mapping files we make for each animal, then base
 % which subplots to make on that...
 
+
 folder = ['M:\PassiveEphys\AnimalData\initial\' animalName '\']; % data from the pipeline 
-chanEEGRemap = [2,4,3,1]; % direct channels to specific subplots so that channels line up with their physical locations
+chanEEGRemap = [1,2,3,4,5,6]; % direct channels to specific subplots so that channels line up with their physical locations
 % the file will be some crazy thing like this:
 % 'EEG210_22629-001,22629-003,22629-005,22629-007,22629-009,22629-011 wPLI_dbt'; 
 % instead, we'll search for it.
@@ -104,22 +81,49 @@ end
 windowTimes = out.segmentTimeOfDay{1,1};
 [exptDate_dbForm] = houseConvertDateTo_dbForm(exptDate);
 windowTimes = datetime(exptDate_dbForm,'TimeZone','local')+windowTimes;
-[moveTimeDrugStruct] = getMoveTimeDrugbyAnimalDate(animalName,exptDate,false);
+
+[moveTimeDrugStruct] = getMoveTimeDrugbyAnimalDate(animalName,exptDate);
 moveTimes = moveTimeDrugStruct.fullTimeArrayTOD;
 moveArray = moveTimeDrugStruct.fullMoveStream;
 TheseDrugs = moveTimeDrugStruct.drugTOD;
 
-% t = 0 should be injection;  
-% WARNING!  this assumes that the last injection is the one to ref as t=0
-adjTimes = windowTimes-TheseDrugs(end).time;
-adjMoveTimes = moveTimes-TheseDrugs(end).time;
-% we will need to break apart the avgSpectra based on drug injection times,
-% then hour lengths after 2nd injection, so grab these times here, too
-for iDrugInj = 1:size(TheseDrugs,2)
-    TheseDrugs(iDrugInj).adjTime = TheseDrugs(iDrugInj).time-TheseDrugs(end).time;
-    avgSpectraBreakIndex(iDrugInj) = find(adjTimes>TheseDrugs(iDrugInj).adjTime,1);
-    movementBreakIndex(iDrugInj) = find(adjMoveTimes>TheseDrugs(iDrugInj).adjTime,1);
+
+
+
+% ZARMEEN EDITS TODO
+% OK, finding the breaks for Zarmeen's set doesn;t work cleanly, but we can
+% jump to the spectrograms (last plot) below for now.  The next step is to
+% fix the break points and use them for the other two (first two) plots
+% we can keep the for iDrugInj = 1:size(TheseDrugs,2) loop to adjust the
+% firt times, but it's a little weird.  needs an overhaul.
+%
+% % t = 0 should be injection;  
+% % WARNING!  this assumes that the last injection is the one to ref as t=0
+
+
+try
+    adjTimes = windowTimes-TheseDrugs(end).time;
+    adjMoveTimes = moveTimes-TheseDrugs(end).time;
+    % we will need to break apart the avgSpectra based on drug injection times,
+    % then hour lengths after 2nd injection, so grab these times here, too
+    for iDrugInj = 1:size(TheseDrugs,2)
+        TheseDrugs(iDrugInj).adjTime = TheseDrugs(iDrugInj).time-TheseDrugs(end).time;
+        avgSpectraBreakIndex(iDrugInj) = find(adjTimes>TheseDrugs(iDrugInj).adjTime,1);
+        movementBreakIndex(iDrugInj) = find(adjMoveTimes>TheseDrugs(iDrugInj).adjTime,1);
+    end
+catch
+    error('Not set to handle no injection yet!!!!!')
+%     disp('HEY!!!! there was no drug information for this day.  I wrote this assuming a drug was given.');
+%     disp('I assume you don;t want it to crash here, so I''m seeting t=0 to be the start of REC' );
+%     pause(2);
+%     adjTimes = windowTimes;
+%     adjMoveTimes = moveTimes;
+%     avgSpectraBreakIndex(1) = 1;
+%     movementBreakIndex(1) = 1;
 end
+
+
+
 
 % continue finding breakpoints
 moreTime = true;
@@ -133,37 +137,50 @@ while moreTime
     if adjTimes(end) < nextTime
         moreTime = false;
     end
+%     keyboard
 end
 
+% 2/10/23 I think the above is workng ???? pls test
+
+
+
+
+% ZARMEEN EDITS TODO
+% need to totally rethink this for Zarmeen's data - it assumes the channels
+% counts AND hours are set up as EEG
+% we REALLY want this corrected:   dataSet(iHour).avgSpectra(:,iChan)
+% so step through the iHour based on index instead of the goofy hours
+% established above.
 
 % combine front and rear for bandpower analysis
 % warning!  hardcoded channels for now!!!  fix this via database!!!!
 % I don;t like the way I wrote this, but if either of a front/rear pair is
 % naned out, just make the final 'combined' data to good channel.  I don't
 % know if anything needs to be done otherwise (like error / scaling thing)
-if any(any(isnan(specdata(1).data))) || any(any(isnan(specdata(4).data)))
-    if any(any(isnan(specdata(1).data))) 
-        combSpecdata(1).data = specdata(4).data;
-    else
-        combSpecdata(1).data = specdata(1).data;
-    end
-else
-    combSpecdata(1).data = (specdata(1).data+specdata(4).data)/2;
-end
-if any(any(isnan(specdata(2).data))) || any(any(isnan(specdata(3).data)))
-    if any(any(isnan(specdata(2).data)))
-        combSpecdata(2).data = specdata(3).data;
-    else
-        combSpecdata(2).data = specdata(2).data;
-    end
-else
-    combSpecdata(2).data = (specdata(2).data+specdata(3).data)/2;
-end
+% if any(any(isnan(specdata(1).data))) || any(any(isnan(specdata(4).data)))
+%     if any(any(isnan(specdata(1).data))) 
+%         combSpecdata(1).data = specdata(4).data;
+%     else
+%         combSpecdata(1).data = specdata(1).data;
+%     end
+% else
+%     combSpecdata(1).data = (specdata(1).data+specdata(4).data)/2;
+% end
+% if any(any(isnan(specdata(2).data))) || any(any(isnan(specdata(3).data)))
+%     if any(any(isnan(specdata(2).data)))
+%         combSpecdata(2).data = specdata(3).data;
+%     else
+%         combSpecdata(2).data = specdata(2).data;
+%     end
+% else
+%     combSpecdata(2).data = (specdata(2).data+specdata(3).data)/2;
+% end
 
 
 avgSpectraBreakIndex = [1 avgSpectraBreakIndex];
 movementBreakIndex = [1 movementBreakIndex];
 
+nChans = size(specdata,2);
 for iHour = 1:size(avgSpectraBreakIndex,2)-1
     iStart = avgSpectraBreakIndex(iHour);
     iStop = avgSpectraBreakIndex(iHour+1)-1;
@@ -173,40 +190,49 @@ for iHour = 1:size(avgSpectraBreakIndex,2)-1
     dataSet(iHour).movement = moveArray(movementBreakIndex(iHour):movementBreakIndex(iHour+1)-1);
     dataSet(iHour).movementTimes = adjMoveTimes(movementBreakIndex(iHour):movementBreakIndex(iHour+1)-1);
     dataSet(iHour).time = adjTimes(iStart:iStop);
-    for iChan = 1:2 % bandpower only uses front and rear. this should be done better, but...
+    for iChan = 1:nChans % bandpower only uses front and rear. this should be done better, but...
         % also break spectra into bands like the undergrad homework assignment:
         % will be much better to break this out into a function so we're
         % not repeating ourselves, but this will work for now.
         % Delta
         bounds(1) = find(freqLabels>=FreqBands.Limits.delta(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.delta(2),1);
-        dataSet(iHour).delta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        dataSet(iHour).avgDelta(:,iChan) = mean(dataSet(iHour).delta(:,iChan));
+%         dataSet(iHour).delta(:,iChan) = specdata(iChan).data(bounds(1):bounds(2),iStart:iStop);
+        dataSet(iHour).avgDelta(:,iChan) = mean(specdata(iChan).data(bounds(1):bounds(2),iStart:iStop));
         % Theta
         bounds(1) = find(freqLabels>=FreqBands.Limits.theta(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.theta(2),1);
-        dataSet(iHour).theta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        dataSet(iHour).avgTheta(:,iChan) = mean(dataSet(iHour).theta(:,iChan));
+%         dataSet(iHour).theta(:,iChan) = specdata(iChan).data(bounds(1):bounds(2),iStart:iStop);
+        dataSet(iHour).avgTheta(:,iChan) = mean(specdata(iChan).data(bounds(1):bounds(2),iStart:iStop));
         % Alpha
         bounds(1) = find(freqLabels>=FreqBands.Limits.alpha(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.alpha(2),1);
-        dataSet(iHour).alpha(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        dataSet(iHour).avgAlpha(:,iChan) = mean(dataSet(iHour).alpha(:,iChan));
+%         dataSet(iHour).alpha(:,iChan) = specdata(iChan).data(bounds(1):bounds(2),iStart:iStop);
+        dataSet(iHour).avgAlpha(:,iChan) = mean(specdata(iChan).data(bounds(1):bounds(2),iStart:iStop));
         % Beta
         bounds(1) = find(freqLabels>=FreqBands.Limits.beta(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.beta(2),1);
-        dataSet(iHour).beta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        dataSet(iHour).avgBeta(:,iChan) = mean(dataSet(iHour).beta(:,iChan));
+%         dataSet(iHour).beta(:,iChan) = specdata(iChan).data(bounds(1):bounds(2),iStart:iStop);
+        dataSet(iHour).avgBeta(:,iChan) = mean(specdata(iChan).data(bounds(1):bounds(2),iStart:iStop));
         % Gamma
         bounds(1) = find(freqLabels>=FreqBands.Limits.gamma(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.highGamma(2),1);
-        dataSet(iHour).gamma(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        dataSet(iHour).avgGamma(:,iChan) = mean(dataSet(iHour).gamma(:,iChan));
+%         dataSet(iHour).gamma(:,iChan) = specdata(iChan).data(bounds(1):bounds(2),iStart:iStop);
+        dataSet(iHour).avgGamma(:,iChan) = mean(specdata(iChan).data(bounds(1):bounds(2),iStart:iStop));
     end
 end
 
 
-% this is really ugly hardcoding.  FIX THIS!
+
+
+% ZARMEEN EDITS TODO
+% we don;t care about pre-post hours, but maybe Z wants something else
+% saved?
+
+% controlHour = 1;
+% postDrugManipHour = 4;
+
+% % this is really ugly hardcoding.  FIX THIS!
 summaryData.pre.move = mean(dataSet(1).movement);
 summaryData.post.move = mean(dataSet(4).movement);
 summaryData.pre.avgDelta = dataSet(1).avgDelta;
@@ -220,25 +246,17 @@ summaryData.post.avgAlpha = dataSet(4).avgAlpha;
 summaryData.post.avgBeta = dataSet(4).avgBeta;
 summaryData.post.avgGamma = dataSet(4).avgGamma;
 summaryData.TheseDrugs = TheseDrugs;
-
-
-
+% 
+% 
+% 
 save([saveFolder animalName '_' exptDate '_bandpowerSet.mat'],"dataSet");
 
 
-if skipTheActualPlotting
-    return
-end
+% end of 2/10/23
 
 
-
-
-
-% % normalize (Bryan is working on this)
-% norm =  length(data) * bandTFR.bandwidth / (1+bandTFR.upsampleFx);
-% PSD = sum(abs(bandTFR.blrep).^2)/norm;
-
-
+% ZARMEEN EDITS TODO
+% this will work once the dataSet loop is corrected to count index
 
 %  ======= Plotting bandpower =============================================
 
@@ -254,34 +272,35 @@ bandPower = figure('Name',titletext);
 for iHour = 1:size(dataSet,2)
     subtightplot(6,1,1);
     title(titletext);
-    plot(dataSet(iHour).time,dataSet(iHour).delta(:,1),"Color",'r');
+    plot(dataSet(iHour).time,dataSet(iHour).avgDelta(:,1),"Color",'r');
     hold on
-    plot(dataSet(iHour).time,dataSet(iHour).delta(:,2),"Color",'b');
+    plot(dataSet(iHour).time,dataSet(iHour).avgDelta(:,3),"Color",'b');
     ylabel('delta power');
 
     subtightplot(6,1,2);
-    plot(dataSet(iHour).time,dataSet(iHour).theta(:,1),"Color",'r');
+    plot(dataSet(iHour).time,dataSet(iHour).avgTheta(:,1),"Color",'r');
     hold on
-    plot(dataSet(iHour).time,dataSet(iHour).theta(:,2),"Color",'b');
+    plot(dataSet(iHour).time,dataSet(iHour).avgTheta(:,3),"Color",'b');
     ylabel('theta power');
 
     subtightplot(6,1,3);
-    plot(dataSet(iHour).time,dataSet(iHour).alpha(:,1),"Color",'r');
+    plot(dataSet(iHour).time,dataSet(iHour).avgAlpha(:,1),"Color",'r');
     hold on
-    plot(dataSet(iHour).time,dataSet(iHour).alpha(:,2),"Color",'b');
+    plot(dataSet(iHour).time,dataSet(iHour).avgAlpha(:,3),"Color",'b');
     ylabel('alpha power');
 
     subtightplot(6,1,4);
-    plot(dataSet(iHour).time,dataSet(iHour).beta(:,1),"Color",'r');
+    plot(dataSet(iHour).time,dataSet(iHour).avgBeta(:,1),"Color",'r');
     hold on
-    plot(dataSet(iHour).time,dataSet(iHour).beta(:,2),"Color",'b');
+    plot(dataSet(iHour).time,dataSet(iHour).avgBeta(:,3),"Color",'b');
     ylabel('beta power')
 
     subtightplot(6,1,5);
-    plot(dataSet(iHour).time,dataSet(iHour).gamma(:,1),"Color",'r');
+    plot(dataSet(iHour).time,dataSet(iHour).avgGamma(:,1),"Color",'r');
     hold on
-    plot(dataSet(iHour).time,dataSet(iHour).gamma(:,2),"Color",'b');
+    plot(dataSet(iHour).time,dataSet(iHour).avgGamma(:,3),"Color",'b');
     ylabel('gamma power');
+    ylim([0,1e-8])
 
     subtightplot(6,1,6);
     plot(adjMoveTimes, moveArray);
@@ -305,9 +324,12 @@ saveas(bandPower,[saveFolder 'bandpower\' animalName '-' exptDate '-' savetext '
 
 
 
+
+
+
+% ZARMEEN EDITS TODO
+% this will work once the dataSet loop is corrected to count index
 % ======= Plotting average spectral power =================================
-
-
 if size(TheseDrugs,2) > 1
     titletext = [animalName ' average spectral power for ' exptDate ' ' TheseDrugs(1).what ' & ' TheseDrugs(2).what];
     savetext = [TheseDrugs(1).what '_' TheseDrugs(2).what];
@@ -325,7 +347,7 @@ end
 
 avgspectra = figure('Name',titletext); 
 for iChan = 1:nChans
-    subplot(2,2,chanEEGRemap(iChan));
+    subplot(3,2,chanEEGRemap(iChan));
 %     subtightplot(2,2,chanEEGRemap(iChan),[0.04,0.01]);
     for iHour = 1:size(dataSet,2)
         loglog(freqLabels,dataSet(iHour).avgSpectra(:,iChan)); 
@@ -335,48 +357,38 @@ for iChan = 1:nChans
     %ylabel('Power (mV^2)');  % this is wrong... stop showing the wrong thing...
     
     ylim([getYMin*1.1,getYMax*1.1]);
-    title(['Ch' num2str(iChan) ' ' plotTitleLabels{iChan}],'Interpreter', 'none');
+    % title(['Ch' num2str(iChan) ' ' plotTitleLabels{iChan}],'Interpreter', 'none');  
 end
 
 
-for iChan = 1:nChans
-%     subtightplot(2,2,iChan,[0.04,0.01]);
-    subplot(2,2,iChan);
-
-    if iChan == 1
-        set(gca,'xticklabel',{[]});
-    end
-    if iChan == 2
-        set(gca,'xticklabel',{[]});
-        set(gca,'yticklabel',{[]});
-    end
-    if iChan == 3
-        xlabel('Freq');
-        legend(legLabels,'Location','southwest','FontSize',5);
-        ylabel('Power (mV^2)')
-    end
-    if iChan == 4
-        set(gca,'yticklabel',{[]});
-    end
-end
+% for iChan = 1:nChans
+% %     subtightplot(2,2,iChan,[0.04,0.01]);
+%     subplot(3,2,iChan);
+% 
+%     if iChan == 1
+%         set(gca,'xticklabel',{[]});
+%     end
+%     if iChan == 2
+%         set(gca,'xticklabel',{[]});
+%         set(gca,'yticklabel',{[]});
+%     end
+%     if iChan == 3
+%         xlabel('Freq');
+%         % legend(legLabels,'Location','southwest','FontSize',5);
+%         ylabel('Power (mV^2)')
+%     end
+%     if iChan == 4
+%         set(gca,'yticklabel',{[]});
+%     end
+% end
 sgtitle([animalName '-' exptDate '-' savetext],'Interpreter', 'none');
 
 if ~exist([saveFolder 'avgspectra\'],"dir")
     mkdir([saveFolder 'avgspectra\']);
 end
-fileName = [saveFolder 'avgspectra\' animalName '-' exptDate '-' savetext];
-saveas(avgspectra,[fileName '.fig']);
-saveas(avgspectra,[fileName '.jpg']);
+saveas(avgspectra,[saveFolder 'avgspectra\' animalName '-' exptDate '-' savetext '.fig']);
+saveas(avgspectra,[saveFolder 'avgspectra\' animalName '-' exptDate '-' savetext '.jpg']);
 
-
-print('-painters',fileName,'-r300','-dpng');
-if reportPlot
-    try
-        sendSlackFig([animalName '-' exptDate '-' savetext],[fileName '.png']);
-    catch
-        disp(['failed to upload ' fileName ' to Slack']);
-    end
-end
 
 
 

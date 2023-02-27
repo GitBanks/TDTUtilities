@@ -26,18 +26,24 @@ specificHours = [1,4];
 
 % TODO! make this a flexible parameter or global path check from a set type
 % input maybe
-loadFileFolder = 'M:\PassiveEphys\AnimalData\Fluvoxamine-LPS\';
 
-loadFile = [loadFileFolder animalName '_' exptDate '_bandpowerSet.mat'];
 try
+    loadFileFolder = 'M:\PassiveEphys\AnimalData\Fluvoxamine-LPS\';
+    loadFile = [loadFileFolder animalName '_' exptDate '_bandpowerSet.mat'];
     load(loadFile,"dataSet");
 catch
-    error(['File not found' loadFile]);
+    try
+        loadFileFolder = 'M:\PassiveEphys\AnimalData\combined\';
+        loadFile = [loadFileFolder animalName '_' exptDate '_bandpowerSet.mat'];
+        load(loadFile,"dataSet");
+    catch
+        error(['File not found' loadFile]);
+    end
 end
+
 
 treatments = getTreatmentInfo(animalName,exptDate);
 thisDrug = treatments.pars{1};
-
 
 theseExptIndices = getExperimentsByAnimalAndDate(animalName,exptDate);
 
