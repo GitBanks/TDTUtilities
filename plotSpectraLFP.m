@@ -5,6 +5,14 @@ function summaryData = plotSpectraLFP(animalName,exptDate,chansToExclude)
 % exptDate = '22228';
 % chansToExclude = nan
 
+% problem days:
+% animalName = 'ZZ09';
+% exptDate = '21804';
+% animalName = 'ZZ10';
+% exptDate = '21804';
+% chansToExclude = nan
+
+
 % this is just for Zarmeen's data
 saveFolder = 'M:\Zarmeen\data\spectra\';
 
@@ -180,6 +188,8 @@ end
 avgSpectraBreakIndex = [1 avgSpectraBreakIndex];
 movementBreakIndex = [1 movementBreakIndex];
 
+
+
 nChans = size(specdata,2);
 for iHour = 1:size(avgSpectraBreakIndex,2)-1
     iStart = avgSpectraBreakIndex(iHour);
@@ -303,15 +313,17 @@ for iHour = 1:size(dataSet,2)
     ylim([0,1e-8])
 
     subtightplot(6,1,6);
-    plot(adjMoveTimes, moveArray);
+    plot(dataSet(iHour).movementTimes, dataSet(iHour).movement,"Color",'b');
+    hold on
     ylabel('Movement');
     ylim([0,max(moveArray)*1.2]);
+    xlim([dataSet(1).movementTimes(1),dataSet(end).movementTimes(end)]);
 end
 subtightplot(6,1,5);
 legend({'Front','Rear'});
-for i = 1:6
+for i = 1:5
     subtightplot(6,1,i);
-    xlim([adjMoveTimes(1),adjMoveTimes(end)]);
+    xlim([dataSet(1).time(1),dataSet(end).time(end)]);
 end
 
 
@@ -321,6 +333,51 @@ if ~exist([saveFolder 'bandpower\'],"dir")
 end
 saveas(bandPower,[saveFolder 'bandpower\' animalName '-' exptDate '-' savetext '.fig']);
 saveas(bandPower,[saveFolder 'bandpower\' animalName '-' exptDate '-' savetext '.jpg']);
+
+
+%  ======= Plotting smoothed bandpower a la Ziyad's paper =================
+
+titletext = [animalName ' Bandpower over time for ' exptDate ' ' TheseDrugs(1).what];
+savetext = TheseDrugs(1).what;
+bandPowerSmoothed = figure('Name',titletext); 
+for iHour = 1:size(dataSet,2)
+
+    subtightplot(3,1,1);
+    title(titletext);
+    plot(dataSet(iHour).time,dataSet(iHour).avgDelta(:,1),"Color",'r');
+    hold on
+    plot(dataSet(iHour).time,dataSet(iHour).avgDelta(:,3),"Color",'b');
+    ylabel('delta power');
+
+    subtightplot(3,1,2);
+    plot(dataSet(iHour).time,smooth(dataSet(iHour).avgDelta(:,1),30),"Color",'r');
+    hold on
+    plot(dataSet(iHour).time,smooth(dataSet(iHour).avgDelta(:,3),30),"Color",'b');
+    ylabel(' smoothed delta power');
+
+    subtightplot(3,1,3);
+    plot(adjMoveTimes, moveArray);
+    ylabel('Movement');
+    ylim([0,max(moveArray)*1.2]);
+    xlim([adjMoveTimes(1),adjMoveTimes(end)]);
+end
+subtightplot(3,1,3);
+legend({'Front','Rear'});
+for i = 1:2
+    subtightplot(3,1,i);
+    xlim([adjTimes(1),adjTimes(end)]);
+end
+
+
+
+
+
+
+
+
+
+
+
 
 
 
