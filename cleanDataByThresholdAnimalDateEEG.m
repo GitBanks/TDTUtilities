@@ -1,0 +1,86 @@
+function foundPoints = cleanDataByThresholdAnimalDateEEG(animalName,exptDate)
+% for now let's use the method we just used in QA to look for reasonable
+% outlier magnitudes:
+% animalName = 'EEG242';
+% exptDate = '23210';
+% you can use the output foundPoints to trigger a rerunning of specAnalysis
+% or otherwise generate a list of animals that have had points cleaned.
+
+% careful! these are a few hardcoded thresholds which will be much
+% different if we're not giving it EEG data recorded by Synapse.  Which is
+% why I called this function 'EEG'
+secondsAroundNoiseToErase = 4;
+minThreshold = 0.0015;
+STDmultiplier = 3;
+
+foundPoints = false;
+
+findExptType = 'Spon';
+[operationList] = getExperimentsByAnimalAndDate(animalName,exptDate,findExptType);
+year = exptDate(1:2);
+
+for i=1:size(operationList,1)
+    dirStr = [getPathGlobal('importedData') '20' year '\' operationList{i,1} '\'];
+    load([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
+    [nChans,nPts] = size(ephysData);
+    t = (0:nPts-1)*(dT); % time array for EEG signal
+    % save([dirStr '\' operationList{i,1} '_BACKUP_D_ata0.mat'],"ephysData","dT");
+    % find and remove any big outliers
+    % here's the threshold
+    blankingWindow = round(1/dT)*secondsAroundNoiseToErase;
+    for iChan = 1:nChans
+        % check this noiselimit against some threshold - take the
+        % MAX to prevent overselection of points
+        noiseLimit = std(ephysData(iChan,:),'omitnan')*STDmultiplier;
+        if minThreshold > noiseLimit
+            noiseLimit = minThreshold;
+            display([num2str(STDmultiplier) ' SD is below our minimum threshold.' 'Noise threshold will be: ' num2str(noiseLimit)]); 
+        else
+            display(['Noise threshold will be: ' num2str(noiseLimit)]); 
+        end
+        % here we find points.  we're taking abs to catch both + and - going noise
+        setNan = abs(ephysData(iChan,:)) >noiseLimit;
+        % next, let's be thorough and trim a few seconds off each side
+        tempSetNanArray = setNan;
+        for ii = blankingWindow:size(setNan,2)-blankingWindow
+            if setNan(ii)
+                tempSetNanArray(ii-blankingWindow:ii+blankingWindow) = true;
+            end
+        end
+    end
+    % plot to show our progress
+    figure('Units','Normalized','Position',[0 0.2 0.8 0.5]);
+    tempEphysData = ephysData;
+    for iChan = 1:4
+        tempEphysData(iChan,tempSetNanArray) = nan;
+    end
+    for iPlot = 1:nChans
+        subtightplot(4,1,iPlot)
+        plot(t,ephysData(iPlot,:),'r');
+        hold on
+        plot(t,tempEphysData(iPlot,:),'b');
+    end
+
+    % now we need some user input
+    disp([num2str(sum(tempSetNanArray)) ' points found to eliminate.']);
+    if sum(tempSetNanArray) > 0
+        % should we save over the files?  ask here
+        b2name = questdlg_timer(60,'Should we eliminate these points (red)?',...
+        'Save Dialogue Box','Yes','No','No');
+        switch b2name
+            case 'Yes'
+                ephysData = tempEphysData;
+                disp('Red points set to NaN. Overwriting EEGData0!');
+                save([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
+                disp([dirStr operationList{i,1} '_EEGData0.mat overwritten.']);
+                disp('rerun fileMaint and reimport to revert to original.');
+                foundPoints = true;
+            case 'No'
+                disp('No changes will be made.')
+        end
+    else
+        disp('since no points found we''re skipping this index.')
+    end
+    close all
+end
+
