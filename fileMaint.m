@@ -9,8 +9,7 @@ function fileMaint(animal)
 % animal = 'ZZ09';
 
 % === override and analysis toggle parameters - change rarely
-forceReimport = 0;
-forceReimportTrials = 0;
+forceReimport = 0; % change this to 1 if you've messed up the noise thresholding in some way - remember to change it back!
 runMagnetDataSaving = 1;
 
 % === establish a clean list of all experiments we're interested in
@@ -31,7 +30,8 @@ path.dirStrAnalysisROOT = [mousePaths.M 'PassiveEphys\']; % 'M' drive
 %dirStrRecSourceAROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
 %path.dirStrRecSourceAROOT = '\\144.92.237.183\Data\PassiveEphys\'; %Gilgamesh
 path.dirStrRecSourceAROOT = ['\\' getPathGlobal('REC') '\Data\PassiveEphys\']; % fake Gilgamesh (21708, it's broken today)
-path.dirStrRecSourceBROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus
+path.dirStrRecSourceBROOT = ['\\' getPathGlobal('REC') '\Data\PassiveEphys\']; % only point to the only REC computer we use, for now (2/28/23)
+%path.dirStrRecSourceBROOT = '\\144.92.237.187\Data\PassiveEphys\'; %Nessus we dont use this computer
 path.dirStrRawDataROOT = [mousePaths.W 'PassiveEphys\']; %'W' drive
 path.dirStrServer = '\\144.92.237.180\Users\'; %Helmholz
 
@@ -65,7 +65,7 @@ for iList = 1:length(listOfAnimalExpts)
         exptTable.RECBEmpty(iList) = true;
     end
     % === are data imported?
-    if ~isempty(dir([dirStrAnalysis '*data*']))
+    if ~isempty(dir([dirStrAnalysis '*data*'])) || forceReimport
         exptTable.Imported(iList) = true;
     else
         exptTable.Imported(iList) = false;

@@ -55,6 +55,10 @@ workingTable = readtable(tname);
 % workingTable.Dates = T.Dates;
 % workingTable.chansToExclude = T.chansToExclude;
 
+
+workingTable = workingTable(logical(workingTable.include),:);
+
+
 for iExpt = 1:size(workingTable,1)
     thisAnimal = workingTable.animalName{iExpt};
     if iscell(workingTable.Dates)
@@ -69,6 +73,16 @@ for iExpt = 1:size(workingTable,1)
     % workingList = getExperimentsByAnimalAndDate(thisAnimal,thisDate);
     dataStruct(iExpt).Animal = thisAnimal;
     dataStruct(iExpt).Date = thisDate;
+
+    if any(ismember(workingTable.Properties.VariableNames,'Sex'))
+        dataStruct(iExpt).Sex = workingTable.Sex{iExpt};
+    end
+
+    if any(ismember(workingTable.Properties.VariableNames,'Notes'))
+        dataStruct(iExpt).Notes = workingTable.Notes{iExpt};
+    end
+   
+
     % added a way to grab manually entered groupings 
     if any(ismember(workingTable.Properties.VariableNames,'groupID'))
         dataStruct(iExpt).group = workingTable.groupID(iExpt);
