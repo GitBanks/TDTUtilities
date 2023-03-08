@@ -1,8 +1,40 @@
 function summaryData = plotSpectraLFP(animalName,exptDate,chansToExclude)
-% test params
-% animalName = 'ZZ14';
-% exptDate = '22120';
-% exptDate = '22228';
+
+% chansToExclude = nan
+ 
+% problem animals  
+% 
+% exptDate = '22831'
+% animalName = 'ZZ20'
+
+% % no movement data animal
+% % animalName = 'ZZ06' 
+% % exptDate = '21520' 
+% % exptDate = '21608'
+% % chansToExclude = nan
+% 
+% % no pre injection recording (4-aco treatment) 
+% % animalName = 'ZZ06';
+% % exptDat = '21512'
+% % chansToExclude = nan;
+
+% noise problems 
+% animalName = 'ZZ09' 
+% exptDate = '21623'
+% animalName = 'ZZ14' 
+% exptDate = '22120'
+% animalName = 'ZZ14' 
+% exptDate = '22120'
+
+% animalName = 'ZZ14' 
+% exptDate = '22120'
+% animalName = 'ZZ19'
+% exptDate = '22705'
+% animalName = 'ZZ09';
+% exptDate = '21623';
+% animalName = 'ZZ10';
+% exptDate = '21726';
+
 % chansToExclude = nan
 
 % this is just for Zarmeen's data
@@ -81,14 +113,36 @@ end
 windowTimes = out.segmentTimeOfDay{1,1};
 [exptDate_dbForm] = houseConvertDateTo_dbForm(exptDate);
 windowTimes = datetime(exptDate_dbForm,'TimeZone','local')+windowTimes;
-
 [moveTimeDrugStruct] = getMoveTimeDrugbyAnimalDate(animalName,exptDate);
 moveTimes = moveTimeDrugStruct.fullTimeArrayTOD;
 moveArray = moveTimeDrugStruct.fullMoveStream;
 TheseDrugs = moveTimeDrugStruct.drugTOD;
 
+% times of day for indecies are found under the animal's metaData.blockTime
+% try pulling all the blocks from metadata based on today's date (i.e.,
+% exptDate)
+% metadata location
+rootFileLocation = 'M:\PassiveEphys\AnimalData\';
+metaDataLocation = [rootFileLocation animalName '\metaData.mat'];
+load(metaDataLocation);
+newTable = metaData(contains(metaData.block,exptDate),:);
+nextTimeArray = newTable.blockTime; % these will be our new breaks against this array:
+
+for iBreak = 1:size(nextTimeArray,1)
+    avgSpectraBreakIndex(iBreak) = find(windowTimes>=nextTimeArray(iBreak),1);
+    movementBreakIndex(iBreak) = find(moveTimes>=nextTimeArray(iBreak),1);
+end
+adjTimes = windowTimes-TheseDrugs(end).time;
+adjMoveTimes = moveTimes-TheseDrugs(end).time;
 
 
+% 
+% 
+% windowTimes
+% -TheseDrugs(end).time % we still need this to adjust everything relative to injection
+% % we still want to create these:
+% avgSpectraBreakIndex
+% movementBreakIndex
 
 % ZARMEEN EDITS TODO
 % OK, finding the breaks for Zarmeen's set doesn;t work cleanly, but we can
@@ -99,49 +153,42 @@ TheseDrugs = moveTimeDrugStruct.drugTOD;
 %
 % % t = 0 should be injection;  
 % % WARNING!  this assumes that the last injection is the one to ref as t=0
-
-
-try
-    adjTimes = windowTimes-TheseDrugs(end).time;
-    adjMoveTimes = moveTimes-TheseDrugs(end).time;
-    % we will need to break apart the avgSpectra based on drug injection times,
-    % then hour lengths after 2nd injection, so grab these times here, too
-    for iDrugInj = 1:size(TheseDrugs,2)
-        TheseDrugs(iDrugInj).adjTime = TheseDrugs(iDrugInj).time-TheseDrugs(end).time;
-        avgSpectraBreakIndex(iDrugInj) = find(adjTimes>TheseDrugs(iDrugInj).adjTime,1);
-        movementBreakIndex(iDrugInj) = find(adjMoveTimes>TheseDrugs(iDrugInj).adjTime,1);
-    end
-catch
-    error('Not set to handle no injection yet!!!!!')
-%     disp('HEY!!!! there was no drug information for this day.  I wrote this assuming a drug was given.');
-%     disp('I assume you don;t want it to crash here, so I''m seeting t=0 to be the start of REC' );
-%     pause(2);
-%     adjTimes = windowTimes;
-%     adjMoveTimes = moveTimes;
-%     avgSpectraBreakIndex(1) = 1;
-%     movementBreakIndex(1) = 1;
-end
-
-
-
-
-% continue finding breakpoints
-moreTime = true;
-breakIndex = size(avgSpectraBreakIndex,2)+1;
-nextTime = TheseDrugs(iDrugInj).adjTime+hours(1);
-while moreTime
-    avgSpectraBreakIndex(breakIndex) = find(adjTimes>nextTime,1);
-    movementBreakIndex(breakIndex) = find(adjMoveTimes>nextTime,1);
-    breakIndex = breakIndex+1;
-    nextTime = nextTime+hours(1);
-    if adjTimes(end) < nextTime
-        moreTime = false;
-    end
-%     keyboard
-end
+% 
+% try
+%     adjTimes = windowTimes-TheseDrugs(end).time;
+%     adjMoveTimes = moveTimes-TheseDrugs(end).time;
+%     % we will need to break apart the avgSpectra based on drug injection times,
+%     % then hour lengths after 2nd injection, so grab these times here, too
+%     for iDrugInj = 1:size(TheseDrugs,2)
+%         TheseDrugs(iDrugInj).adjTime = TheseDrugs(iDrugInj).time-TheseDrugs(end).time;
+%         avgSpectraBreakIndex(iDrugInj) = find(adjTimes>TheseDrugs(iDrugInj).adjTime,1);
+%         movementBreakIndex(iDrugInj) = find(adjMoveTimes>TheseDrugs(iDrugInj).adjTime,1);
+%     end
+% catch
+%     error('Not set to handle no injection yet!!!!!')
+% %     disp('HEY!!!! there was no drug information for this day.  I wrote this assuming a drug was given.');
+% %     disp('I assume you don;t want it to crash here, so I''m seeting t=0 to be the start of REC' );
+% %     pause(2);
+% %     adjTimes = windowTimes;
+% %     adjMoveTimes = moveTimes;
+% %     avgSpectraBreakIndex(1) = 1;
+% %     movementBreakIndex(1) = 1;
+% end
+% 2/24/23: we need to figure out if and why the first few indecies are
+% getting merged.... this stupid 'breakpoint' thing strikes again...
 
 % 2/10/23 I think the above is workng ???? pls test
-
+% % find breakpoints
+% moreTime = true;
+% nextTime = 1;
+% while moreTime
+%     avgSpectraBreakIndex(nextTime) = find(windowTimes>=nextTimeArray(nextTime),1);
+%     movementBreakIndex(nextTime) = find(moveTimes>=nextTimeArray(nextTime),1);
+%     nextTime = nextTime+1;
+%     if windowTimes(end) < nextTime
+%         moreTime = false;
+%     end
+% end
 
 
 
@@ -176,9 +223,11 @@ end
 %     combSpecdata(2).data = (specdata(2).data+specdata(3).data)/2;
 % end
 
+% avgSpectraBreakIndex = [1 avgSpectraBreakIndex];
+% movementBreakIndex = [1 movementBreakIndex];
 
-avgSpectraBreakIndex = [1 avgSpectraBreakIndex];
-movementBreakIndex = [1 movementBreakIndex];
+
+
 
 nChans = size(specdata,2);
 for iHour = 1:size(avgSpectraBreakIndex,2)-1
@@ -269,185 +318,379 @@ else
 end
 
 bandPower = figure('Name',titletext); 
+
+% add this for animals without movement data 
+if contains(animalName, 'ZZ06')
+    subplotrows = 5;
+else
+    subplotrows = 6;
+end
+
+% hardcoded ylimits 
+
 for iHour = 1:size(dataSet,2)
-    subtightplot(6,1,1);
+    subtightplot(subplotrows,1,1);
     title(titletext);
     plot(dataSet(iHour).time,dataSet(iHour).avgDelta(:,1),"Color",'r');
     hold on
-    plot(dataSet(iHour).time,dataSet(iHour).avgDelta(:,3),"Color",'b');
+    if nChans > 2 
+        plot(dataSet(iHour).time,dataSet(iHour).avgDelta(:,3),"Color",'b');
+    end
+    ylim ([0 8e-7]);
     ylabel('delta power');
 
-    subtightplot(6,1,2);
+    subtightplot(subplotrows,1,2);
     plot(dataSet(iHour).time,dataSet(iHour).avgTheta(:,1),"Color",'r');
     hold on
-    plot(dataSet(iHour).time,dataSet(iHour).avgTheta(:,3),"Color",'b');
+    if nChans > 2
+        plot(dataSet(iHour).time,dataSet(iHour).avgTheta(:,3),"Color",'b');
+    end
+    ylim ([0 4e-7]);
     ylabel('theta power');
 
-    subtightplot(6,1,3);
+    subtightplot(subplotrows,1,3);
     plot(dataSet(iHour).time,dataSet(iHour).avgAlpha(:,1),"Color",'r');
     hold on
-    plot(dataSet(iHour).time,dataSet(iHour).avgAlpha(:,3),"Color",'b');
+    if nChans > 2
+        plot(dataSet(iHour).time,dataSet(iHour).avgAlpha(:,3),"Color",'b');
+    end
+    ylim ([0 1.5e-7]);
     ylabel('alpha power');
 
-    subtightplot(6,1,4);
+    subtightplot(subplotrows,1,4);
     plot(dataSet(iHour).time,dataSet(iHour).avgBeta(:,1),"Color",'r');
     hold on
-    plot(dataSet(iHour).time,dataSet(iHour).avgBeta(:,3),"Color",'b');
+    if nChans > 2
+        plot(dataSet(iHour).time,dataSet(iHour).avgBeta(:,3),"Color",'b');
+    end
+    ylim ([0 2.5e-8]);
     ylabel('beta power')
 
-    subtightplot(6,1,5);
+    subtightplot(subplotrows,1,5);
     plot(dataSet(iHour).time,dataSet(iHour).avgGamma(:,1),"Color",'r');
     hold on
-    plot(dataSet(iHour).time,dataSet(iHour).avgGamma(:,3),"Color",'b');
+    if nChans > 2
+        plot(dataSet(iHour).time,dataSet(iHour).avgGamma(:,3),"Color",'b');
+    end
     ylabel('gamma power');
     ylim([0,1e-8])
+%     ylim([0,4.5e-9])
 
-    subtightplot(6,1,6);
-    plot(adjMoveTimes, moveArray);
-    ylabel('Movement');
-    ylim([0,max(moveArray)*1.2]);
+%    checks if there's movement data and will plot accordingly 
+    if ~contains(animalName,'ZZ06')
+        subtightplot(subplotrows,1,6);
+        plot(dataSet(iHour).movementTimes, dataSet(iHour).movement,"Color",'b');
+        hold on
+        ylabel('Movement');
+        ylim([0,max(moveArray)*1.2]);
+        xlim([dataSet(1).movementTimes(1),dataSet(end).movementTimes(end)]);
+    end
 end
-subtightplot(6,1,5);
-legend({'Front','Rear'});
-for i = 1:6
-    subtightplot(6,1,i);
-    xlim([adjMoveTimes(1),adjMoveTimes(end)]);
+
+% legend
+
+allAnimalExpt = getExperimentsByAnimal(animalName);
+ElectrodeLocationDate = allAnimalExpt{1}(1:5);
+ElectrodeLocationIndex = allAnimalExpt{1}(7:9);
+[electrodeLocation,map,~] = getElectrodeLocationFromDateIndex(ElectrodeLocationDate,ElectrodeLocationIndex);
+
+electrodeLocationplot = find(~rem(map,2)==0);
+legendinfo = [];
+
+
+for iPlot = 1:length(electrodeLocationplot)       
+    legendinfo{iPlot} = electrodeLocation{map(electrodeLocationplot(iPlot))};
 end
 
 
+if nChans > 2
+    subtightplot(subplotrows,1,5);
+    legend(legendinfo{1:2})
+else 
+    subtightplot (subplotrows,1,5);
+    legend(legendinfo{1})
+end
+
+for i = 1:5
+    subtightplot(subplotrows,1,i);
+    xlim([dataSet(1).time(1),dataSet(end).time(end)]);
+end
+
+% saving below
+% 
+% if ~exist([saveFolder 'bandpower\'],"dir")
+%     mkdir([saveFolder 'bandpower\']);
+% end
+% 
+% 
+% if ~exist([saveFolder 'bandpower\' animalName],"dir")
+%     mkdir([saveFolder 'bandpower\' animalName]);
+% end
+% 
+% 
+% saveas(bandPower,[saveFolder 'bandpower\' animalName '\' animalName '-' exptDate '-' savetext '.fig']);
+% saveas(bandPower,[saveFolder 'bandpower\' animalName '\' animalName '-' exptDate '-' savetext '.jpg']);
+
+% saving by drug !!! HARDCODED !!!
 
 if ~exist([saveFolder 'bandpower\'],"dir")
     mkdir([saveFolder 'bandpower\']);
 end
-saveas(bandPower,[saveFolder 'bandpower\' animalName '-' exptDate '-' savetext '.fig']);
-saveas(bandPower,[saveFolder 'bandpower\' animalName '-' exptDate '-' savetext '.jpg']);
-
-
-
-
-
-
-% ZARMEEN EDITS TODO
-% this will work once the dataSet loop is corrected to count index
-% ======= Plotting average spectral power =================================
-if size(TheseDrugs,2) > 1
-    titletext = [animalName ' average spectral power for ' exptDate ' ' TheseDrugs(1).what ' & ' TheseDrugs(2).what];
-    savetext = [TheseDrugs(1).what '_' TheseDrugs(2).what];
-else
-    titletext = [animalName ' average spectral power for ' exptDate ' ' TheseDrugs(1).what];
-    savetext = TheseDrugs(1).what;
-end
-
-getYMax = nan;
-getYMin = nan;
-for iHour = 1:size(dataSet,2)
-    getYMax = max(max(max(dataSet(iHour).avgSpectra)),getYMax);
-    getYMin = max(min(min(dataSet(iHour).avgSpectra)),getYMin);
-end
-
-avgspectra = figure('Name',titletext); 
-for iChan = 1:nChans
-    subplot(3,2,chanEEGRemap(iChan));
-%     subtightplot(2,2,chanEEGRemap(iChan),[0.04,0.01]);
-    for iHour = 1:size(dataSet,2)
-        loglog(freqLabels,dataSet(iHour).avgSpectra(:,iChan)); 
-        hold on
-    end
-    
-    %ylabel('Power (mV^2)');  % this is wrong... stop showing the wrong thing...
-    
-    ylim([getYMin*1.1,getYMax*1.1]);
-    % title(['Ch' num2str(iChan) ' ' plotTitleLabels{iChan}],'Interpreter', 'none');  
-end
-
-
-% for iChan = 1:nChans
-% %     subtightplot(2,2,iChan,[0.04,0.01]);
-%     subplot(3,2,iChan);
 % 
-%     if iChan == 1
-%         set(gca,'xticklabel',{[]});
+% ------------4aco-------------
+% if ~exist([saveFolder 'bandpower\4-AcO-DMT' ],"dir")
+%     mkdir([saveFolder 'bandpower\4-AcO-DMT' ]);
+% end
+% 
+% saveas(bandPower,[saveFolder 'bandpower\4-AcO-DMT\' animalName '-' exptDate '-' savetext '.fig']);
+% saveas(bandPower,[saveFolder 'bandpower\4-AcO-DMT\' animalName '-' exptDate '-' savetext '.jpg']);
+% 
+% 
+% ---------6fdet-------------
+if ~exist([saveFolder 'bandpower\6-FDET' ],"dir")
+    mkdir([saveFolder 'bandpower\6-FDET' ]);
+end
+
+saveas(bandPower,[saveFolder 'bandpower\6-FDET\' animalName '-' exptDate '-' savetext '.fig']);
+saveas(bandPower,[saveFolder 'bandpower\6-FDET\' animalName '-' exptDate '-' savetext '.jpg']);
+
+% 
+% ----------saline------------
+% if ~exist([saveFolder 'bandpower\Saline' ],"dir")
+%     mkdir([saveFolder 'bandpower\Saline' ]);
+% end
+% 
+% saveas(bandPower,[saveFolder 'bandpower\Saline\' animalName '-' exptDate '-' savetext '.fig']);
+% saveas(bandPower,[saveFolder 'bandpower\Saline\' animalName '-' exptDate '-' savetext '.jpg']);
+
+% ---------psilocybin------------
+% if ~exist([saveFolder 'bandpower\Psilocybin' ],"dir")
+%     mkdir([saveFolder 'bandpower\Psilocybin' ]);
+% end
+% 
+% saveas(bandPower,[saveFolder 'bandpower\Psilocybin\' animalName '-' exptDate '-' savetext '.fig']);
+% saveas(bandPower,[saveFolder 'bandpower\Psilocybin\' animalName '-' exptDate '-' savetext '.jpg']);
+
+
+
+
+% ===== Plotting smoothed Delta bandpower =======================================
+% 
+% titletext = [animalName ' Delta Bandpower over time for ' exptDate ' ' TheseDrugs(1).what];
+% savetext = TheseDrugs(1).what;
+% bandPowerSmoothed = figure('Name',titletext); 
+% 
+% 
+% % checks if there's movement data and will plot accordingly 
+% if contains(animalName,'ZZ06')
+%     subplotrows = 2;
+% else
+%     subplotrows = 3;
+% end
+% 
+% 
+% for iHour = 1:size(dataSet,2)
+% 
+%     subtightplot(subplotrows,1,1);
+%     title(titletext);
+%     
+%     
+%     plot(dataSet(iHour).time,dataSet(iHour).avgDelta(:,1),"Color",'r');
+%     hold on
+%     if nChans > 2 
+%         plot(dataSet(iHour).time,dataSet(iHour).avgDelta(:,3),"Color",'b');
 %     end
-%     if iChan == 2
-%         set(gca,'xticklabel',{[]});
-%         set(gca,'yticklabel',{[]});
+%     hold on 
+%     ylabel('delta power');
+% 
+%     subtightplot(subplotrows,1,2);
+%     plot(dataSet(iHour).time,smooth(dataSet(iHour).avgDelta(:,1),30),"Color",'r');
+%     hold on
+%     if nChans >2 
+%         plot(dataSet(iHour).time,smooth(dataSet(iHour).avgDelta(:,3),30),"Color",'b');
 %     end
-%     if iChan == 3
-%         xlabel('Freq');
-%         % legend(legLabels,'Location','southwest','FontSize',5);
-%         ylabel('Power (mV^2)')
-%     end
-%     if iChan == 4
-%         set(gca,'yticklabel',{[]});
+%     hold on 
+%     ylabel(' smoothed delta power');
+% 
+% %   checks if there's movement data and will plot accordingly 
+%     if ~contains(animalName,'ZZ06')
+%         subtightplot(subplotrows,1,3);
+%         plot(dataSet(iHour).movementTimes, dataSet(iHour).movement,"Color",'b');
+%         hold on
+%         ylabel('Movement');
+%         ylim([0,max(moveArray)*1.2]);
+%         xlim([dataSet(1).movementTimes(1),dataSet(end).movementTimes(end)]);
 %     end
 % end
-sgtitle([animalName '-' exptDate '-' savetext],'Interpreter', 'none');
-
-if ~exist([saveFolder 'avgspectra\'],"dir")
-    mkdir([saveFolder 'avgspectra\']);
-end
-saveas(avgspectra,[saveFolder 'avgspectra\' animalName '-' exptDate '-' savetext '.fig']);
-saveas(avgspectra,[saveFolder 'avgspectra\' animalName '-' exptDate '-' savetext '.jpg']);
-
-
-
-
-
-
-% ======= Plotting spectrogram and movement ===============================
-
-if size(TheseDrugs,2) > 1
-    titletext = [animalName ' spectrogram and movement for ' exptDate ' ' TheseDrugs(1).what ' & ' TheseDrugs(2).what];
-    savetext = [TheseDrugs(1).what '_' TheseDrugs(2).what];
-else
-    titletext = [animalName ' spectrogram and movement for ' exptDate ' ' TheseDrugs(1).what];
-    savetext = TheseDrugs(1).what;
-end
-
-spectrogramFig = figure('Name',titletext);
-for iChan = 1:nChans
-    subtightplot(nChans+1,1,iChan);
-    colormap('jet')
-    pcolor(adjTimes,log2(freqLabels),specdataLog(iChan).data)
-    shading flat
-    axis xy; %colorbar('east');
-    if iChan == nChans; colorbar('east'); end
-    ylim([log2(freqLabels(1)) log2(freqLabels(end))]);
-    set(gca,'fontsize',10);
-    set(gca,'ytick',log2([2 4 8 16 30 50]),'yticklabel',string([2 4 8 16 30 50]));
-    ylabel('Hz');
-    xlabel('time');
-end
-% Movement here (loaded previously)
-subtightplot(nChans+1,1,nChans+1);
-plot(adjMoveTimes, moveArray);
-ylabel('Movement');
-xlim([adjMoveTimes(1),adjMoveTimes(end)]);
-ylim([0,max(moveArray)*1.2]);
-% indicate where manipulations took place.
-% loop through drug injections here
-for iDrugInj = 1:size(TheseDrugs,2)
-    thisDrugTime = TheseDrugs(iDrugInj).adjTime;
-    thisDrugName = [TheseDrugs(iDrugInj).what ' ' num2str(TheseDrugs(iDrugInj).amount)];
-    xline(thisDrugTime,'-',thisDrugName);
-end
-sgtitle([animalName '-' exptDate '-' savetext],'Interpreter', 'none');
-
-if ~exist([saveFolder 'spectrogram\'],"dir")
-    mkdir([saveFolder 'spectrogram\']);
-end
-saveas(spectrogramFig,[saveFolder 'spectrogram\' animalName '-' exptDate '-' savetext '.fig']);
-saveas(spectrogramFig,[saveFolder 'spectrogram\' animalName '-' exptDate '-' savetext '.jpg']);
+% 
+% 
+% % legend info and adding to plots 
+% allAnimalExpt = getExperimentsByAnimal(animalName);
+% ElectrodeLocationDate = allAnimalExpt{1}(1:5);
+% ElectrodeLocationIndex = allAnimalExpt{1}(7:9);
+% [electrodeLocation,map,~] = getElectrodeLocationFromDateIndex(ElectrodeLocationDate,ElectrodeLocationIndex);
+% 
+% electrodeLocationplot = find(~rem(map,2)==0);
+% legendinfo = [];
+% 
+% 
+% for iPlot = 1:length(electrodeLocationplot)       
+%     legendinfo{iPlot} = electrodeLocation{map(electrodeLocationplot(iPlot))};
+% end
+% 
+% if nChans > 2
+%     subtightplot(subplotrows,1,2);
+%     legend(legendinfo{1:2})
+% else 
+%     subtightplot (subplotrows,1,2);
+%     legend(legendinfo{1})
+% end
+% 
+% 
+% 
+% for i = 1:2
+%     subtightplot(subplotrows,1,i);
+%     xlim([dataSet(1).time(1),dataSet(end).time(end)]);
+% end
+% 
+% % saving below 
+% 
+% if ~exist([saveFolder 'smthDeltabandpower\'],"dir")
+%     mkdir([saveFolder 'smthDeltabandpower\']);
+% end
+% 
+% 
+% if ~exist([saveFolder 'smthDeltabandpower\' animalName],"dir")
+%     mkdir([saveFolder 'smthDeltabandpower\' animalName]);
+% end
+% 
+% saveas(bandPowerSmoothed,[saveFolder 'smthDeltabandpower\' animalName '\' animalName '-' exptDate '-' savetext '.fig']);
+% saveas(bandPowerSmoothed,[saveFolder 'smthDeltabandpower\' animalName '\' animalName '-' exptDate '-' savetext '.jpg']);
 
 
+% Average Spec and Spectrogram ( Commented out ) 
+
+% 
+% % ZARMEEN EDITS TODO
+% % this will work once the dataSet loop is corrected to count index
+% % ======= Plotting average spectral power =================================
+% if size(TheseDrugs,2) > 1
+%     titletext = [animalName ' average spectral power for ' exptDate ' ' TheseDrugs(1).what ' & ' TheseDrugs(2).what];
+%     savetext = [TheseDrugs(1).what '_' TheseDrugs(2).what];
+% else
+%     titletext = [animalName ' average spectral power for ' exptDate ' ' TheseDrugs(1).what];
+%     savetext = TheseDrugs(1).what;
+% end
+% 
+% getYMax = nan;
+% getYMin = nan;
+% for iHour = 1:size(dataSet,2)
+%     getYMax = max(max(max(dataSet(iHour).avgSpectra)),getYMax);
+%     getYMin = max(min(min(dataSet(iHour).avgSpectra)),getYMin);
+% end
+% 
+% avgspectra = figure('Name',titletext); 
+% for iChan = 1:nChans
+%     subplot(3,2,chanEEGRemap(iChan));
+% %     subtightplot(2,2,chanEEGRemap(iChan),[0.04,0.01]);
+%     for iHour = 1:size(dataSet,2)
+%         loglog(freqLabels,dataSet(iHour).avgSpectra(:,iChan)); 
+%         hold on
+%     end
+%     
+%     %ylabel('Power (mV^2)');  % this is wrong... stop showing the wrong thing...
+%     
+%     ylim([getYMin*1.1,getYMax*1.1]);
+%     % title(['Ch' num2str(iChan) ' ' plotTitleLabels{iChan}],'Interpreter', 'none');  
+% end
+% 
+% 
+% % for iChan = 1:nChans
+% % %     subtightplot(2,2,iChan,[0.04,0.01]);
+% %     subplot(3,2,iChan);
+% % 
+% %     if iChan == 1
+% %         set(gca,'xticklabel',{[]});
+% %     end
+% %     if iChan == 2
+% %         set(gca,'xticklabel',{[]});
+% %         set(gca,'yticklabel',{[]});
+% %     end
+% %     if iChan == 3
+% %         xlabel('Freq');
+% %         % legend(legLabels,'Location','southwest','FontSize',5);
+% %         ylabel('Power (mV^2)')
+% %     end
+% %     if iChan == 4
+% %         set(gca,'yticklabel',{[]});
+% %     end
+% % end
+% sgtitle([animalName '-' exptDate '-' savetext],'Interpreter', 'none');
+% 
+% if ~exist([saveFolder 'avgspectra\'],"dir")
+%     mkdir([saveFolder 'avgspectra\']);
+% end
+% saveas(avgspectra,[saveFolder 'avgspectra\' animalName '-' exptDate '-' savetext '.fig']);
+% saveas(avgspectra,[saveFolder 'avgspectra\' animalName '-' exptDate '-' savetext '.jpg']);
+% 
+% 
+% 
+% 
+% 
+% 
+% % ======= Plotting spectrogram and movement ===============================
+% 
+% if size(TheseDrugs,2) > 1
+%     titletext = [animalName ' spectrogram and movement for ' exptDate ' ' TheseDrugs(1).what ' & ' TheseDrugs(2).what];
+%     savetext = [TheseDrugs(1).what '_' TheseDrugs(2).what];
+% else
+%     titletext = [animalName ' spectrogram and movement for ' exptDate ' ' TheseDrugs(1).what];
+%     savetext = TheseDrugs(1).what;
+% end
+% 
+% spectrogramFig = figure('Name',titletext);
+% for iChan = 1:nChans
+%     subtightplot(nChans+1,1,iChan);
+%     colormap('jet')
+%     pcolor(adjTimes,log2(freqLabels),specdataLog(iChan).data)
+%     shading flat
+%     axis xy; %colorbar('east');
+%     if iChan == nChans; colorbar('east'); end
+%     ylim([log2(freqLabels(1)) log2(freqLabels(end))]);
+%     set(gca,'fontsize',10);
+%     set(gca,'ytick',log2([2 4 8 16 30 50]),'yticklabel',string([2 4 8 16 30 50]));
+%     ylabel('Hz');
+%     xlabel('time');
+% end
+% % Movement here (loaded previously)
+% subtightplot(nChans+1,1,nChans+1);
+% plot(adjMoveTimes, moveArray);
+% ylabel('Movement');
+% xlim([adjMoveTimes(1),adjMoveTimes(end)]);
+% ylim([0,max(moveArray)*1.2]);
+% % indicate where manipulations took place.
+% % loop through drug injections here
+% for iDrugInj = 1:size(TheseDrugs,2)
+%     thisDrugTime = TheseDrugs(iDrugInj).adjTime;
+%     thisDrugName = [TheseDrugs(iDrugInj).what ' ' num2str(TheseDrugs(iDrugInj).amount)];
+%     xline(thisDrugTime,'-',thisDrugName);
+% end
+% sgtitle([animalName '-' exptDate '-' savetext],'Interpreter', 'none');
+% 
+% if ~exist([saveFolder 'spectrogram\'],"dir")
+%     mkdir([saveFolder 'spectrogram\']);
+% end
+% saveas(spectrogramFig,[saveFolder 'spectrogram\' animalName '-' exptDate '-' savetext '.fig']);
+% saveas(spectrogramFig,[saveFolder 'spectrogram\' animalName '-' exptDate '-' savetext '.jpg']);
+% 
+% 
+% 
+% 
 
 
 
 
-
-
-
-
+% Movement related code 
 
 
 
