@@ -121,7 +121,7 @@ for indexRaw = 1:length(S.htrEventTimes)
     warning('off','all');
     startOfWindow = (S.htrEventTimes(indexRaw)-1)*(1/S.magDT);
     endOfWindow = (S.htrEventTimes(indexRaw)+1)*(1/S.magDT);
-    if endOfWindow <= size(S.magData,2)
+    if endOfWindow <= size(S.magData,2) && startOfWindow>0
         rawTraces = double(S.magData(startOfWindow:endOfWindow));   
         rawTraces = filterData_dbVer(rawTraces,20,200,S.magDT); % bandpass
         detectedRawCenteredFig(:,indexRaw) = rawTraces;
