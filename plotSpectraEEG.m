@@ -69,6 +69,9 @@ end
 
 load([folder file]); %careful! what if there's another file with a similar name?  as written, the code will just load the last one it found, but that's not certainly the correct one...
 
+
+
+
 % load and plot - edit for specific recording type and channels
 listOfSegments = fields(out.specAnalysis{1,1});
 % grab the labels / values for the frequencies
@@ -79,13 +82,14 @@ nChans = size(out.specAnalysis{1,1}.(listOfSegments{1}).powspctrm,1);
 for iSegment = 1:size(listOfSegments,1)
     thisSeg = listOfSegments{iSegment};
     for iChan = 1:nChans
-        specdataLog(iChan).data(iSegment,:) = log2(out.specAnalysis{1,1}.(thisSeg).powspctrm(iChan,:));
+        specdataLog(iChan).data(iSegment,:) = real(log2(out.specAnalysis{1,1}.(thisSeg).powspctrm(iChan,:)));
         % taking the log2 of these is fine for the spectrogram, but the
         % units will get nonsensical without that context.  If we want to
         % look at average spectral power, we need the not log data too.
-        specdata(iChan).data(iSegment,:) = out.specAnalysis{1,1}.(thisSeg).powspctrm(iChan,:);
+        specdata(iChan).data(iSegment,:) = real(out.specAnalysis{1,1}.(thisSeg).powspctrm(iChan,:));
     end
 end
+
 % also exclude channels here
 if ~isnan(chansToExclude)
     for iChan = 1:size(chansToExclude,1)
@@ -180,28 +184,28 @@ for iHour = 1:size(avgSpectraBreakIndex,2)-1
         % Delta
         bounds(1) = find(freqLabels>=FreqBands.Limits.delta(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.delta(2),1);
-        dataSet(iHour).delta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        dataSet(iHour).avgDelta(:,iChan) = mean(dataSet(iHour).delta(:,iChan));
+        dataSet(iHour).delta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1,'omitnan');
+        dataSet(iHour).avgDelta(:,iChan) = mean(dataSet(iHour).delta(:,iChan),'omitnan');
         % Theta
         bounds(1) = find(freqLabels>=FreqBands.Limits.theta(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.theta(2),1);
-        dataSet(iHour).theta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        dataSet(iHour).avgTheta(:,iChan) = mean(dataSet(iHour).theta(:,iChan));
+        dataSet(iHour).theta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1,'omitnan');
+        dataSet(iHour).avgTheta(:,iChan) = mean(dataSet(iHour).theta(:,iChan),'omitnan');
         % Alpha
         bounds(1) = find(freqLabels>=FreqBands.Limits.alpha(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.alpha(2),1);
-        dataSet(iHour).alpha(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        dataSet(iHour).avgAlpha(:,iChan) = mean(dataSet(iHour).alpha(:,iChan));
+        dataSet(iHour).alpha(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1,'omitnan');
+        dataSet(iHour).avgAlpha(:,iChan) = mean(dataSet(iHour).alpha(:,iChan),'omitnan');
         % Beta
         bounds(1) = find(freqLabels>=FreqBands.Limits.beta(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.beta(2),1);
-        dataSet(iHour).beta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        dataSet(iHour).avgBeta(:,iChan) = mean(dataSet(iHour).beta(:,iChan));
+        dataSet(iHour).beta(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1,'omitnan');
+        dataSet(iHour).avgBeta(:,iChan) = mean(dataSet(iHour).beta(:,iChan),'omitnan');
         % Gamma
         bounds(1) = find(freqLabels>=FreqBands.Limits.gamma(1),1);
         bounds(2) = find(freqLabels>=FreqBands.Limits.highGamma(2),1);
-        dataSet(iHour).gamma(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1);
-        dataSet(iHour).avgGamma(:,iChan) = mean(dataSet(iHour).gamma(:,iChan));
+        dataSet(iHour).gamma(:,iChan) = mean(combSpecdata(iChan).data(bounds(1):bounds(2),iStart:iStop),1,'omitnan');
+        dataSet(iHour).avgGamma(:,iChan) = mean(dataSet(iHour).gamma(:,iChan),'omitnan');
     end
 end
 

@@ -116,6 +116,19 @@ for ii = 1:size(workingTable,2)
     skipTheActualPlotting = true;
     mattsData = plotSpectraEEG(animalName,exptDate,chansToExclude,setName,reportPlot,skipTheActualPlotting);
     workingTable(ii).data = mattsData;
+    % we're making PSM collection standard now.
+    try
+        fileNameCSVA = ['\\144.92.237.185\Data\PassiveEphys\AnimalData\' animalName '\PSM_' animalName '_' exptDate '_deltaPSM_matchedMovement_wMeanTA.csv'];
+        TA = readtable(fileNameCSVA);
+        fileNameCSVP = ['\\144.92.237.185\Data\PassiveEphys\AnimalData\' animalName '\PSM_' animalName '_' exptDate '_deltaPSM_matchedMovement_wMeanTP.csv'];
+        TP = readtable(fileNameCSVP);
+        workingTable(ii).data.pre.PSMavgDelta = [TA.grandMean(1),TP.grandMean(1)];
+        workingTable(ii).data.post.PSMavgDelta = [TA.grandMean(2),TP.grandMean(2)];
+    catch
+        disp([fileNameCSVA ' or P NOT FOUND']);
+        disp(['Please run PSM R code on ' animalName ' ' exptDate]);
+        error('STOPPING NOW!');
+    end
 end
 
 

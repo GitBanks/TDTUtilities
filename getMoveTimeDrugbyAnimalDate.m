@@ -21,6 +21,13 @@ function [S] = getMoveTimeDrugbyAnimalDate(animalName,exptDate,overwriteMove)
 % exptDate = '22222';
 % animalName = thisAnimal;
 % exptDate = thisDate;
+% animalName = 'ZZ06';
+% exptDate = '21515';
+% 
+% animalName = 'ZZ22';
+% exptDate = '23105';
+% exptDate = '22o26';
+
 
 if ~exist("overwriteMove","var")
     overwriteMove = true;
