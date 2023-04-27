@@ -30,6 +30,9 @@ for iChan = 1:nChans
     %filter operates on first non-singleton dimension of data:
     tempdata(1:nPts) = data(iChan,1:nPts);
     tempdata = double(tempdata);
+    nanLocations = isnan(tempdata);
+    tempdata(nanLocations) = 0;
     tempfilt = filtfilt(b,a,tempdata);
+    tempfilt(nanLocations) = nan;
     filtData(iChan,:) = tempfilt(1:nPts);
 end
