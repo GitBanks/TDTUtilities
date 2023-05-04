@@ -47,6 +47,11 @@ switch str
         p = [M 'PassiveEphys\AnimalData\initial\'];
     case 'CodyLocalHTRData'
         p = ['C:\Users\Matt Banks\Documents\Molecular Devices\pCLAMP\Data\'];
+    case 'banksLocalHTRData'
+        p = [M 'PassiveEphys\AnimalData\HTRDrugGroupList.xlsx']; % using the animal saves location
+
+
+
     % for specific file paths (old)
     case 'masterLog'
         p = [W 'PassiveEphys\EEG animal data\Mouse Psychedelics Master Log.xlsx'];
