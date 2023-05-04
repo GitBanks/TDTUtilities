@@ -23,7 +23,7 @@ S.fhControls = figure('units','pixels',...
     'name','Experiment Day Setup',...
     'resize','off');  
 
-S.thisFile = getPathGlobal('banksLocalHTRData');
+% S.thisFile = getPathGlobal('banksLocalHTRData');
 opts = detectImportOptions(S.thisFile);
 % opts = setvartype(opts, "RecordingID", 'string');
 S.workingTable = readtable(S.thisFile,opts);

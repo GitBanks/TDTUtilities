@@ -1,4 +1,4 @@
-function [avgCenters,avgCounts] = getPlotHTRBinnedAvgByGroup
+function [avgCenters,avgCounts] = getPlotHTRBinnedAvgByGroup(thisGroup,thisFile,displayEachAnimal,binSize,displaySummary)
 % for now, this works by giving the function a drug name, but we also would
 % like it to accept a list of animals
 
@@ -21,13 +21,14 @@ function [avgCenters,avgCounts] = getPlotHTRBinnedAvgByGroup
 % animalDateTable = getAnimalDayTableByTreatment(treatment); we're no
 % longer loading in using this getAnimalDayTableByTreatment
 
-displayEachAnimal = false;
-binSize = 5;
-% thisGroup = 4; % work this in as a parameter
-thisGroup = 2; % work this in as a parameter
+% test params
+% displayEachAnimal = false;
+% binSize = 5;
+% thisGroup = 2; % work this in as a parameter
+% thisFile = getPathGlobal('banksLocalHTRData');
+% displaySummary = true
 
 
-thisFile = getPathGlobal('banksLocalHTRData');
 opts = detectImportOptions(thisFile);
 % opts = setvartype(opts, "RecordingID", 'string');
 workingTable = readtable(thisFile,opts);
@@ -37,6 +38,7 @@ treatment = animalDateTable.drug{1};
 
 for iExpt = 1:size(animalDateTable,1)
     animalName = char(animalDateTable.animalName(iExpt));
+    disp(['finding bins for: ' animalName]);
     exptDate = char(animalDateTable.exptDate(iExpt));
     [allCenters,allCounts] = getPlotHTRBinnedByAnimalDate(animalName,exptDate,binSize,displayEachAnimal);
     S(iExpt).allCenters = allCenters;
@@ -71,13 +73,13 @@ end
 avgCounts = avgCounts/size(S,2);
 
 
-
-figure;
-bar(avgCenters,avgCounts);
-title([treatment ' n=' num2str(size(S,2))]);
-xlabel('min (5 min bins)');
-ylabel('Average HTR');
-
+if displaySummary
+    figure;
+    bar(avgCenters,avgCounts);
+    title([treatment ' n=' num2str(size(S,2))]);
+    xlabel('min (5 min bins)');
+    ylabel('Average HTR');
+end
 
 
 
