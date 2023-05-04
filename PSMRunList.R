@@ -13,10 +13,11 @@ xlsFilePath <- "//144.92.237.185/Data/PassiveEphys/mouseEEG/combinedGroupInfo.xl
 
 myTable <- read_excel(xlsFilePath)
 # calc_prop_score("EEG234","23131") # this fails...
-for (x in 64:65) {
+for (x in 72:75) {
 	thisAnimal <- myTable[x, "animalName"]
 	thisDate <- myTable[x, "Dates"]
 	calc_prop_score(thisAnimal,thisDate)
 }
 
 # calc_prop_score("EEG221","22904")
+# calc_prop_score("EEG242","23210")

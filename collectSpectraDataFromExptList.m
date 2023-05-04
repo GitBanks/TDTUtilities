@@ -6,6 +6,7 @@ function collectSpectraDataFromExptList(setName)
 % these switches
 % setName = 'FLVX'
 % setName = 'combined'
+isLFP = false;
 
 switch setName
     case 'FLVX' % working
@@ -100,6 +101,7 @@ switch setName
     case 'combined'
 
     case 'ZZ'
+        isLFP = true;
        
     otherwise
         error('Need an appropriate table name from a recognized list: ''FLVX'' or ''LPS2020'' or ''ZZ'' so far ');
@@ -114,7 +116,12 @@ for ii = 1:size(workingTable,2)
     chansToExclude = workingTable(ii).ChansToExclude;
     reportPlot = false;
     skipTheActualPlotting = true;
-    mattsData = plotSpectraEEG(animalName,exptDate,chansToExclude,setName,reportPlot,skipTheActualPlotting);
+    if ~isLFP
+        mattsData = plotSpectraEEG(animalName,exptDate,chansToExclude,setName,reportPlot,skipTheActualPlotting);
+    else
+        mattsData = plotSpectraLFP(animalName,exptDate,chansToExclude);
+    end
+
     workingTable(ii).data = mattsData;
     % we're making PSM collection standard now.
     try

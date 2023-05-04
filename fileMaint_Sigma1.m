@@ -1,14 +1,19 @@
 function fileMaint_Sigma1(animalName,exptDate)
-fileMaint(animalName);
+% test params
 % animalName = 'EEG223';
 % exptDate = '22d18';
+
+fileMaint(animalName);
+
 cleanDataByThresholdAnimalDateEEG(animalName,exptDate);
-% keyboard
+
+patientAnalysis.runAnalysis(@specAnalysis, 'Subjects',{animalName},'Blocks',{exptDate},'isMouse',true,'OptionSet','SegLength4');
+
 chansToExclude = nan;
 setName = 'combined';
-patientAnalysis.runAnalysis(@specAnalysis, 'Subjects',{animalName},'Blocks',{exptDate},'isMouse',true,'OptionSet','SegLength4');
 sendToSlack = false;
 plotSpectraEEG(animalName,exptDate,chansToExclude,setName,sendToSlack);
+
 PSMTableForR2(animalName,exptDate);
 
 reportPlot = true;

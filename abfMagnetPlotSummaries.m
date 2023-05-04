@@ -16,6 +16,11 @@ workingTable = workingTable(startsWith(workingTable.RecordingID,exptDate),:);
 
 
 
+
+
+
+
+
 % summary plots
 binSize = 5; % minutes
 % summary plot 
