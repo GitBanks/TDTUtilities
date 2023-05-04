@@ -3,6 +3,28 @@ function foundPoints = cleanDataByThresholdAnimalDateEEG(animalName,exptDate)
 % outlier magnitudes:
 % animalName = 'EEG242';
 % exptDate = '23210';
+
+% lfp animal that "works"
+% animalName = 'ZZ19';
+% exptDate = '22812';
+
+% problema animals
+% animalName = 'ZZ09'; % no stim in post spon recordings
+% exptDate = '21623';
+% animalName = 'ZZ10'; % stim in post spon recordings
+% exptDate = '21726';
+% animalName = 'ZZ09'; % stim in post spon recordings
+% exptDate = '21804';
+% animalName = 'ZZ10'; % no stim in post spon recordings
+% exptDate = '21823';
+% animalName = 'ZZ09'; % no stim in post spon recordings
+% exptDate = '21910';
+
+% animalName = 'ZZ14';
+% exptDate = '22117';
+% animalName = 'ZZ08';
+% exptDate = '21608';
+
 % you can use the output foundPoints to trigger a rerunning of specAnalysis
 % or otherwise generate a list of animals that have had points cleaned.
 
@@ -11,17 +33,21 @@ function foundPoints = cleanDataByThresholdAnimalDateEEG(animalName,exptDate)
 % why I called this function 'EEG'
 secondsAroundNoiseToErase = 4;
 minThreshold = 0.0015;
-STDmultiplier = 3;
+STDmultiplier = 6;
 
 foundPoints = false;
 
-findExptType = 'Spon';
+findExptType = '';
 [operationList] = getExperimentsByAnimalAndDate(animalName,exptDate,findExptType);
 year = exptDate(1:2);
 
 for i=1:size(operationList,1)
     dirStr = [getPathGlobal('importedData') '20' year '\' operationList{i,1} '\'];
-    load([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
+    try % making it work for any data, not just EEG
+        load([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
+    catch
+        load([dirStr operationList{i,1} '_Data0.mat'],"ephysData","dT");
+    end
     [nChans,nPts] = size(ephysData);
     t = (0:nPts-1)*(dT); % time array for EEG signal
     % save([dirStr '\' operationList{i,1} '_BACKUP_D_ata0.mat'],"ephysData","dT");
@@ -62,25 +88,29 @@ for i=1:size(operationList,1)
     end
 
     % now we need some user input
-    disp([num2str(sum(tempSetNanArray)) ' points found to eliminate.']);
-    if sum(tempSetNanArray) > 0
-        % should we save over the files?  ask here
-        b2name = questdlg_timer(60,'Should we eliminate these points (red)?',...
-        'Save Dialogue Box','Yes','No','No');
-        switch b2name
-            case 'Yes'
-                ephysData = tempEphysData;
-                disp('Red points set to NaN. Overwriting EEGData0!');
-                save([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
-                disp([dirStr operationList{i,1} '_EEGData0.mat overwritten.']);
-                disp('rerun fileMaint and reimport to revert to original.');
-                foundPoints = true;
-            case 'No'
-                disp('No changes will be made.')
-        end
-    else
-        disp('since no points found we''re skipping this index.')
-    end
-    close all
+    %disp([num2str(sum(tempSetNanArray)) ' points found to eliminate.']);
+    disp([num2str(sum(tempSetNanArray)*dT) ' seconds found to eliminate.']);
+        
+%     if sum(tempSetNanArray) > 0
+%         
+%         keyboard
+%         % should we save over the files?  ask here
+%         b2name = questdlg_timer(60,'Should we eliminate these points (red)?',...
+%         'Save Dialogue Box','Yes','No','No');
+%         switch b2name
+%             case 'Yes'
+%                 ephysData = tempEphysData;
+%                 disp('Red points set to NaN. Overwriting EEGData0!');
+%                 save([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
+%                 disp([dirStr operationList{i,1} '_EEGData0.mat overwritten.']);
+%                 disp('rerun fileMaint and reimport to revert to original.');
+%                 foundPoints = true;
+%             case 'No'
+%                 disp('No changes will be made.')
+%         end
+%     else
+%         disp('since no points found we''re skipping this index.')
+%     end
+%     close all
 end
 
