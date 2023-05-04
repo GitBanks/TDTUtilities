@@ -12,11 +12,23 @@ function qualityAssuranceEEG(animalName,exptDate,reportPlot,textNotes)
 % exptDate = '23221';
 % reportPlot = true;
 
+% saline day - 1 electrode
+% animalName = 'ZZ19';
+% exptDate = '22623'; 
+% reportPlot = false;
+
+% saline day - 3 electrodes
+% animalName = 'ZZ14';
+% exptDate = '22117'; 
+% reportPlot = false;
+
+
+
 % Question: do we want to store this by animal, or by project?
 % here's by animal:
 % savePath = [getPathGlobal('animalSaves') animalName '\']
 % here's project:
-savePath = '\\144.92.237.185\Data\PassiveEphys\AnimalData\combined\QA\';
+savePath = '\\144.92.237.185\Data\PassiveEphys\AnimalData\combined\QA\'; %change this for saving 
 saveFileName = [animalName '-' exptDate '-QA'];
 
 if ~exist('textNotes','var')
@@ -33,12 +45,14 @@ ctrlHour = 1;
 manipHour = 4;
 fullChannel = 1; % show this channel in the 'full day' plot
 
+% this part loads in raw data
 fullExptChannel = [];
 for i=1:size(operationList,1)
     dirStr = [getPathGlobal('importedData') '20' year '\' operationList{i,1} '\'];
     load([dirStr '\' operationList{i,1} '_EEGData0.mat']);
+%     load([dirStr '\' operationList{i,1} '_Data0.mat']);
     [nChans,nPts] = size(ephysData);
-    t = (0:nPts-1)*(dT); % time array for EEG signal
+    t = (0:nPts-1)*(dT); 
     time_logi = find(t>=rangeStart & t<=rangeEnd);
     if i == ctrlHour
         ctrlHourArray = ephysData(:,time_logi);
@@ -58,7 +72,9 @@ upperB = prctile(fullExptChannel,99)*2; % 99th prctile
 
 
 % pull the spectra data from the saved run
-saveFolder = 'M:\PassiveEphys\AnimalData\combined\';
+
+saveFolder = 'M:\PassiveEphys\AnimalData\combined\'; % EEG animals bandpower location
+% saveFolder = 'M:\Zarmeen\Data\spectra\'; % ZZ animal bandpower location 
 load([saveFolder animalName '_' exptDate '_bandpowerSet.mat'],"dataSet");
 getYMax = nan;
 getYMin = nan;
@@ -125,10 +141,10 @@ freqLabels = [1 2 3 4 5 6 7 8 10 12 14 18 22 26 30 40 50 60 70 80 90 100 110 120
 
 % this is the weird pattern we'll need to address multiple subplots to
 % create the correct shape (square) for the avg spectra 
-subplotRange = [7 8 13 14; 9 10 15 16; 19 20 25 26;21 22 27 28];
+subplotRange = [7 8 13 14; 9 10 15 16; 19 20 25 26; 21 22 27 28];
 
 % a convention we've been using for a while
-channelRemapping = [4 1 3 2];
+channelRemapping = [4 1 3 2]; %going to change with different number of electrodes ????????
 
 % need to track the subplots and channels distinctly and carefully!  ii vs
 % iChan via channelRemapping
@@ -173,7 +189,7 @@ mainPlotTitle = [animalName '-' exptDate '-' treatmentText];
 annotation('textbox', [0.2, 0.98, 0, 0], 'string', mainPlotTitle,'FontSize',12);
 
 % save the files
-fileName = [savePath saveFileName];
+% fileName = [savePath saveFileName];
 %saveas(QAFig,[fileName '.fig']);
 %saveas(QAFig,[fileName '.jpg']);
 
