@@ -116,6 +116,13 @@ S.Preselects = {
     'Vehicle + Vehicle'
     'Fluvoxamine + LPS'
     'Saline + LPS'
+    'DMT + LPS'
+    '(DMT + BD1063) + LPS'
+    'BD1063 + LPS'
+    'BD1063 + Saline'
+    '(Fluvox + BD1063) + LPS'
+    'DMT + Saline'
+    'Fluvoxamine + Saline'
     }; 
 % LEFT
 S.pp(1) = uicontrol('style','pop',...
