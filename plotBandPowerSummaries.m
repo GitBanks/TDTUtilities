@@ -10,6 +10,9 @@ switch setName
     case '2020_PSYLOCYBIN_LPS'
         saveFileName = 'M:\PassiveEphys\mouseEEG\2020PsilocybinLPSBandpowerData.mat';
 
+    case 'Sigma1'
+        saveFileName = 'M:\PassiveEphys\mouseEEG\Sigma1BandpowerData.mat';
+
     case 'ZZ'
         saveFileName = 'M:\PassiveEphys\mouseEEG\ZZBandpowerData.mat';
         disp('If you tried using ZZ here - if you see this message, be sure the xls file exists, then take out this disp and keyboard statements.  This entry here is only to show how to add ZZ data to this switch')
@@ -45,12 +48,15 @@ for iGroup = 1:nGroups
         
     end
     % also grab some sample text to auto-label things
-    nDrugs = size(tempT.drugTOD{ii,1},2);
+%     nDrugs = size(tempT.drugTOD{ii,1},2);
+    nDrugs = size(tempT.drugTOD(ii,1),2);
     xtickLabelstart{1,iGroup} = [];
     legendText{1,iGroup} = [];
     for iii = 1:nDrugs
-        xtickLabelstart{1,iGroup} = [xtickLabelstart{1,iGroup} tempT.drugTOD{ii,1}(iii).what(1:3) ' '];
-        legendText{1,iGroup} = [legendText{1,iGroup} tempT.drugTOD{ii,1}(iii).what ' '];
+%         xtickLabelstart{1,iGroup} = [xtickLabelstart{1,iGroup} tempT.drugTOD{ii,1}(iii).what(1:3) ' '];
+%         legendText{1,iGroup} = [legendText{1,iGroup} tempT.drugTOD{ii,1}(iii).what ' '];
+        xtickLabelstart{1,iGroup} = [xtickLabelstart{1,iGroup} tempT.drugTOD(ii,iii).what(1:3) ' '];
+        legendText{1,iGroup} = [legendText{1,iGroup} tempT.drugTOD(ii,iii).what ' '];
     end
 end
 

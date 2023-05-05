@@ -2,14 +2,14 @@ clear all
 %Average Rate of HTR- ALL DRUGS Plotted
 treatments = {
 % 'saline0p9_vol'
-%'Anlg_5_MeO_DET';
-%'Anlg_Pyr_T'; 
+'Anlg_5_MeO_DET';
+'Anlg_Pyr_T'; 
 'Anlg_6_FDET'; 
-%'Anlg_5_MeO_MiPT'; 
-%'Anlg_4_AcO_DMT'; 
-%'Anlg_5_MeO_pyrT';
-%'Anlg_5_6_DiMeO_MiPT';
-%'DOI_conc'
+'Anlg_5_MeO_MiPT'; 
+'Anlg_4_AcO_DMT'; 
+'Anlg_5_MeO_pyrT';
+'Anlg_5_6_DiMeO_MiPT';
+'DOI_conc'
 'psilocybin';
 };
 treatmentDisplay = treatments;

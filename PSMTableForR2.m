@@ -21,23 +21,46 @@ function PSMTableForR2(animalName,exptDate)
 % exptDate = '22614';
 
 % MIGHT WANT TO MAKE THIS A PARAMETER!!!
-specificHours = [1,4];
 
 
 % TODO! make this a flexible parameter or global path check from a set type
 % input maybe
-loadFileFolder = 'M:\PassiveEphys\AnimalData\Fluvoxamine-LPS\';
 
-loadFile = [loadFileFolder animalName '_' exptDate '_bandpowerSet.mat'];
 try
+    loadFileFolder = 'M:\PassiveEphys\AnimalData\Fluvoxamine-LPS\';
+    loadFile = [loadFileFolder animalName '_' exptDate '_bandpowerSet.mat'];
     load(loadFile,"dataSet");
+    chanOfInterest = [1,2];
+    specificHours = [1,4];
 catch
-    error(['File not found' loadFile]);
+    try
+        loadFileFolder = 'M:\PassiveEphys\AnimalData\combined\';
+        loadFile = [loadFileFolder animalName '_' exptDate '_bandpowerSet.mat'];
+        load(loadFile,"dataSet");
+        chanOfInterest = [1,2];
+        specificHours = [1,4];
+    catch
+        try
+            loadFileFolder = 'M:\Zarmeen\Data\spectra\';
+            loadFile = [loadFileFolder animalName '_' exptDate '_bandpowerSet.mat'];
+            load(loadFile,"dataSet");
+            % we want to load R PFC for now.  We will find the channels
+            % with this 
+            [electrodeLocation,map,~] = getElectrodeLocationFromAnimalName(animalName);
+            % next, remember that the channels are saved in order 1:16 for
+            % 'map' list, then in that order pulled from electrodeLocation
+            channelList = electrodeLocation(map);
+            chanOfInterest = find(contains(channelList,'R mPFC') | (contains(channelList,' R ') & contains(channelList,'PFC')))';
+            specificHours = [1,2];
+        catch
+            error(['File not found' loadFile]);
+        end
+    end
 end
+
 
 treatments = getTreatmentInfo(animalName,exptDate);
 thisDrug = treatments.pars{1};
-
 
 theseExptIndices = getExperimentsByAnimalAndDate(animalName,exptDate);
 
@@ -71,22 +94,24 @@ for i = 1:size(specificHours,2)
     for iSegment = 1:size(dataSet(specificHours(i)).time,1)
         %thisSeg = listOfSegments{iSegment};
         
+        chanN = chanOfInterest(1);
         % first eleement here is anterior
-        PSMTable.AvgTotalPowA(incrementSeg) = dataSet(specificHours(i)).delta(iSegment,1);
-        PSMTable.deltaA(incrementSeg) = dataSet(specificHours(i)).delta(iSegment,1);
-        PSMTable.thetaA(incrementSeg) = dataSet(specificHours(i)).theta(iSegment,1);
-        PSMTable.alphaA(incrementSeg) = dataSet(specificHours(i)).alpha(iSegment,1);
-        PSMTable.betaA(incrementSeg) = dataSet(specificHours(i)).beta(iSegment,1);
-        PSMTable.gammaA(incrementSeg) = dataSet(specificHours(i)).gamma(iSegment,1);
+        PSMTable.AvgTotalPowA(incrementSeg) = dataSet(specificHours(i)).delta(iSegment,chanN);
+        PSMTable.deltaA(incrementSeg) = dataSet(specificHours(i)).delta(iSegment,chanN);
+        PSMTable.thetaA(incrementSeg) = dataSet(specificHours(i)).theta(iSegment,chanN);
+        PSMTable.alphaA(incrementSeg) = dataSet(specificHours(i)).alpha(iSegment,chanN);
+        PSMTable.betaA(incrementSeg) = dataSet(specificHours(i)).beta(iSegment,chanN);
+        PSMTable.gammaA(incrementSeg) = dataSet(specificHours(i)).gamma(iSegment,chanN);
         %PSMTable.highGamma(incrementSeg) = mean(mean(out.specAnalysis{1,1}.(thisSeg).powspctrm(iChans,highGamma),1));
 
-        % 2nd element here is the posterior
-        PSMTable.AvgTotalPowP(incrementSeg) = dataSet(specificHours(i)).delta(iSegment,2);
-        PSMTable.deltaP(incrementSeg) = dataSet(specificHours(i)).delta(iSegment,2);
-        PSMTable.thetaP(incrementSeg) = dataSet(specificHours(i)).theta(iSegment,2);
-        PSMTable.alphaP(incrementSeg) = dataSet(specificHours(i)).alpha(iSegment,2);
-        PSMTable.betaP(incrementSeg) = dataSet(specificHours(i)).beta(iSegment,2);
-        PSMTable.gammaP(incrementSeg) = dataSet(specificHours(i)).gamma(iSegment,2);
+        % 2nd element here is the posterior (updated: for just some mice)
+        chanN = chanOfInterest(2);
+        PSMTable.AvgTotalPowP(incrementSeg) = dataSet(specificHours(i)).delta(iSegment,chanN);
+        PSMTable.deltaP(incrementSeg) = dataSet(specificHours(i)).delta(iSegment,chanN);
+        PSMTable.thetaP(incrementSeg) = dataSet(specificHours(i)).theta(iSegment,chanN);
+        PSMTable.alphaP(incrementSeg) = dataSet(specificHours(i)).alpha(iSegment,chanN);
+        PSMTable.betaP(incrementSeg) = dataSet(specificHours(i)).beta(iSegment,chanN);
+        PSMTable.gammaP(incrementSeg) = dataSet(specificHours(i)).gamma(iSegment,chanN);
 
         PSMTable.winTime(incrementSeg) = dataSet(specificHours(i)).time(iSegment);
         PSMTable.meanMovement(incrementSeg) = meanMove(iSegment);

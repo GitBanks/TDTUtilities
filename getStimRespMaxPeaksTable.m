@@ -3,8 +3,8 @@
 %% Define animal and subset
 
 
-%animal = {'ZZ09','ZZ10','ZZ14','ZZ15','ZZ19' 'ZZ20' 'ZZ21' 'ZZ22'};
-animal = {'ZZ16'}
+animal = {'ZZ06', 'ZZ07','ZZ08','ZZ09','ZZ10','ZZ11','ZZ12','ZZ13','ZZ14','ZZ15','ZZ16','ZZ19', 'ZZ20', 'ZZ21', 'ZZ22'};
+%animal = {'ZZ16'}
 % subset={'21804','22117','22203'};
 % drug =;
 % % ========= Set up the list of animals to run ===============
@@ -22,7 +22,14 @@ end
 % stimRespExptTable = stimRespExptTable(stimRespExptTable.stimResp == true,:);
 
 %% This is to prune without subset
-stimRespExptTable = exptTableComplete(exptTableComplete.stimResp == true,:);
+stimRespExptTable = exptTableComplete(exptTableComplete.spon == true,:);
+
+% stimRespExptTable.Saline = contains(stimRespExptTable.Description, 'Saline');
+% stimRespExptTable.Psilocybin = contains(stimRespExptTable.Description, 'Psilocybin');
+% 
+% SalineTable = stimRespExptTable(stimRespExptTable.Saline == true,:)
+% PsilTable = stimRespExptTable(stimRespExptTable.Psilocybin == true,:)
+
 %%
 % % % ========= step through the new list and pull data ========
 
@@ -38,6 +45,9 @@ for iList = 1:nIndex
     data(iList).index = exptList{iList};
     data(iList).Animal = stimRespExptTable.Animal;
     data(iList).Drug = stimRespExptTable.Description{iList};
+   if contains(exptList{iList,2},'ZZ06')
+    manualPeakEntry = [2];
+    end 
     if contains(exptList{iList,2},'ZZ09')
     manualPeakEntry = [2];
     end
@@ -50,14 +60,20 @@ for iList = 1:nIndex
     if contains(exptList{iList,2},'ZZ15')
         manualPeakEntry = [1];
     end
+    if contains(exptList{iList,2},'ZZ16')
+    manualPeakEntry = [1];
+    end
     if contains(exptList{iList,2},'ZZ19')
-        manualPeakEntry = [2];
+        manualPeakEntry = [1];
     end
     if contains(exptList{iList,2},'ZZ20')
         manualPeakEntry = [1];
     end
     if contains(exptList{iList,2},'ZZ21')
         manualPeakEntry = [1];
+    end
+    if contains(exptList{iList,2},'ZZ22')
+        manualPeakEntry = [2];
     end
     try 
         load([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData');
@@ -110,8 +126,9 @@ end
 %% Export as CSV for prism
 
 outPath = ['C:\Users\Grady\Documents\Zarmeen Data\PeakMax'];
-tableOutPath = fullfile(outPath, 'stimRespAllAnimals10623.csv')
+tableOutPath = fullfile(outPath, 'stimPeakTable23120.csv')
 writetable(stimPeakTable, tableOutPath)
+
 
 
 

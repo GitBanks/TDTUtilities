@@ -50,7 +50,17 @@ end
 if size(dirCheck,1)==2 || isempty(dir([dirStrRawData '*_Cam2*']))
     prevIndexDirCheck = dir(blockLocation);
     if isempty(prevIndexDirCheck) % if this is true, we've really derailed somewhere.  stop here.
-        error(['previous index ' blockLocation ' doesn''t exist - something is wrong.  Was video recorded?  Please check this directory for data.' ]);
+        disp(' ');
+        disp(['If you''re seeing this message ' date ' and index ' index ' may not be the first in the datafile']);
+        disp('Please check which animal was run on the preceeding index and import that data first.');
+        disp('It will be the animal associated with this file location: ');
+        disp(blockLocation);
+        disp('This error happens when there''s nothing in that location ');
+        disp('or it''s a bogus location like -1');
+        disp('It''s also possible video was not recorded.');
+        disp('This program was designed assuming the video files need to be sorted into their respective directories.')
+        % ['previous index ' blockLocation ' doesn''t exist - something is wrong.  Was video recorded?  Please check this directory for data.' ]%
+        error('^^ PLESE READ THE MESSAGE ABOVE ^^');
     end
     %dir([blockLocation '*_Cam*']);
     vidFileDir = dir([blockLocation '*_Cam2*']);

@@ -1,4 +1,4 @@
-function [fileName] = plotRawEEG_AllChans(animalName)
+function [fileName] = plotRawEEG_AllChans(animalName,sendThisToSlack)
 % function to plot/display (representative) EEG traces from experiments to
 % aid in evaluation in signal quality. This will be included in
 % fileMaint_dual/fileMaint. Note that data will need to be imported from recording computer
@@ -100,26 +100,24 @@ for iDate = 1:length(dates)
     % add a title above all subplots
     sgtitle([animalName ' date' thisDate ' ' treatment],'FontWeight','Bold');
     
-    outPath = 'M:\mouseEEG\Power\Raw Traces\';
+    outPath = 'M:\PassiveEphys\mouseEEG\Power\Raw Traces\';
     % ask user if they would like to save
-    buttonName = questdlg_timer(10,['Would you like to save figure to ' outPath '?'],...
-        'Save Dialogue Box','Yes','No','Yes');
+%     buttonName = questdlg_timer(10,['Would you like to save figure to ' outPath '?'],...
+%         'Save Dialogue Box','Yes','No','Yes');
     
     fileName = [outPath figName]; %file name output for if uploading to slack
-    if strcmp(buttonName,'Yes')
+
         savefig(gcf,fileName); % save figure as .fg
         print('-painters',fileName,'-r300','-dpng'); % save as .png at 300dpi
         
         % ask user if they would like to save
-        b2name = questdlg_timer(10,['Would you like to upload figure to slack?'],...
-            'Save Dialogue Box','Yes','No','No');
-        if strcmp(b2name,'Yes') || iDate==length(dates)
+%         b2name = questdlg_timer(10,['Would you like to upload figure to slack?'],...
+%             'Save Dialogue Box','Yes','No','No');
+        if sendThisToSlack == true
             sendSlackFig([animalName ' date' thisDate ' ' treatment ' Raw EEG'],[fileName '.png']);
             disp('sent');
         end
-    else
-        disp([fileName ' was not saved']);
-    end
+    close all
     
     
 end

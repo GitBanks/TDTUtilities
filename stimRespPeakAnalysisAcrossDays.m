@@ -5,39 +5,147 @@ function [plotH] = stimRespPeakAnalysisAcrossDays(animal,subset)
 % set it for the animal, this will error after the table is presented 
 
 % test params
- animal = 'ZZ15';
- subset={'22221','22222'};
-
-
-if contains(animal,'ZZ10')
-    manualPeakEntry = [2,1,1];
-end
-if contains(animal,'ZZ09')
-    manualPeakEntry = [2,2,1];
-end
-if contains(animal,'ZZ14')
-    manualPeakEntry = [2,2,1];
-end
-if contains(animal,'ZZ15')
-    manualPeakEntry = [2,1,1];
-end
-if contains(animal,'ZZZZexample')
-    manualPeakEntry = [1,1,1];
-end
-if ~exist('manualPeakEntry','var')
-    warning('The peaks haven''t been set for this animal.');
-    warning('We''ll show you a table but then error out.')
-end
+ animal = {'ZZ09', 'ZZ10', 'ZZ14', 'ZZ15', 'ZZ19', 'ZZ20', 'ZZ21'};
 
 
 % % ========= Set up the list of animals to run ===============
-[exptTable] = getExptPlasticitySetByAnimal(animal);
 
-%We now want to make a table that pulls data from indices from the subset we give it
-stimRespExptTable = exptTable(contains(exptTable.DateIndex,subset(:)),:);
-stimRespExptTable = stimRespExptTable(stimRespExptTable.stimResp == true,:);
+exptTableComplete = table();
+
+for ianimal = 1:size(animal,2);
+    [exptTable] = getExptPlasticitySetByAnimal(animal{ianimal});
+    exptTableComplete =  [exptTableComplete ; exptTable];
+end
+
+stimRespExptTable = exptTableComplete(exptTableComplete.stimResp == true,:);
 
 
+%% ===============================================================================================
+exptList = [stimRespExptTable.DateIndex stimRespExptTable.Animal];
+
+nIndex = size(exptList,1);
+nROI = 1;
+data = struct();
+for iList = 1:nIndex
+    exptDate = exptList{iList}(1:5);
+    exptIndex = exptList{iList}(7:9);
+    dirStrAnalysis = [ getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+    data(iList).index = exptList{iList};
+    if contains(exptList{iList,2},'ZZ09')
+    manualPeakEntry = [2];
+    end
+    if contains(exptList{iList,2},'ZZ10')
+        manualPeakEntry = [2];
+    end
+    if contains(exptList{iList,2},'ZZ14')
+        manualPeakEntry = [1];
+    end
+    if contains(exptList{iList,2},'ZZ15')
+        manualPeakEntry = [1];
+    end
+    if contains(exptList{iList,2},'ZZ19')
+        manualPeakEntry = [1];
+    end
+    if contains(exptList{iList,2},'ZZ20')
+        manualPeakEntry = [1];
+    end
+    if contains(exptList{iList,2},'ZZ21')
+        manualPeakEntry = [1];
+    end
+    try 
+        load([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData');
+        for iROI = 1
+            % this is where we grab the calculated peaks.
+            %[data(iList).ROI(iROI).maxPeaks] = max(peakData.pkVals(iROI).data,[],2);
+            peakAbs = abs(peakData.pkVals(1).data);
+            [peakMax, peakIndex] = max(max(peakAbs));
+            
+            for ii = 1 %:size(peakData.pkVals.data) %(iROI).peakTimeCalc,1)
+                data(iList).ROI(iROI).peakTimes(ii) = peakData.pkVals(1).peakTimeCalc(manualPeakEntry,peakIndex);
+                data(iList).ROI(iROI).maxPeaks(ii) = peakMax;
+            end        
+%             data(iList).ROI(iROI).peakTimes = peakData.pkSearchData(iROI).tPk; % this will change
+            if isempty(data(iList).ROI(iROI).maxPeaks) % if someone didn't select a peak
+                error('The program requires the number of peaks selected to be the same, every day, for an animal')
+            end
+        end
+    catch
+        
+        for iROI = 1:nROI
+            data(iList).ROI(iROI).maxPeaks = NaN;
+            data(iList).ROI(iROI).peakTimes = NaN;
+        end
+    end
+end
+
+
+%% =================================================================================================
+for i = 1:size(stimRespExptTable)   
+    [data(i).Description] = stimRespExptTable.Description(i); 
+    [data(i).Animal] = stimRespExptTable.Animal(i); 
+end
+
+
+newTable = struct2table(data)
+
+
+varTypes = {'string','string','string','string','double'};
+varNames = {'Animal','Description','ROI','File','MaxPeak'};
+nROI = 1;
+sz = [length(exptList)*nROI length(varNames)];
+stimPeakTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
+
+
+nIndex = size(exptList,1);
+
+for iROI = 1
+    for iList = 1:nIndex
+        indexList = ((iROI-1)*nIndex)+iList;
+        stimPeakTable.Animal(indexList) = stimRespExptTable.Animal(iList);
+        stimPeakTable.Description(indexList) = data(iList).Description;
+        stimPeakTable.ROI(indexList) = [peakData.ROILabels(iROI)];
+        stimPeakTable.File(indexList) = data(iList).index;
+        stimPeakTable.MaxPeak(indexList) = data(iList).ROI(iROI).maxPeaks(1,1);
+        stimPeakTable.PeakTime(indexList) = data(iList).ROI(iROI).peakTimes(1,1);
+    end
+end
+
+
+subsetPsil = 'Psilocybin';
+PsilTable = stimPeakTable(contains(stimPeakTable.Description,subsetPsil),:);
+
+subsetSal = 'Saline'
+SalineTable = stimPeakTable(contains(stimPeakTable.Description,subsetSal),:);
+
+subset6f = '6-FDET'
+SalineTable = stimPeakTable(contains(stimPeakTable.Description,subset6f),:);
+
+
+%% plotting
+
+    
+subsetAnimal = 'ZZ14';
+ZZ14Table = PsilTable(contains(PsilTable.Animal,subsetAnimal),:);
+figure()
+plot(ZZ14Table.MaxPeak)
+xticks(1:size(ZZ14Table.Description))
+xticklabels(ZZ14Table.Description)
+
+
+subsetAnimal = 'ZZ10';
+ZZ10Table = PsilTable(contains(PsilTable.Animal,subsetAnimal),:);
+
+
+subsetAnimal = 'ZZ19';
+ZZ19Table = PsilTable(contains(PsilTable.Animal,subsetAnimal),:);
+figure()
+plot(ZZ19Table.MaxPeak)
+xticks(1:size(ZZ19Table.Description))
+xticklabels(ZZ19Table.Description)
+
+
+
+%%
 % ============================================================
 % This block is to find which of the expts is the injection index
 % here's a way to prune further: a subset of experiments from a user input
@@ -62,40 +170,6 @@ if exist('subset','var')
 end
 
 % =========================================================================
-exptList = stimRespExptTable.DateIndex;
-
-% % % ========= step through the new list and perform calculations ========
-nIndex = size(exptList,1);
-nROI = 3;
-data = struct();
-for iList = 1:nIndex
-    exptDate = exptList{iList}(1:5);
-    exptIndex = exptList{iList}(7:9);
-    dirStrAnalysis = [ getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
-    data(iList).index = exptList{iList};  
-    try 
-        load([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData');
-        for iROI = 1:size(peakData.ROILabels,1)
-            % this is where we grab the calculated peaks.
-            [data(iList).ROI(iROI).maxPeaks,peakIndex] = max(peakData.pkVals(iROI).data,[],2);
-            for ii = 1:size(peakData.pkVals(iROI).peakTimeCalc,1)
-                data(iList).ROI(iROI).peakTimes(ii) = peakData.pkVals(iROI).peakTimeCalc(ii,peakIndex(ii));
-            end        
-%             data(iList).ROI(iROI).peakTimes = peakData.pkSearchData(iROI).tPk; % this will change
-            if isempty(data(iList).ROI(iROI).maxPeaks) % if someone didn't select a peak
-                error('The program requires the number of peaks selected to be the same, every day, for an animal')
-            end
-        end
-    catch
-        
-        for iROI = 1:nROI
-            data(iList).ROI(iROI).maxPeaks = NaN;
-            data(iList).ROI(iROI).peakTimes = NaN;
-        end
-    end
-end
-
-
 % % % ======= Here's a table of peaks and times relative to stim ==========
 % this is necessary to be sure we're looking at the same peaks across days
 % we need to account for the number - if an inconsistant number of peaks
@@ -146,6 +220,37 @@ for ii = 1:length(exptList)
 end
 
 
+% % % ========= step through the new list and perform calculations ========
+nIndex = size(exptList,1);
+nROI = 1;
+data = struct();
+for iList = 1:nIndex
+    exptDate = exptList{iList}(1:5);
+    exptIndex = exptList{iList}(7:9);
+    dirStrAnalysis = [ getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
+    data(iList).index = exptList{iList};  
+    try 
+        load([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData');
+        for iROI = 1
+            % this is where we grab the calculated peaks.
+            [data(iList).ROI(iROI).maxPeaks,peakIndex] = max(peakData.pkVals(iROI).data,[],2);
+            for ii = 1:size(peakData.pkVals(iROI).peakTimeCalc,1)
+                data(iList).ROI(iROI).peakTimes(ii) = peakData.pkVals(iROI).peakTimeCalc(ii,peakIndex(ii));
+            end        
+%             data(iList).ROI(iROI).peakTimes = peakData.pkSearchData(iROI).tPk; % this will change
+            if isempty(data(iList).ROI(iROI).maxPeaks) % if someone didn't select a peak
+                error('The program requires the number of peaks selected to be the same, every day, for an animal')
+            end
+        end
+    catch
+        
+        for iROI = 1
+            data(iList).ROI(iROI).maxPeaks = NaN;
+            data(iList).ROI(iROI).peakTimes = NaN;
+        end
+    end
+end
+
 % ===================== finally we plot ===================================
 % optional display of one of the stim/resp peaks
 exptDate = exptList{1}(1:5);
@@ -157,18 +262,17 @@ catch
     error(['Problem loading ' [outPath exptDate '-' exptIndex '_peakData']]);
 end
 
-
-
 %Create the plot matrix of the maximum peak values here
-for iROI = 1:nROI
+for iROI = 1
     for ii = 1:length(data)
         plotMatrix(ii,iROI) = data(ii).ROI(iROI).maxPeaks(1,1);
     end
 end
 
+plotA = figure();
 
-plotH = figure();
-for iROI = 1:nROI
+
+for iROI = 1
     % plot the peaks over time
     subtightplot(4,10,(1:8)+10*(iROI-1));
     plot(exptSeq,plotMatrix(:,iROI),'x-');
