@@ -1,6 +1,7 @@
 function [singleTrialPeakData] = singleTrialStimResp_userInput(exptDate,exptIndex)
 
-%This is to get the single trial data for my experiments
+%This is to get the single trial peak data for in vivo LFP experiments and to plot single
+%trial peaks
 
 % .subMean will be (ROI x samples)
 % .sub will be (ROI x trials x samples)
@@ -8,10 +9,10 @@ function [singleTrialPeakData] = singleTrialStimResp_userInput(exptDate,exptInde
 % 2. wherever I am looping through the iROI i will have to loop through the
 % trials
 % 3. Smooth the curve wherever the data is plotted out
-%exptTable = readtable('C:\Users\Grady\Documents\Zarmeen Data\PeakMax\SalineTableSingleTrial.csv');
+
 clear all
-      exptDate = '22120'
-      exptIndex = '002'
+exptTable = readtable('C:\Users\Grady\Documents\Zarmeen Data\PeakMax\SalineTableSingleTrial.csv');
+for iExpt = 1:size(exptTable,1)
       
 relevantROIs = {'mPFC', 'LFP R PFC'}; % labels in database can be any of these
 % Window for analysis and plotting, relative to stim time
@@ -24,6 +25,9 @@ avgWinTime = 1.e-3; %sec;
 % Time window re stim time to calculate baseline value that is subtracted from peak values
 baseWin = [-5,-0.5]*1.e-3; %sec; 
 %hardcoded location - not ideal, but this works for now
+date = char(exptTable.DateIndex{iExpt});
+exptDate = date(1:5);
+exptIndex = date(7:9);
 fileString = [exptDate '-' exptIndex];
 outPath = [getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' fileString '\'];
 
@@ -276,7 +280,7 @@ for iStim = 1:length(stimSet)
     allTraces(iStim).ampLabel = ampLabel{iStim};
 
 end
-% we will save 
+% here is where all the SAVING happens this will create indivudal files
 % Time of peak re stim time
 % Response magnitude (pk, inner product)
 % Time of stim relative to start of file
@@ -296,17 +300,12 @@ singleTrialPeakData.stimSet = stimSet;
 save([outPath fileString '_singleTrialPeakData'],'singleTrialPeakData','plotTimeArray','allTraces');
 
 
-% also save long term data
-% 
-% if ~exist('peakDataOverTime','var')
-%     peakDataOverTime = struct;
-% end
-% peakDataOverTime.(['expt' strrep(fileString,'-','')]).peakData = singleTrialPeakData;
-% save([outPath2 animal '_peakDataOverTime'],'peakDataOverTime');
-% 
+
 %% 
 %plotting now contained here (so we can call it from other programs)
 sendToSlack = false;
 plotCalculatedPeaks = false;
-plotStimRespByDateIndex(exptDate,exptIndex,sendToSlack,plotCalculatedPeaks)
+plotSingleTrialStimRespByDateIndex(exptDate,exptIndex,sendToSlack,plotCalculatedPeaks)
+end
+
 

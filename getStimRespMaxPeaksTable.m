@@ -3,7 +3,7 @@
 %% Define animal and subset
 
 
-animal = {'ZZ06', 'ZZ07','ZZ08','ZZ09','ZZ10','ZZ11','ZZ12','ZZ13','ZZ14','ZZ15','ZZ16','ZZ19', 'ZZ20', 'ZZ21', 'ZZ22'};
+animal = {'ZZ06', 'ZZ07','ZZ08','ZZ09','ZZ10','ZZ11','ZZ12','ZZ13','ZZ14','ZZ15','ZZ16','ZZ19', 'ZZ20', 'ZZ21', 'ZZ22','ZZ24','ZZ26'};
 %animal = {'ZZ16'}
 % subset={'21804','22117','22203'};
 % drug =;
@@ -22,13 +22,20 @@ end
 % stimRespExptTable = stimRespExptTable(stimRespExptTable.stimResp == true,:);
 
 %% This is to prune without subset
-stimRespExptTable = exptTableComplete(exptTableComplete.spon == true,:);
+stimRespExptTable = exptTableComplete(exptTableComplete.stimResp == true,:);
 
 % stimRespExptTable.Saline = contains(stimRespExptTable.Description, 'Saline');
 % stimRespExptTable.Psilocybin = contains(stimRespExptTable.Description, 'Psilocybin');
+stimRespExptTable.FDET = contains(stimRespExptTable.Description, '6-FDET');
 % 
 % SalineTable = stimRespExptTable(stimRespExptTable.Saline == true,:)
 % PsilTable = stimRespExptTable(stimRespExptTable.Psilocybin == true,:)
+FDETTable = stimRespExptTable(stimRespExptTable.FDET == true,:)
+
+outPath = ['C:\Users\Grady\Documents\Zarmeen Data\PeakMax'];
+tableOutPath = fullfile(outPath, 'sponTable.csv')
+writetable(stimRespExptTable, tableOutPath)
+
 
 %%
 % % % ========= step through the new list and pull data ========
@@ -73,13 +80,13 @@ for iList = 1:nIndex
         manualPeakEntry = [1];
     end
     if contains(exptList{iList,2},'ZZ22')
-        manualPeakEntry = [2];
+        manualPeakEntry = [1];
     end
     try 
         load([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData');
-        %for iROI = 1:size(peakData.ROILabels,1) %look to remove this for loop
-            % this is where we grab the calculated peaks.
-            %[data(iList).ROI(iROI).maxPeaks] = max(peakData.pkVals(iROI).data,[],2);
+%         if ~exist([dirStrAnalysis exptDate '-' exptIndex '_peakData'],'peakData')
+%             [peakData] = evokedStimResp_userInput(exptDate,exptIndex)
+%         end
             peakAbs = abs(peakData.pkVals(1).data);
             [peakMax, peakIndex] = max(peakAbs,[],2);
             peakIndexUse = peakIndex(manualPeakEntry,1);
@@ -126,7 +133,7 @@ end
 %% Export as CSV for prism
 
 outPath = ['C:\Users\Grady\Documents\Zarmeen Data\PeakMax'];
-tableOutPath = fullfile(outPath, 'stimPeakTable23120.csv')
+tableOutPath = fullfile(outPath, 'stimPeakTable23503.csv')
 writetable(stimPeakTable, tableOutPath)
 
 
