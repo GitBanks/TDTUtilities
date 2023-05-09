@@ -105,6 +105,8 @@ for iChan = 1:nChans
     specdata(iChan).data = specdata(iChan).data';
 end
 
+
+
 windowTimes = out.segmentTimeOfDay{1,1};
 [exptDate_dbForm] = houseConvertDateTo_dbForm(exptDate);
 windowTimes = datetime(exptDate_dbForm,'TimeZone','local')+windowTimes;
