@@ -45,11 +45,45 @@ switch str
         p = [M 'PassiveEphys\AnimalData\'];
     case 'pipelineSaves'
         p = [M 'PassiveEphys\AnimalData\initial\'];
-    case 'CodyLocalHTRData'
-        p = ['C:\Users\Matt Banks\Documents\Molecular Devices\pCLAMP\Data\'];
     case 'banksLocalHTRData'
         p = [M 'PassiveEphys\AnimalData\HTRDrugGroupList.xlsx']; % using the animal saves location
 
+    % group references
+    % xlsTableGroupInfo is an xls table of a specific group of mice - this 
+    % will be used in bandpower comparisons between groups, but can also be
+    % useful in other programs.
+    % matTableBandpower is a matlab format bandbower data for use in
+    % comparison plotting
+    case 'FLVX-xlsTableGroupInfo'
+        p = [M 'PassiveEphys\mouseEEG\FLVXGroupInfo.xlsx'];
+    case 'FLVX-matTableBandpower'
+        p = [M 'PassiveEphys\mouseEEG\FLVXBandpowerData.mat'];
+
+    case '2020_PSYLOCYBIN_LPS-xlsTableGroupInfo'
+        p = [M 'PassiveEphys\mouseEEG\2020PsilocybinLPSGroupInfo.xlsx'];
+    case '2020_PSYLOCYBIN_LPS-matTableBandpower'
+        p = [M 'PassiveEphys\mouseEEG\2020PsilocybinLPSBandpowerData.mat'];
+
+    case 'LPS2020-xlsTableGroupInfo'
+        p = [M 'PassiveEphys\mouseEEG\mouseGroupInfo.xlsx'];
+    case 'LPS2020-matTableBandpower'
+        p = [M 'PassiveEphys\mouseEEG\LPS2020BandpowerData.mat'];
+
+    case 'Sigma1-xlsTableGroupInfo'
+        p = [M 'PassiveEphys\mouseEEG\Sigma1GroupInfo.xlsx'];
+    case 'Sigma1-matTableBandpower'
+        p = [M 'PassiveEphys\mouseEEG\Sigma1BandpowerData.mat'];
+
+    case 'combined-xlsTableGroupInfo'
+        p = [M 'PassiveEphys\mouseEEG\combinedGroupInfo.xlsx'];
+    case 'combined-matTableBandpower'
+        p = [M 'PassiveEphys\mouseEEG\combinedBandpowerData.mat'];
+
+    case 'ZZ-xlsTableGroupInfo'
+        p = [M 'PassiveEphys\mouseLFP\ZZGroupInfo.xlsx'];
+    case 'ZZ-matTableBandpower'
+        p = [M 'PassiveEphys\mouseLFP\ZZBandpowerData.mat'];
+  
 
 
     % for specific file paths (old)
@@ -62,17 +96,15 @@ switch str
     case 'wPLI'
         p = [W 'PassiveEphys\EEG animal data\mouseEphys_conn_dbt_noParse_20sWin_0p5sTrial_psychedelics.mat'];
 
-    % Cody's lab paths    
+    % Cody's lab paths !!! this is local, not global!!!   
     case 'CodyLocalHTRDataSource'
         p = 'C:\Users\soplab\Documents\Molecular Devices\pCLAMP\Data\';
     case 'CodyLocalHTRDataSave'
         p = 'C:\WenthurLab\Data\';
     case 'CodyLocalMetaDataSave'
         p = 'C:\WenthurLab\Data\HTR-2022-mouse-DMT.xlsx';
-    
-
     case 'CodyLocalHTRData'
-        p = ['C:\Users\Matt Banks\Documents\Molecular Devices\pCLAMP\Data\'];
+        p = 'C:\Users\Matt Banks\Documents\Molecular Devices\pCLAMP\Data\';
 
     otherwise
         disp('wtf nothing assigned');

@@ -1,4 +1,4 @@
-function [avgCenters,avgCounts] = getPlotHTRBinnedAvgByGroup(thisGroup,thisFile,displayEachAnimal,binSize,displaySummary)
+function [avgCenters,avgCounts,avgSTD] = getPlotHTRBinnedAvgByGroup(thisGroup,thisFile,displayEachAnimal,binSize,displaySummary)
 % for now, this works by giving the function a drug name, but we also would
 % like it to accept a list of animals
 
@@ -64,18 +64,34 @@ for iExpt = 1:size(animalDateTable,1)
 end
 
 
-avgCenters = S(1).allCenters;
-avgCounts = S(1).allCounts;
+avgCenters = S(1).allCenters; % these will all be the same.  We made sure of that above.
 
-for iExpt = 2:size(S,2)
-    avgCounts = S(iExpt).allCounts+avgCounts;
+% avgCounts = S(1).allCounts;
+% avgSTD = std(avgCounts);
+
+newCountArray = zeros(length(S),length(S(1).allCounts));
+for iExpt = 1:size(S,2)
+    newCountArray(iExpt,:) = S(iExpt).allCounts;
 end
-avgCounts = avgCounts/size(S,2);
+avgCounts = mean(newCountArray,1);
+avgSTD = std(newCountArray);
+
+err = avgSTD/sqrt(length(avgCounts));
+
+% for iExpt = 2:size(S,2)
+%     avgCounts = S(iExpt).allCounts+avgCounts;
+% end
+% avgCounts = avgCounts/size(S,2);
 
 
 if displaySummary
     figure;
     bar(avgCenters,avgCounts);
+    hold on
+    er = errorbar(avgCenters,avgCounts,err);
+    er.Color = [0 0 0];                            
+    er.LineStyle = 'none';
+
     title([treatment ' n=' num2str(size(S,2))]);
     xlabel('min (5 min bins)');
     ylabel('Average HTR');
