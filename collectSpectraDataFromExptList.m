@@ -16,7 +16,7 @@ switch setName
     case '2020_PSYLOCYBIN_LPS'
 %         tname = getPathGlobal([setName '-xlsTableGroupInfo']);
 %         saveFileName = getPathGlobal([setName '-matTableBandpower']);
-        error('you need to reedit this table before using it - add an include column for starters');
+        error('you need to reedit this table before using it - add an ''include column'' for starters');
 
     case 'LPS2020' % untested - this is framework only
 %         tname = getPathGlobal([setName '-xlsTableGroupInfo']);
