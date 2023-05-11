@@ -4,6 +4,19 @@ function [exptTable] = getAnimalsByTreatment(treatment)
 dbConn = dbConnect(); %handle this better?  close db at end?
 query = ['SELECT * FROM `global_stimparams` WHERE `paramfield` LIKE ' '''' treatment ''''];
 masterResult = fetchAdjust(dbConn,query);
+% we'd like to add a check here to see if the drug name was wrong (a common
+% problem, since it needs to match the database name exactly). if
+% masterResult is empty, try again, but use a 'pop-up' selection thingy.
+if isempty(masterResult)
+    treatment = popupGetDrugSelection();
+    query = ['SELECT * FROM `global_stimparams` WHERE `paramfield` LIKE ' '''' treatment ''''];
+    masterResult = fetchAdjust(dbConn,query);
+    if isempty(masterResult)
+        error('invalid input.  check popupGetDrugSelection or the database');
+    end
+end
+
+
 exptIDlist = masterResult(:,2);
 
 sz = [length(exptIDlist) 5];
