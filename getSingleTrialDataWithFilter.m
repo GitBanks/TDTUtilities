@@ -1,5 +1,3 @@
-function [singleTrialPeakData] = singleTrialStimResp_userInput(exptDate,exptIndex)
-
 %This is to get the single trial peak data for in vivo LFP experiments and to plot single
 %trial peaks
 
@@ -11,12 +9,12 @@ function [singleTrialPeakData] = singleTrialStimResp_userInput(exptDate,exptInde
 % 3. Smooth the curve wherever the data is plotted out
 
 clear all
-exptTable = readtable('C:\Users\Grady\Documents\Zarmeen Data\PeakMax\SalineTableSingleTrial.csv');
+exptTable = readtable('C:\Users\Grady\Documents\Zarmeen Data\PeakMax\SRList.csv');
 for iExpt = 1:size(exptTable,1)
       
 relevantROIs = {'mPFC', 'LFP R PFC'}; % labels in database can be any of these
 % Window for analysis and plotting, relative to stim time
-tPreStim = 0.02; %sec
+tPreStim = 0.05; %sec
 tPostStim = 0.2; %sec
 % Start searching for peaks and troughs of responses after this time
 artifactDur = 2.e-3; %sec;
@@ -45,15 +43,6 @@ end
 [stimSet,dTRec,stimArray,stimTimes] = getSynapseStimSetData(exptDate,indexOut,tPreStim,tPostStim,isTank);
 
 
-% first check if exptDate matches the problem date.
-
-% stimSet will have channel x sample data, so swap the channel dimension
-% around as needed.
-
-% thinking on this... Matt may say "why didn't you just fix the data".  If
-% we want to do that, you could load the problem day, swap the channels in
-% the array as I suggested above, then save.  Make sure there's a backup.-
-% can we do this?? i think that would be best 
 if contains(exptDate,'22706')
     for i = 1:size(stimSet,2)
         stimSet(i).data(1:2,:,:) = stimSet(i).data(5:6,:,:); % or whatever chan - 5:6?  
@@ -141,8 +130,56 @@ if isfile([outPath2 animal '_peakDataOverTime.mat'])
         p(iROI).yPkList = yPkList;
     end
 end
+%% Subtract baseline from post stimulus period to zero out any abberrations 
+baseWinIndex = floor(baseWin/dTRec)
+plotTimeArray = dTRec*(-preStimIndex:postStimIndex)
 
-%% Plot average traces
+figure() %Visualize raw data
+for iStim = 1:nStims
+   for iTrial = 1:nTrials
+       hold on
+    plot(plotTimeArray,squeeze(stimSet(iStim).sub(1,iTrial,:)))
+   end
+end
+
+for iROI = 1 %:nROIs
+    for iStim = 1:nStims
+         for iTrial = 1:nTrials
+     tempMn = stimSet(iStim).sub(iROI,iTrial,:);
+     baseVal = mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
+     data(iStim).sub(1,iTrial,:) = tempMn  - baseVal;
+         end
+    end
+end
+
+
+figure() %Visualize normalized data
+for iStim = 1:nStims
+   for iTrial = 1:nTrials
+       hold on
+    plot(plotTimeArray,squeeze(data(iStim).sub(1,iTrial,:)))
+   end
+end
+
+   
+%% Apply filter to data
+%gausswin() will give you a gaussian window, by default it's 2.5 SD wide. 
+%Sampling frequency (fs) in Hz, times 20/2000 is 20 milliseconds wide so, 10 ms on either side;
+
+f = gausswin((1/dTRec)*(20/10000)); 
+
+%makes sure the filter sums to 1
+f = f/sum(f);
+for iStim = 1:length(stimSet)
+    for iTrials = 1:nTrials
+       tempData = data(iStim).sub(1,iTrial,:);
+       tempData = squeeze(filter(f,1,tempData))';
+       data(iStim).sub(1,iTrials,:) = tempData;
+    end
+end
+ 
+
+%% Plot traces
 ampLabel = [];
 
 for iStim = 1:nStims
@@ -162,14 +199,13 @@ for iROI = 1 %:nROIs
     hold on
     for iStim = 1:length(stimSet)
         for iTrials = 1:nTrials
-            filterData = smooth((stimSet(iStim).sub(iROI,iTrials,:)), 4);
-            plot(plotTimeArray,squeeze(stimSet(iStim).sub(iROI,iTrials,:)));
-            plot(plotTimeArray,squeeze(filterData))
+            %plot(plotTimeArray,squeeze((stimSet(iStim).sub(iROI,iTrials,:))));
+            plot(plotTimeArray,squeeze(data(iStim).sub(1,iTrials,:)));
         end
     end
-    if exist('tPkList','var')
-        plot(p(iROI).tPkList,p(iROI).yPkList,'*b','MarkerSize',8);
-    end
+%     if exist('tPkList','var') %Comment this in or out if you want to see where previous peaks were selected
+%         plot(p(iROI).tPkList,p(iROI).yPkList,'*b','MarkerSize',8); 
+%     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
     ax.YLim = [-40.0e-05, 40.0e-05]%[1.05*plotMin(iROI),1.05*plotMax(iROI)];
@@ -177,7 +213,7 @@ for iROI = 1 %:nROIs
     if iROI == 1
         ax.YLabel.String = 'avg dataSub (V)';
     end
-    %ax.Title.String = ROILabels(1);
+ 
     if iROI == nROIs
         legend(ampLabel,'FontSize',6,'Location','NorthEast');
         legend('boxoff');
@@ -241,10 +277,12 @@ for iROI = 1 %:nROIs
                 else
                     [~, pkIndex] = min(tempMn(tempIndA(1):tempIndA(2)));
                 end
-                baseVal = mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2))); % this is the baseline pre stim 
+                %baseVal = mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2))); % this is the baseline pre stim 
                 tempIndB(1) = actualStimIndex+pkSearchIndices(1)+pkIndex-avgWinIndex;
                 tempIndB(2) = actualStimIndex+pkSearchIndices(1)+pkIndex+avgWinIndex;
-                pkVals(iROI).data(iStim,iTrial) = mean(tempMn(tempIndB(1):tempIndB(2))) - baseVal;
+                %pkVals(iROI).data(iStim,iTrial) =
+                %mean(tempMn(tempIndB(1):tempIndB(2))) - baseVal; %this is
+                %now being done above
                 pkVals(iROI).peakTimeCalc(iStim, iTrial) = (pkIndex+tempIndA(1))*dTRec-tPreStim;
                 pkVals(iROI).baseVal(iStim, iTrial) = baseVal;
             end
@@ -271,7 +309,7 @@ for iStim = 1:nStims
     end
 end
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
-
+end
 
 %%
 for iStim = 1:length(stimSet)
@@ -284,28 +322,21 @@ end
 % Time of peak re stim time
 % Response magnitude (pk, inner product)
 % Time of stim relative to start of file
-singleTrialPeakData = struct;
-singleTrialPeakData.pkSearchData = pkSearchData; % user selected Time of peak re stim time
-singleTrialPeakData.ROILabels = ROILabels; %corresponding labels
-singleTrialPeakData.stimArrayNumeric = stimArrayNumeric;
-singleTrialPeakData.pkVals = pkVals; % Response magnitude 
-singleTrialPeakData.stimTimes = stimTimes; % Time of stim relative to start of file
-singleTrialPeakData.plotMin = plotMin;
-singleTrialPeakData.plotMax = plotMax;
-singleTrialPeakData.plotTimeArray = plotTimeArray; 
-singleTrialPeakData.allTraces = allTraces;
-singleTrialPeakData.stimSet = stimSet;
+singleTrialPeakDataFilt = struct;
+singleTrialPeakDataFilt.pkSearchData = pkSearchData; % user selected Time of peak re stim time
+singleTrialPeakDataFilt.ROILabels = ROILabels; %corresponding labels
+singleTrialPeakDataFilt.stimArrayNumeric = stimArrayNumeric;
+singleTrialPeakDataFilt.pkVals = pkVals; % Response magnitude 
+singleTrialPeakDataFilt.stimTimes = stimTimes; % Time of stim relative to start of file
+singleTrialPeakDataFilt.plotMin = plotMin;
+singleTrialPeakDataFilt.plotMax = plotMax;
+singleTrialPeakDataFilt.plotTimeArray = plotTimeArray; 
+singleTrialPeakDataFilt.allTraces = allTraces;
+singleTrialPeakDataFilt.stimSet = stimSet;
 
     
-save([outPath fileString '_singleTrialPeakData'],'singleTrialPeakData','plotTimeArray','allTraces');
+save([outPath fileString '_singleTrialPeakDataFilt'],'singleTrialPeakDataFilt','plotTimeArray','allTraces');
 
-
-
-%% 
-%plotting now contained here (so we can call it from other programs)
 sendToSlack = false;
 plotCalculatedPeaks = false;
 plotSingleTrialStimRespByDateIndex(exptDate,exptIndex,sendToSlack,plotCalculatedPeaks)
-end
-
-

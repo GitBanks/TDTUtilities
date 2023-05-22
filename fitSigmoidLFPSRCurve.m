@@ -1,47 +1,56 @@
-tableFile = 'C:\Users\Grady\Documents\Zarmeen Data\PeakMax\stimPeakTable23120';
+tableFile = 'C:\Users\Grady\Documents\Zarmeen Data\SingleTrialPeakMax\singleTrialDataCombined';
 
  
 animalTable = readtable(tableFile); % read in metadata
 %animalTable = animalTable(animalTable.use==1,:); % remove animals that should be excluded from analysis 
 
-
-% searchDir = getLocalPath('slopeData');
-% dirCheck = dir(searchDir);
-% fNames = {dirCheck.name};
-
 outputTable = [];
-%outPath = getLocalPath('sigmoidFits');
 
+animalList = unique(animalTable.DateIndex)
 
 
 % loop through entries in table
-for ii = 1:height(animalTable)
-    exptDateIndex = animalTable.File(ii);
+for ii = 1:size(animalList,1)
+    exptDateIndex = animalList(ii);
     exptDateIndex = char(exptDateIndex);
-    exptDate = exptDateIndex(1:5);
-    
-%     dirStrAnalysis = [ getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' exptDateIndex '\']
-%     load([dirStrAnalysis exptDateIndex '_peakData'],'peakData'); 
-   
-       data = getStimResponse(workbookFile, sheetName, dataLines);
+
+        searchString = ['C:\Users\Grady\Documents\Zarmeen Data\SingleTrialPeakMax\' exptDateIndex];
+        dataComplete = readtable(searchString);
+        dataToUse = dataComplete(:,4:34)
+        data = table2array(dataToUse)
        
-       if ~isnan(data)
-           x = data(:,1); % stimulus intensity (uA)
-           y = abs(data(:,2)); % response 2 would be PRE LTP and 3 would be POST LTP
+       if ~isempty(data)
+           cols_with_all_zeros = find(all(data==0));
+           n = numel(cols_with_all_zeros);
+           columnCount = size(data,2) - n;
+           trialsToUse = data(:, 2:columnCount)
+           xData = data(:,1)
+           stimIntensity = repmat(xData, columnCount-1,1)
+           yData = trialsToUse
+           yData = yData(:)
            
-           % fit sigmoid to stim-response data
+        
+           x = stimIntensity; % stimulus intensity (uA)
+           y = yData; 
            
+           % Set paramter estimates and fit sigmoid to stim-response data
            a = 2; % height
            b = .15; % temperature/"heat" parameter of sigmoid, i.e. the slope
            c = 200; % center point of function
+           k = mean(trialsToUse(1,:));
            p0 = [a b c]; % initial conditions
-           lower = [0 0 0];
-           upper = [5 1 400];
+           lower = [k 0 0 0];
+           upper = [k 5 1 400];
            
-           expression = 'a/(1+exp(-b*(x-c)))';
-           sigmoid = fittype(expression); %fittype('L + (U-L)/(1 + exp(-4*log(3)*(x-xmid)/xscale80))','indep','x'); 
+          %expression = 'a/(1+exp(-b*(x-c)))'; we are adding K to account
+          %for the variance in the sub threshold sim intensity this will
+          %let the Y intercpt vary
+           expression = 'k + (a-k)/(1+exp(-b*(x-c))';
+           sigmoid = fittype(expression); 
            fo = fitoptions('Method','NonlinearLeastSquares','Lower',lower,'Upper',upper,'StartPoint',p0);
-           [f,goodness] = fit(x,y,sigmoid,fo);
+           
+               [f,goodness] = fit(x,y,sigmoid,fo);
+               
            % extract values from the model fit
            cnames = coeffnames(f);
            cvals = coeffvalues(f);
@@ -53,7 +62,7 @@ for ii = 1:height(animalTable)
            xlabel('stim intensity (uA)');
            ylabel('fEPSP slope');
 %            ylim([0 5]);
-           title(searchString);
+           title(exptDateIndex);
            legend('Location','southeast');
            fname = [outPath searchString];
            %print('-painters',fname,'-dpng');
@@ -88,9 +97,9 @@ for ii = 1:height(animalTable)
        end
 
    else
-      warning(['search for: ' searchString ' unsuccessful']); 
-   end
+      warning(['search for: ' searchString ' unsuccessful']);
 end
+
 
 outPath = getLocalPath('summaryData');
 csvFile = [outPath '\sigmoid fit table new Post.csv'];
