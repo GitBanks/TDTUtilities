@@ -7,9 +7,9 @@
 % 2. wherever I am looping through the iROI i will have to loop through the
 % trials
 % 3. Smooth the curve wherever the data is plotted out
-
+close all
 clear all
-exptTable = readtable('C:\Users\Grady\Documents\Zarmeen Data\PeakMax\SRList.csv');
+exptTable = readtable('M:\Zarmeen\Data\SR Model Fits\SRTableComplete.csv');
 for iExpt = 1:size(exptTable,1)
       
 relevantROIs = {'mPFC', 'LFP R PFC'}; % labels in database can be any of these
@@ -23,9 +23,12 @@ avgWinTime = 1.e-3; %sec;
 % Time window re stim time to calculate baseline value that is subtracted from peak values
 baseWin = [-5,-0.5]*1.e-3; %sec; 
 %hardcoded location - not ideal, but this works for now
-date = char(exptTable.DateIndex{iExpt});
-exptDate = date(1:5);
-exptIndex = date(7:9);
+%date = char(exptTable.Index{iExpt});
+
+exptDate = '21624';
+exptIndex = '006';
+% exptDate = date(1:5);
+% exptIndex = date(7:9);
 fileString = [exptDate '-' exptIndex];
 outPath = [getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' fileString '\'];
 
@@ -41,6 +44,16 @@ end
 
 [~,indexOut,isTank] = getIsTank(exptDate,exptIndex);
 [stimSet,dTRec,stimArray,stimTimes] = getSynapseStimSetData(exptDate,indexOut,tPreStim,tPostStim,isTank);
+if contains(exptDate,'22705')
+    for i = 1:size(stimSet,2)
+        stimSet(i).data(1:2,:,:) = stimSet(i).data(5:6,:,:); % or whatever chan - 5:6?  
+        %yes
+        % and also 
+        stimSet(i).sub(1,:,:) = stimSet(i).sub(3,:,:);
+        stimSet(i).dataMean(1:2,:) = stimSet(i).dataMean(5:6,:);
+        stimSet(i).subMean(1,:) = stimSet(i).subMean(3,:);
+    end
+end
 
 
 if contains(exptDate,'22706')
@@ -171,10 +184,10 @@ f = gausswin((1/dTRec)*(20/10000));
 %makes sure the filter sums to 1
 f = f/sum(f);
 for iStim = 1:length(stimSet)
-    for iTrials = 1:nTrials
+    for iTrial = 1:nTrials
        tempData = data(iStim).sub(1,iTrial,:);
        tempData = squeeze(filter(f,1,tempData))';
-       data(iStim).sub(1,iTrials,:) = tempData;
+       data(iStim).sub(1,iTrial,:) = tempData;
     end
 end
  
@@ -208,7 +221,7 @@ for iROI = 1 %:nROIs
 %     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [-40.0e-05, 40.0e-05]%[1.05*plotMin(iROI),1.05*plotMax(iROI)];
+    ax.YLim = [-20.0e-05, 20.0e-05] %[1.05*plotMin(iROI),1.05*plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
         ax.YLabel.String = 'avg dataSub (V)';
@@ -277,12 +290,10 @@ for iROI = 1 %:nROIs
                 else
                     [~, pkIndex] = min(tempMn(tempIndA(1):tempIndA(2)));
                 end
-                %baseVal = mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2))); % this is the baseline pre stim 
+               baseVal = mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2))); % this is the baseline pre stim 
                 tempIndB(1) = actualStimIndex+pkSearchIndices(1)+pkIndex-avgWinIndex;
                 tempIndB(2) = actualStimIndex+pkSearchIndices(1)+pkIndex+avgWinIndex;
-                %pkVals(iROI).data(iStim,iTrial) =
-                %mean(tempMn(tempIndB(1):tempIndB(2))) - baseVal; %this is
-                %now being done above
+                pkVals(iROI).data(iStim,iTrial) = mean(tempMn(tempIndB(1):tempIndB(2))) - baseVal;
                 pkVals(iROI).peakTimeCalc(iStim, iTrial) = (pkIndex+tempIndA(1))*dTRec-tPreStim;
                 pkVals(iROI).baseVal(iStim, iTrial) = baseVal;
             end
@@ -309,7 +320,7 @@ for iStim = 1:nStims
     end
 end
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
-end
+
 
 %%
 for iStim = 1:length(stimSet)
@@ -335,7 +346,15 @@ singleTrialPeakDataFilt.allTraces = allTraces;
 singleTrialPeakDataFilt.stimSet = stimSet;
 
     
+outPath2 = ['M:\PassiveEphys\AnimalData\' animalName '\']
 save([outPath fileString '_singleTrialPeakDataFilt'],'singleTrialPeakDataFilt','plotTimeArray','allTraces');
+% saveas(figure1,[outPath2 'raw' exptDateIndex '.fig'])
+% saveas(figure2,[outPath2 'normalized' exptDateIndex  '.fig'])
+% saveas(thisFigure,[outPath2 'smoothed' exptDateIndex '.fig'])
+%  
+    
+
+end
 
 sendToSlack = false;
 plotCalculatedPeaks = false;
