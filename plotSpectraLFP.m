@@ -17,8 +17,11 @@ function summaryData = plotSpectraLFP(animalName,exptDate,chansToExclude,reportP
 % reportPlot = true;
 
 
-% this is just for Zarmeen's data
-saveFolder = 'M:\Zarmeen\data\spectra\';
+% % this is just for Zarmeen's data
+setName = 'ZZ';
+saveFolder = getPathGlobal([setName '-savePath']);
+% this is for Leo's data
+% saveFolder = 'M:\PassiveEphys\AnimalData\DOI\';
 
 if ~exist('reportPlot','var')
     reportPlot = false;
@@ -257,6 +260,7 @@ end
 % postDrugManipHour = 4;
 
 % % this is really ugly hardcoding.  FIX THIS!
+try
 summaryData.pre.move = mean(dataSet(1).movement);
 summaryData.post.move = mean(dataSet(4).movement);
 summaryData.pre.avgDelta = dataSet(1).avgDelta;
@@ -270,6 +274,9 @@ summaryData.post.avgAlpha = dataSet(4).avgAlpha;
 summaryData.post.avgBeta = dataSet(4).avgBeta;
 summaryData.post.avgGamma = dataSet(4).avgGamma;
 summaryData.TheseDrugs = TheseDrugs;
+catch
+    warning('summaryData did not get created, but we don''t need them for now');
+end
 % 
 % 
 % 
