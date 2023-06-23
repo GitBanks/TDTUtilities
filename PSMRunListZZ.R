@@ -9,11 +9,11 @@ setwd("C:/Users/Matt Banks/Documents/Code/TDTUtilities/")
 source("PropensityScoreMatching.R") 
 #xlsFilePath <- "//144.92.237.185/Data/PassiveEphys/mouseEEG/FLVXGroupInfo.xlsx"
 #xlsFilePath <- "//144.92.237.185/Data/PassiveEphys/mouseEEG/Sigma1GroupInfo.xlsx"
-xlsFilePath <- "//144.92.237.185/Data/PassiveEphys/mouseLFP/ZZcombinedGroupInfo.xlsx"
+xlsFilePath <- "//144.92.237.185/Data/PassiveEphys/mouseLFP/ZZGroupInfo.xlsx"
 
 myTable <- read_excel(xlsFilePath)
 # calc_prop_score("EEG234","23131") # this fails...
-for (x in 1:6) {
+for (x in 20) {
 	thisAnimal <- myTable[x, "animalName"]
 	thisDate <- myTable[x, "Dates"]
 	calc_prop_score(thisAnimal,thisDate)
