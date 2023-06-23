@@ -9,35 +9,38 @@ function collectSpectraDataFromExptList(setName)
 isLFP = false;
 
 switch setName
-    case 'FLVX' % working
-        tname = 'M:\PassiveEphys\mouseEEG\FLVXGroupInfo.xlsx';
-        saveFileName = 'M:\PassiveEphys\mouseEEG\FLVXBandpowerData.mat';
+    case 'FLVX' 
+        tname = getPathGlobal([setName '-xlsTableGroupInfo']);
+        saveFileName = getPathGlobal([setName '-matTableBandpower']);
 
     case '2020_PSYLOCYBIN_LPS'
-        tname = 'M:\PassiveEphys\mouseEEG\2020PsilocybinLPSGroupInfo.xlsx';
-        saveFileName = 'M:\PassiveEphys\mouseEEG\2020PsilocybinLPSBandpowerData.mat';
+%         tname = getPathGlobal([setName '-xlsTableGroupInfo']);
+%         saveFileName = getPathGlobal([setName '-matTableBandpower']);
+        error('you need to reedit this table before using it - add an ''include column'' for starters');
 
     case 'LPS2020' % untested - this is framework only
-        tname = 'M:\PassiveEphys\mouseEEG\mouseGroupInfo.xlsx';
-        saveFileName = 'M:\PassiveEphys\mouseEEG\LPS2020BandpowerData.mat';
+%         tname = getPathGlobal([setName '-xlsTableGroupInfo']);
+%         saveFileName = getPathGlobal([setName '-matTableBandpower']);
+        error('you need to reedit this table before using it - add an include column for starters');
 
     case 'Sigma1' % untested - this is framework only
-        tname = 'M:\PassiveEphys\mouseEEG\Sigma1GroupInfo.xlsx';
-        saveFileName = 'M:\PassiveEphys\mouseEEG\Sigma1BandpowerData.mat';
+        tname = getPathGlobal([setName '-xlsTableGroupInfo']);
+        saveFileName = getPathGlobal([setName '-matTableBandpower']);
 
     case 'combined' % untested - this is framework only
-        tname = 'M:\PassiveEphys\mouseEEG\combinedGroupInfo.xlsx';
-        saveFileName = 'M:\PassiveEphys\mouseEEG\combinedBandpowerData.mat';
+        tname = getPathGlobal([setName '-xlsTableGroupInfo']);
+        saveFileName = getPathGlobal([setName '-matTableBandpower']);
 
     case 'ZZ' % untested - this is framework only
-        tname = 'M:\PassiveEphys\mouseEEG\ZZGroupInfo.xlsx';
-        saveFileName = 'M:\PassiveEphys\mouseEEG\ZZBandpowerData.mat';
-        disp('If you tried using ZZ here - if you see this message, be sure the xls file exists, then take out this disp and keyboard statements.  This entry here is only to show how to add ZZ data to this switch')
-        keyboard
+        tname = getPathGlobal([setName '-xlsTableGroupInfo']);
+        saveFileName = getPathGlobal([setName '-matTableBandpower']);
+
+    case 'DOIKetanserin'
+        tname = getPathGlobal([setName '-xlsTableGroupInfo']);
+        saveFileName = getPathGlobal([setName '-matTableBandpower']);
 
     otherwise
         error('Need an appropriate table name from a recognized list: ''FLVX'' or ''LPS2020'' or ''ZZ'' so far ');
-
 end
 
 % this will take a while since it loads movement for each day in addition
@@ -100,6 +103,8 @@ switch setName
 %         end
     case 'combined'
 
+    case 'DOIKetanserin'
+
     case 'ZZ'
         isLFP = true;
        
@@ -131,6 +136,10 @@ for ii = 1:size(workingTable,2)
         TP = readtable(fileNameCSVP);
         workingTable(ii).data.pre.PSMavgDelta = [TA.grandMean(1),TP.grandMean(1)];
         workingTable(ii).data.post.PSMavgDelta = [TA.grandMean(2),TP.grandMean(2)];
+
+        % TODO: add section for alpha **OR** better, load in a single table
+        % if we figure out the R syntax
+
     catch
         disp([fileNameCSVA ' or P NOT FOUND']);
         disp(['Please run PSM R code on ' animalName ' ' exptDate]);

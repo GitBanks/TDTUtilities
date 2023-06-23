@@ -2,6 +2,11 @@ function animalDateTable = getAnimalDayTableByTreatment(treatment)
 % test input
 % treatment = 'Fluvoxamine'
 
+if ~exist('treatment','var')
+    %getAnimalsByTreatment now set to handle no entry!  but need manual
+    %selection now
+    treatment = ''; 
+end
 workingTable = getAnimalsByTreatment(treatment);
 theseDates = unique(workingTable.Date);
 animalDateTable = table();

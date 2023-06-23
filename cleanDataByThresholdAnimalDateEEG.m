@@ -15,7 +15,7 @@ function foundPoints = cleanDataByThresholdAnimalDateEEG(animalName,exptDate)
 % careful! these are a few hardcoded thresholds which will be much
 % different if we're not giving it EEG data recorded by Synapse.  Which is
 % why I called this function 'EEG'
-secondsAroundNoiseToErase = .25;
+secondsAroundNoiseToErase = 4;
 minThreshold = 0.0015;
 STDmultiplier = 3;
 
@@ -32,7 +32,7 @@ year = exptDate(1:2);
 
 
 
-for i=5%:size(operationList,1)
+for i=1:size(operationList,1)
     dirStr = [getPathGlobal('importedData') '20' year '\' operationList{i,1} '\'];
     try % making it work for any data, not just EEG
         load([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
@@ -87,30 +87,30 @@ for i=5%:size(operationList,1)
     %disp([num2str(sum(tempSetNanArray)) ' points found to eliminate.']);
     disp([num2str(sum(tempSetNanArray)*dT) ' seconds found to eliminate.']);
         
-%     if sum(tempSetNanArray) > 0
-%         % should we save over the files?  ask here
-%         b2name = questdlg_timer(60,'Should we eliminate these points (red)?',...
-%         'Save Dialogue Box','Yes','No','No');
-%         switch b2name
-%             case 'Yes'
-%                 ephysData = tempEphysData;
-%                 if isEEG
-%                     disp('Red points set to NaN. Overwriting EEGData0!');
-%                     save([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
-%                     disp([dirStr operationList{i,1} '_EEGData0.mat overwritten.']);
-%                 else
-%                     disp('Red points set to NaN. Overwriting data0!');
-%                     save([dirStr operationList{i,1} '_data0.mat'],"ephysData","dT");
-%                     disp([dirStr operationList{i,1} '_data0.mat overwritten.']);
-%                 end
-%                 disp('rerun fileMaint and reimport to revert to original.');
-%                 foundPoints = true;
-%             case 'No'
-%                 disp('No changes will be made.')
-%         end
-%     else
-%         disp('since no points found we''re skipping this index.')
-%     end
-%     close all
+    if sum(tempSetNanArray) > 0
+        % should we save over the files?  ask here
+        b2name = questdlg_timer(60,'Should we eliminate these points (red)?',...
+        'Save Dialogue Box','Yes','No','No');
+        switch b2name
+            case 'Yes'
+                ephysData = tempEphysData;
+                if isEEG
+                    disp('Red points set to NaN. Overwriting EEGData0!');
+                    save([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
+                    disp([dirStr operationList{i,1} '_EEGData0.mat overwritten.']);
+                else
+                    disp('Red points set to NaN. Overwriting data0!');
+                    save([dirStr operationList{i,1} '_data0.mat'],"ephysData","dT");
+                    disp([dirStr operationList{i,1} '_data0.mat overwritten.']);
+                end
+                disp('rerun fileMaint and reimport to revert to original.');
+                foundPoints = true;
+            case 'No'
+                disp('No changes will be made.')
+        end
+    else
+        disp('since no points found we''re skipping this index.')
+    end
+    close all
 end
 

@@ -1,4 +1,4 @@
-function [avgCenters,avgCounts] = getPlotHTRBinnedAvgByGroup(thisGroup,thisFile,displayEachAnimal,binSize,displaySummary)
+function [avgCenters,avgCounts,avgSTD] = getPlotHTRBinnedAvgByGroup(thisGroup,thisFile,displayEachAnimal,binSize,displaySummary)
 % for now, this works by giving the function a drug name, but we also would
 % like it to accept a list of animals
 
@@ -49,6 +49,7 @@ end
 % others to fit that.  Start by checking all the pre inj bin lengths
 for iExpt = 1:size(animalDateTable,1)
     preInjBins(iExpt) = sum(S(iExpt).allCenters < 0);
+    postInjBins(iExpt) = sum(S(iExpt).allCenters < 0); % not finished, but we might want to also trim the end, since it will fail if these don;t line up.
 end
 % find the shortest
 shortestDurationPreInj = min(preInjBins);
@@ -59,23 +60,41 @@ newCenters = sort(newCenters(1:shortestDurationPreInj));
 for iExpt = 1:size(animalDateTable,1)
     skipThisNumberOfElements = preInjBins(iExpt)-shortestDurationPreInj;
     S(iExpt).allCenters = S(iExpt).allCenters(skipThisNumberOfElements+1:end);
-    S(iExpt).allCenters(1:shortestDurationPreInj) = newCenters;
+    % fix any weird center values that may not match exactly (sometimes off
+    % by 20 seconds - no big deal)
+    S(iExpt).allCenters(1:shortestDurationPreInj) = newCenters; 
     S(iExpt).allCounts = S(iExpt).allCounts(skipThisNumberOfElements+1:end);
 end
 
 
-avgCenters = S(1).allCenters;
-avgCounts = S(1).allCounts;
+avgCenters = S(1).allCenters; % these will all be the same.  We made sure of that above.
 
-for iExpt = 2:size(S,2)
-    avgCounts = S(iExpt).allCounts+avgCounts;
+% avgCounts = S(1).allCounts;
+% avgSTD = std(avgCounts);
+max(length(S))
+newCountArray = zeros(length(S),length(S(1).allCounts));
+for iExpt = 1:size(S,2)
+    newCountArray(iExpt,:) = S(iExpt).allCounts;
 end
-avgCounts = avgCounts/size(S,2);
+avgCounts = mean(newCountArray,1);
+avgSTD = std(newCountArray);
+
+err = avgSTD/sqrt(length(avgCounts));
+
+% for iExpt = 2:size(S,2)
+%     avgCounts = S(iExpt).allCounts+avgCounts;
+% end
+% avgCounts = avgCounts/size(S,2);
 
 
 if displaySummary
     figure;
     bar(avgCenters,avgCounts);
+    hold on
+    er = errorbar(avgCenters,avgCounts,err);
+    er.Color = [0 0 0];                            
+    er.LineStyle = 'none';
+
     title([treatment ' n=' num2str(size(S,2))]);
     xlabel('min (5 min bins)');
     ylabel('Average HTR');
