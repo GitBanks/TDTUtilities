@@ -2,7 +2,7 @@
 clear all
 close all
  
-animalTable = readtable('SRTableComplete2'); % read in metadata
+animalTable = readtable('M:\Zarmeen\Data\SR Model Fits\SRFilt.csv'); % read in metadata
 %animalTable = animalTable(animalTable.use==1,:); % remove animals that should be excluded from analysis 
 
 outputTable = [];
@@ -123,14 +123,14 @@ for ii =  1:size(animalList,1)
            cvals_mdlRobust = coeffvalues(mdl_robust);
            
            for cc = 1:length(cnames_mdlRobust)
-               tempTable.(cnames_mdlRobust{cc}) = cvals_mdlRobust(cc);
+               tempTable.(cnames_mdlRobust{cc}) = cvals_mdl(cc);
            end
            
-           cnames_mdlRobustBounded = coeffnames(mdl_robust_bounded);
-           cvals_mdlRobustBounded = coeffvalues(mdl_robust_bounded);
+           cnames_mdl = coeffnames(mdl);
+           cvals_mdl = coeffvalues(mdl);
            
-           for cc = 1:length(cnames_mdlRobustBounded)
-               tempTable.(cnames_mdlRobustBounded{cc}) = cvals_mdlRobustBounded(cc);
+           for cc = 1:length(cnames_mdl)
+               tempTable.(cnames_mdl{cc}) = cvals_mdl(cc);
            end
            
            temptTable.gof_rmse = gof.rmse;
@@ -138,9 +138,9 @@ for ii =  1:size(animalList,1)
            temptTable.gofRobust_rmse = gof_robust.rmse;
            temptTable.gofRobustBounded_rmse = gof_robust_bounded.rmse;
            
-           %tempTable.modelFit = {f};
-           tempTable.rsquare = gof.rsquare;
-           %tempTable.goodness = {goodness};
+           tempTable.modelFit = {f};
+           tempTable.rsquare = goodness.rsquare;
+           tempTable.goodness = {goodness};
            
            if isempty(outputTable)
                % use this line for the first entry
@@ -157,8 +157,6 @@ for ii =  1:size(animalList,1)
        
     saveas(figure,['M:\Zarmeen\Data\SR Model Fits\Sigmoid Fit Plots\' exptDateIndex '.png'])
     saveas(figure,['M:\Zarmeen\Data\SR Model Fits\Sigmoid Fit Plots\' exptDateIndex '.fig'])
-    
-
     
 
 end
