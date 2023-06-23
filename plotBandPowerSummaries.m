@@ -1,22 +1,24 @@
 function plotBandPowerSummaries(setName)
+% this is the "box plot" or comparison plot
 
 switch setName
     case 'FLVX' 
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
     case '2020_PSYLOCYBIN_LPS'
 %         saveFileName = getPathGlobal([setName '-matTableBandpower']);
-        error('you need to reedit this table before using it - add an ''include column'' for starters');
     case 'LPS2020' % untested - this is framework only
 %         saveFileName = getPathGlobal([setName '-matTableBandpower']);
-        error('you need to reedit this table before using it - add an include column for starters');
     case 'Sigma1' % untested - this is framework only
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
     case 'combined' % untested - this is framework only
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
-        xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,LPS','DMT2.5,LPS','DMT10,LPS','BD1063 5,LPS','BD1063 1,LPS','BD1063 .1,LPS','BD1063,Saline'}; % changed!
+        xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,LPS','DMT2.5,LPS','DMT10,LPS','DMT10,Sal','Flvx,Sal'}; % changed!
     case 'ZZ' % untested - this is framework only
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
         xtickLabelstart = {'Sal','Psil','4ACO','6FDET'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
+    case 'DOIKetanserin' % untested - this is framework only
+        saveFileName = getPathGlobal([setName '-matTableBandpower']);
+        xtickLabelstart = {'Sal,Sal','Sal,LPS','Ketan,Sal'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
 
     otherwise
         error('Need an appropriate table name from a recognized list: ''FLVX'' or ''LPS2020'' or ''ZZ'' so far ');
@@ -104,14 +106,17 @@ figure();
 scatter(1:nColsForBoxPlot,boxplotArray,'k*');
 hold on
 
-% this is if you want to label the data with names or sex or whatever
-% groupIncr = [0 0 0 0 1 1 2 2 3 3 4 4];
-% for ii = 10:nColsForBoxPlot
+
+% % this is if you want to label the data with names or sex or whatever
+% groupIncr = [0 0 0 0 1 1 2 2 3 3 4 4]; % this will need to be updated whenever you add groups!!!!!!!
+% % find th first non movement column
+% bandStart = find(groupIncr>0,1);
+% for ii = bandStart:nColsForBoxPlot
 %     yLocations = boxplotArray(ii,~isnan(boxplotArray(ii,:)));
 %     xLocations = ones(size(yLocations,2),1)*ii;
 %     useThese = ~isnan(boxplotArray(ii,:));
-% % %     theseNames = group(groupIncr(ii)).names(useThese);
-%     theseNames = group(groupIncr(ii)).Sex(useThese);
+%     theseNames = group(groupIncr(ii)).names(useThese);
+% %     theseNames = group(groupIncr(ii)).Sex(useThese);
 %     try
 %     text(xLocations,yLocations,theseNames);
 %     catch
@@ -140,9 +145,11 @@ switch setName
     case 'LPS2020' % untested - this is framework only
     case 'Sigma1' % untested - this is framework only        saveFileName = getPathGlobal([setName '-matTableBandpower']);
     case 'combined' % untested - this is framework only
-        legend([a(18) a(16) a(14) a(12) a(10) a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
+        legend([a(18) a(16) a(14) a(12) a(10) a(8) a(6)], xtickLabelstart,'Location','northeast');
     case 'ZZ' % untested - this is framework only
         legend([a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
+    case 'DOIKetanserin'
+        legend([a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
     otherwise
 end
 %     legend([a(3) a(2) a(1)], {'Saline Saline','Saline LPS','Fluvoxamine LPS'},'Location','southwest');
