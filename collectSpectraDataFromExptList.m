@@ -34,7 +34,11 @@ switch setName
     case 'ZZ' % untested - this is framework only
         tname = getPathGlobal([setName '-xlsTableGroupInfo']);
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
-  
+
+    case 'DOIKetanserin'
+        tname = getPathGlobal([setName '-xlsTableGroupInfo']);
+        saveFileName = getPathGlobal([setName '-matTableBandpower']);
+
     otherwise
         error('Need an appropriate table name from a recognized list: ''FLVX'' or ''LPS2020'' or ''ZZ'' so far ');
 end
@@ -99,6 +103,8 @@ switch setName
 %         end
     case 'combined'
 
+    case 'DOIKetanserin'
+
     case 'ZZ'
         isLFP = true;
        
@@ -130,6 +136,10 @@ for ii = 1:size(workingTable,2)
         TP = readtable(fileNameCSVP);
         workingTable(ii).data.pre.PSMavgDelta = [TA.grandMean(1),TP.grandMean(1)];
         workingTable(ii).data.post.PSMavgDelta = [TA.grandMean(2),TP.grandMean(2)];
+
+        % TODO: add section for alpha **OR** better, load in a single table
+        % if we figure out the R syntax
+
     catch
         disp([fileNameCSVA ' or P NOT FOUND']);
         disp(['Please run PSM R code on ' animalName ' ' exptDate]);
