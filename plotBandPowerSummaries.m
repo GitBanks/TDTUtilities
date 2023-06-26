@@ -1,5 +1,9 @@
 function plotBandPowerSummaries(setName)
 % this is the "box plot" or comparison plot
+% be sure you've run collectSpectraDataFromExptList(setName)
+
+% dummy variables
+% setName = 'combined'
 
 switch setName
     case 'FLVX' 
@@ -13,6 +17,7 @@ switch setName
     case 'combined' % untested - this is framework only
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
         xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,LPS','DMT2.5,LPS','DMT10,LPS','DMT10,Sal','Flvx,Sal'}; % changed!
+        groupIncr = [0 0 0 0 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6 7 7]; % this will need to be updated whenever you add groups!!!!!!!
     case 'ZZ' % untested - this is framework only
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
         xtickLabelstart = {'Sal','Psil','4ACO','6FDET'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
@@ -107,21 +112,21 @@ scatter(1:nColsForBoxPlot,boxplotArray,'k*');
 hold on
 
 
-% % this is if you want to label the data with names or sex or whatever
-% groupIncr = [0 0 0 0 1 1 2 2 3 3 4 4]; % this will need to be updated whenever you add groups!!!!!!!
-% % find th first non movement column
-% bandStart = find(groupIncr>0,1);
-% for ii = bandStart:nColsForBoxPlot
-%     yLocations = boxplotArray(ii,~isnan(boxplotArray(ii,:)));
-%     xLocations = ones(size(yLocations,2),1)*ii;
-%     useThese = ~isnan(boxplotArray(ii,:));
+% this is if you want to label the data with names or sex or whatever
+
+% find th first non movement column
+bandStart = find(groupIncr>0,1);
+for ii = bandStart:nColsForBoxPlot
+    yLocations = boxplotArray(ii,~isnan(boxplotArray(ii,:)));
+    xLocations = ones(size(yLocations,2),1)*ii;
+    useThese = ~isnan(boxplotArray(ii,:));
 %     theseNames = group(groupIncr(ii)).names(useThese);
-% %     theseNames = group(groupIncr(ii)).Sex(useThese);
-%     try
-%     text(xLocations,yLocations,theseNames);
-%     catch
-%     end
-% end
+    theseNames = group(groupIncr(ii)).Sex(useThese);
+    try
+    text(xLocations,yLocations,theseNames);
+    catch
+    end
+end
 
 boxplot(boxplotArray','Colors',char(colorCode));
 xlim([0.5,nColsForBoxPlot+.5]);
@@ -145,7 +150,7 @@ switch setName
     case 'LPS2020' % untested - this is framework only
     case 'Sigma1' % untested - this is framework only        saveFileName = getPathGlobal([setName '-matTableBandpower']);
     case 'combined' % untested - this is framework only
-        legend([a(18) a(16) a(14) a(12) a(10) a(8) a(6)], xtickLabelstart,'Location','northeast');
+        legend([a(14) a(12) a(10) a(8) a(6) a(4) a(2) ], xtickLabelstart,'Location','northeast');
     case 'ZZ' % untested - this is framework only
         legend([a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
     case 'DOIKetanserin'
