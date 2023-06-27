@@ -4,9 +4,9 @@ function [peakData] = evokedStimResp_userInput(exptDate,exptIndex)
 % User-defined parameters
 
 if ~exist('exptDate','var') || ~exist('exptIndex','var')
-      exptDate = '22421'; 
-      exptIndex = '014';
-    
+%       exptDate = '22507'; 
+%       exptIndex = '001';
+%     
 %     exptIndex = '008'; noTank = false;
 %	exptIndex = '004'; noTank = false;
 %     exptIndex = '005'; noTank = true;
@@ -61,7 +61,8 @@ end
 % thinking on this... Matt may say "why didn't you just fix the data".  If
 % we want to do that, you could load the problem day, swap the channels in
 % the array as I suggested above, then save.  Make sure there's a backup.-
-% can we do this?? i think that would be best 
+% can we do this?? i think that would be best
+
 if contains(exptDate,'22705')
     for i = 1:size(stimSet,2)
         stimSet(i).data(1:2,:,:) = stimSet(i).data(5:6,:,:); % or whatever chan - 5:6?  
@@ -186,7 +187,7 @@ for iROI = 1 %:nROIs
     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [-40.0e-05, 40.0e-05]%[1.05*plotMin(iROI),1.05*plotMax(iROI)];
+    ax.YLim = [-20.0e-05, 20.0e-05]%[1.05*plotMin(iROI),1.05*plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
         

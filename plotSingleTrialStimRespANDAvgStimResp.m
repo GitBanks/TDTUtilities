@@ -10,7 +10,7 @@
 clear all
 
 %Load in the CSV with the single trial data
-dataTable = readtable('M:\Zarmeen\Data\SR Model Fits\SRTableComplete2');
+dataTable = readtable('C:\Users\Grady\Documents\Zarmeen Data\ZZ29.csv');
 iROI = 1
 
 
@@ -21,42 +21,62 @@ exptIndex = date(7:9);
 animal = dataTable.Animal(iExpt);
 animal = char(animal);
 outPath1 = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
-singleTrialData = load([outPath1 exptDate '-' exptIndex '_singleTrialPeakDataFilt'],'singleTrialPeakDataFilt','plotTimeArray','allTraces');
-avgTrialData = load([outPath1 exptDate '-' exptIndex '_peakData'],'peakData','plotTimeArray','avgTraces');
 
-    if contains(dataTable.Animal{iExpt},'ZZ06')
-        manualPeakEntry = [2];
-    end 
-    if contains(dataTable.Animal{iExpt},'ZZ09')
-        manualPeakEntry = [1];
-    end
-    if contains(dataTable.Animal{iExpt},'ZZ10')
-        manualPeakEntry = [2];
-    end
-    if contains(dataTable.Animal{iExpt},'ZZ14')
-        manualPeakEntry = [1];
-    end
-    if contains(dataTable.Animal{iExpt},'ZZ15')
-        manualPeakEntry = [1];
-    end
-    if contains(dataTable.Animal{iExpt},'ZZ16')
-        manualPeakEntry = [1];
-    end
-    if contains(dataTable.Animal{iExpt},'ZZ19')
-        manualPeakEntry = [1];
-    end
-    if contains(dataTable.Animal{iExpt},'ZZ20')
-        manualPeakEntry = [1];
-    end
-    if contains(dataTable.Animal{iExpt},'ZZ21')
-        manualPeakEntry = [1];
-    end
-    if contains(dataTable.Animal{iExpt},'ZZ22')
-        manualPeakEntry = [1];
-    end
-    
+if ~isfile([outPath1 exptDate '-' exptIndex '_singleTrialPeakDataFilt.mat'])
+    singleTrialPeakDataFilt = getSingleTrialDataWithFilter(exptDate,exptIndex)
+    singleTrialData.singleTrialPeakDataFilt = [singleTrialPeakDataFilt]
+else
+    singleTrialData = load([outPath1 exptDate '-' exptIndex '_singleTrialPeakDataFilt'],'singleTrialPeakDataFilt','plotTimeArray','allTraces');
+end
+
+if size(singleTrialData.singleTrialPeakDataFilt.stimArrayNumeric,2) > size(singleTrialData.singleTrialPeakDataFilt.pkVals.data,1)
+    singleTrialPeakDataFilt = getSingleTrialDataWithFilter(exptDate,exptIndex)
+    singleTrialData.singleTrialPeakDataFilt = [singleTrialPeakDataFilt]
+else
+    ;
+end
+
+% if ~isfile([outPath1 exptDate '-' exptIndex '_peakData.mat'])
+%     avgTrialData = evokedStimResp_userInput(exptDate,exptIndex)
+%     avgTrialData.peakData = [avgTrialData]
+% else
+%     avgTrialData = load([outPath1 exptDate '-' exptIndex '_peakData'],'peakData','plotTimeArray','avgTraces');
+% end
+
+% 
+%     if contains(dataTable.Animal{iExpt},'ZZ06')
+%         manualPeakEntry = [2];
+%     end 
+%     if contains(dataTable.Animal{iExpt},'ZZ09')
+%         manualPeakEntry = [1];
+%     end
+%     if contains(dataTable.Animal{iExpt},'ZZ10')
+%         manualPeakEntry = [2];
+%     end
+%     if contains(dataTable.Animal{iExpt},'ZZ14')
+%         manualPeakEntry = [1];
+%     end
+%     if contains(dataTable.Animal{iExpt},'ZZ15')
+%         manualPeakEntry = [1];
+%     end
+%     if contains(dataTable.Animal{iExpt},'ZZ16')
+%         manualPeakEntry = [1];
+%     end
+%     if contains(dataTable.Animal{iExpt},'ZZ19')
+%         manualPeakEntry = [1];
+%     end
+%     if contains(dataTable.Animal{iExpt},'ZZ20')
+%         manualPeakEntry = [1];
+%     end
+%     if contains(dataTable.Animal{iExpt},'ZZ21')
+%         manualPeakEntry = [1];
+%     end
+%     if contains(dataTable.Animal{iExpt},'ZZ22')
+%         manualPeakEntry = [1];
+%     end
+%     
 %here we pick the peak
-avgPkResponses = (avgTrialData.peakData.pkVals(iROI).data(manualPeakEntry,:));
+%avgPkResponses = (avgTrialData.peakData.pkVals(iROI).data(1,:));
 
 %% Plotting here
 FigName = ['SingleTrial and Avg Stim Resp plot - ' animal '_' exptDate '_' exptIndex];
@@ -67,7 +87,9 @@ subplot(2,2,1)
 plot(singleTrialData.singleTrialPeakDataFilt.stimArrayNumeric, singleTrialData.singleTrialPeakDataFilt.pkVals.data,'-o');
 XL = get(gca, 'YLim');
 hold on
-plot(avgTrialData.peakData.stimArrayNumeric, avgPkResponses,'-o', 'MarkerSize',10 , 'LineWidth', 2, 'Color', [0 0 0]);
+for ii = 1:size(singleTrialData.singleTrialPeakDataFilt.pkVals.data,1);
+plot(singleTrialData.singleTrialPeakDataFilt.stimArrayNumeric(ii), mean(singleTrialData.singleTrialPeakDataFilt.pkVals.data(ii,:)),'-o', 'MarkerSize',10 , 'LineWidth', 2, 'Color', [0 0 0]);
+end
 hold off
 ax = gca;
 title('Single Trial Responses and Averaged Responses');
@@ -112,6 +134,20 @@ baseWinIndex = floor(baseWin/dTRec)
 plotTimeArray = dTRec*(-preStimIndex:postStimIndex)
 
 %% Visualize raw data
+for iStim = 1:length(stimSet)
+     for iTrials = 1:nTrials
+         plotMax = max(stimSet(iStim).sub(1,iTrials,:));
+         plotMax = plotMax*4;
+     end
+end
+for iStim = 1:length(stimSet)
+     for iTrials = 1:nTrials
+         plotMin = min(stimSet(iStim).sub(1,iTrials,:));
+         plotMin = plotMin*4;
+     end
+end
+
+
 subplot(2,2,2) 
 for iStim = 1:nStims
    for iTrial = 1:nTrials
@@ -121,7 +157,7 @@ for iStim = 1:nStims
 end
 ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [-50.0e-05, 50.0e-05]
+    ax.YLim = [plotMin,plotMax];
     ax = gca;
 title('Raw Data');
 
@@ -149,7 +185,7 @@ ax = gca;
 ax = gca;
 title('Normalized Data');
 ax.XLim = [-tPreStim,tPostStim];
-ax.YLim = [-50.0e-05, 50.0e-05]
+ax.YLim = [plotMin,plotMax];
 
 %%visualize smoothed data
 f = gausswin((1/dTRec)*(20/10000)); 
@@ -171,9 +207,12 @@ for iStim = 1:length(stimSet)
          plot(plotTimeArray,squeeze(data(iStim).sub(1,iTrials,:)));
      end
 end
+
+
+
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [-50.0e-05, 50.0e-05] %[1.05*plotMin(iROI),1.05*plotMax(iROI)];
+    ax.YLim = [plotMin,plotMax]; %[-50.0e-05, 50.0e-05]
     ax.XLabel.String = 'time(sec)';
     ax = gca;
     title('Filtered Data');
@@ -181,8 +220,6 @@ end
         ax.YLabel.String = 'avg dataSub (V)';
     end
  
- 
-
 
 fileString = [exptDate '-' exptIndex];
 outPath = [getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' fileString '\']
