@@ -58,34 +58,54 @@ switch str
         p = [M 'PassiveEphys\mouseEEG\FLVXGroupInfo.xlsx'];
     case 'FLVX-matTableBandpower'
         p = [M 'PassiveEphys\mouseEEG\FLVXBandpowerData.mat'];
+    case 'FLVX-savePath'
+        p = [M 'PassiveEphys\AnimalData\Fluvoxamine-LPS\'];
 
     case '2020_PSYLOCYBIN_LPS-xlsTableGroupInfo'
         p = [M 'PassiveEphys\mouseEEG\2020PsilocybinLPSGroupInfo.xlsx'];
     case '2020_PSYLOCYBIN_LPS-matTableBandpower'
         p = [M 'PassiveEphys\mouseEEG\2020PsilocybinLPSBandpowerData.mat'];
+    case '2020_PSYLOCYBIN_LPS-savePath'
+        p = [M 'PassiveEphys\AnimalData\psyloLPS-2020\'];
 
     case 'LPS2020-xlsTableGroupInfo'
         p = [M 'PassiveEphys\mouseEEG\mouseGroupInfo.xlsx'];
     case 'LPS2020-matTableBandpower'
         p = [M 'PassiveEphys\mouseEEG\LPS2020BandpowerData.mat'];
+        % no save directory for LPS set
 
     case 'Sigma1-xlsTableGroupInfo'
         p = [M 'PassiveEphys\mouseEEG\Sigma1GroupInfo.xlsx'];
     case 'Sigma1-matTableBandpower'
         p = [M 'PassiveEphys\mouseEEG\Sigma1BandpowerData.mat'];
+    case 'Sigma1-savePath'
+        p = [M 'PassiveEphys\AnimalData\Sigma1DMT\'];
 
     case 'combined-xlsTableGroupInfo'
         p = [M 'PassiveEphys\mouseEEG\combinedGroupInfo.xlsx'];
     case 'combined-matTableBandpower'
         p = [M 'PassiveEphys\mouseEEG\combinedBandpowerData.mat'];
+    case 'combined-savePath'
+        p = [M 'PassiveEphys\AnimalData\combined\'];
 
     case 'ZZ-xlsTableGroupInfo'
         p = [M 'PassiveEphys\mouseLFP\ZZGroupInfo.xlsx'];
     case 'ZZ-matTableBandpower'
         p = [M 'PassiveEphys\mouseLFP\ZZBandpowerData.mat'];
+    case 'ZZ-savePath'
+        p = [M 'Zarmeen\data\spectra\'];
   
+    case 'DOIKetanserin-xlsTableGroupInfo'
+        p = [M 'PassiveEphys\mouseEEG\DOIKetanserinGroupInfo.xlsx'];
+    case 'DOIKetanserin-matTableBandpower'
+        p = [M 'PassiveEphys\mouseEEG\DOIKetanserinBandpowerData.mat'];
+    case 'DOIKetanserin-savePath'
+        p = [M 'PassiveEphys\AnimalData\DOI\'];
 
+    case 'PSY2020-savePath'
+        p = [M 'PassiveEphys\AnimalData\psychedelics-2020\'];
 
+        
     % for specific file paths (old)
     case 'masterLog'
         p = [W 'PassiveEphys\EEG animal data\Mouse Psychedelics Master Log.xlsx'];

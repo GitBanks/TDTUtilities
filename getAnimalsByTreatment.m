@@ -1,6 +1,9 @@
 function [exptTable] = getAnimalsByTreatment(treatment)
 % treatment = 'saline0p9_vol';
 %treatment = 'DOI_conc';
+if ~exist('treatment','var')
+    treatment = '';
+end
 dbConn = dbConnect(); %handle this better?  close db at end?
 query = ['SELECT * FROM `global_stimparams` WHERE `paramfield` LIKE ' '''' treatment ''''];
 masterResult = fetchAdjust(dbConn,query);

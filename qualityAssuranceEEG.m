@@ -189,9 +189,9 @@ mainPlotTitle = [animalName '-' exptDate '-' treatmentText];
 annotation('textbox', [0.2, 0.98, 0, 0], 'string', mainPlotTitle,'FontSize',12);
 
 % save the files
-% fileName = [savePath saveFileName];
-%saveas(QAFig,[fileName '.fig']);
-%saveas(QAFig,[fileName '.jpg']);
+fileName = [savePath saveFileName];
+saveas(QAFig,[fileName '.fig']);
+saveas(QAFig,[fileName '.jpg']);
 
 print('-painters',fileName,'-r300','-dpng');
 if reportPlot

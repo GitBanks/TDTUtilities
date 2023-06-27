@@ -94,7 +94,6 @@ S.Preselects = {
     'WAY-100635 + Psilocybin'
     'Ketanserin + Saline'
     'Psilocybin + Saline'
-    'Saline + Saline'
     'DMSO + Psilocybin'
     'DMSO + Saline'
     'Mifepristone + Psilocybin'
@@ -115,7 +114,19 @@ S.Preselects = {
     'Mifepristone + Vehicle'
     'Vehicle + Vehicle'
     'Fluvoxamine + LPS'
+    'DMT + LPS'
+    '(DMT + BD1063) + LPS'
+    'BD1063 + LPS'
+    'BD1063 + Saline'
+    '(Fluvox + BD1063) + LPS'
+    'DMT + Saline'
+    'Fluvoxamine + Saline'
+    'DOI + LPS'
+    'DOI + Saline'
     'Saline + LPS'
+    'Saline + Saline'
+    '(DOI + Ketanserin) + LPS'
+    '(DOI + Ketanserin) + Saline'
     }; 
 % LEFT
 S.pp(1) = uicontrol('style','pop',...

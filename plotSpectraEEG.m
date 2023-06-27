@@ -11,27 +11,10 @@ if ~exist('skipTheActualPlotting','var')
     skipTheActualPlotting = false;
 end
 
-
-switch setName
-    % keep in mind if you create a new setName you need to create the folder
-    % with subfolders: spectrogram\ bandpower\ and avgspectra\
-    case 'FLVX'
-        saveFolder = 'M:\PassiveEphys\AnimalData\Fluvoxamine-LPS\';
-    case 'PSY2020'
-        saveFolder = 'M:\PassiveEphys\AnimalData\psychedelics-2020\';
-    case '2020_PSYLOCYBIN_LPS'
-        saveFolder = 'M:\PassiveEphys\AnimalData\psyloLPS-2020\';
-    case 'Sigma1'
-        saveFolder = 'M:\PassiveEphys\AnimalData\Sigma1DMT\';
-    case 'combined'
-        saveFolder = 'M:\PassiveEphys\AnimalData\combined\';
-    case 'ZZ'
-        error('Need to set this up - spectra might not apply for ZZ mice');
-    otherwise
-        error('Need an appropriate table name from a recognized list: ''FLVX'' or ''PSY2020'' so far ');
+if contains(setName,'ZZ') 
+    error('This code only set up for EEG mice, not LFP / ZZ mice');
 end
-
-
+saveFolder = getPathGlobal([setName '-savePath']);
 
 
 if iscell(chansToExclude)
@@ -52,7 +35,7 @@ plotTitleLabels = {'R Anterior','R Posterior','L Posterior','L Anterior'};
 % to do is reference the mapping files we make for each animal, then base
 % which subplots to make on that...
 
-folder = ['M:\PassiveEphys\AnimalData\initial\' animalName '\']; % data from the pipeline 
+folder = [getPathGlobal('pipelineSaves') animalName '\']; % data from the pipeline 
 chanEEGRemap = [2,4,3,1]; % direct channels to specific subplots so that channels line up with their physical locations
 % the file will be some crazy thing like this:
 % 'EEG210_22629-001,22629-003,22629-005,22629-007,22629-009,22629-011 wPLI_dbt'; 
