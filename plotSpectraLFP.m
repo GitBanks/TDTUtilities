@@ -155,7 +155,6 @@ nextTimeArray = newTable.blockTime; % these will be our new breaks against this 
 
 
 
-
 for iBreak = 1:size(nextTimeArray,1)
     avgSpectraBreakIndex(iBreak) = find(windowTimes>=nextTimeArray(iBreak),1);
     movementBreakIndex(iBreak) = find(moveTimes>=nextTimeArray(iBreak),1);
@@ -399,25 +398,25 @@ end
 
 % -----------------saving below------------------ 
 
-% % % % % saving by animal name 
-% 
-% if ~exist([saveFolder 'bandpower\'],"dir")
-%     mkdir([saveFolder 'bandpower\']);
-% end
-% 
-% 
-% if ~exist([saveFolder 'bandpower\' animalName],"dir")
-%     mkdir([saveFolder 'bandpower\' animalName]);
-% end
-% 
-% 
-% saveas(bandPower,[saveFolder 'bandpower\' animalName '\' animalName '-' exptDate '-' savetext '.fig']);
-% saveas(bandPower,[saveFolder 'bandpower\' animalName '\' animalName '-' exptDate '-' savetext '.jpg']);
-% 
-% 
+% % % % saving by animal name 
+
+if ~exist([saveFolder 'bandpower\'],"dir")
+    mkdir([saveFolder 'bandpower\']);
+end
 
 
-% % % % saving by drug -----------------------------------
+if ~exist([saveFolder 'bandpower\' animalName],"dir")
+    mkdir([saveFolder 'bandpower\' animalName]);
+end
+
+
+saveas(bandPower,[saveFolder 'bandpower\' animalName '\' animalName '-' exptDate '-' savetext '.fig']);
+saveas(bandPower,[saveFolder 'bandpower\' animalName '\' animalName '-' exptDate '-' savetext '.jpg']);
+
+
+
+
+% % % % saving by drug 
 % 
 % if ~exist([saveFolder 'bandpower\'],"dir")
 %     mkdir([saveFolder 'bandpower\']);
