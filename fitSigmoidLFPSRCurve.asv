@@ -1,83 +1,40 @@
 %tableFile = 'C:\Users\Grady\Documents\Zarmeen Data\SingleTrialPeakMax\singleTrialDataCombined';
 clear all
+close all
  
-animalTable = readtable('M:\Zarmeen\Data\SR Model Fits\SRTableComplete'); % read in metadata
-%M:\Zarmeen\Data\SR Model Fits\SRTableComplete
+animalTable = readtable('M:\Zarmeen\Data\SR Model Fits\SRFilt.csv'); % read in metadata
 %animalTable = animalTable(animalTable.use==1,:); % remove animals that should be excluded from analysis 
 
 outputTable = [];
 
 
-animalList = (animalTable.Index);
+animalList = unique(animalTable.Index)
 
 
 % loop through entries in table
-for ii = 1:size(animalList,1)
+for ii =  1:size(animalList,1)
     exptDateIndex = animalList(ii);
     exptDateIndex = char(exptDateIndex);
-    exptDate = exptDateIndex(1:5);
-    exptIndex = exptDateIndex(7:9);
-    animal = char(animalTable.Animal(ii))
-    outPath1 = ['M:\PassiveEphys\20' exptDate(1:2) '\' exptDate '-' exptIndex '\'];
-    
-   
-          %searchString = ['M:\Zarmeen\Data\SR Model Fits\SingleTrialResponsesFilt\' exptDateIndex];
-       if ~isfile([outPath1 exptDate '-' exptIndex '_singleTrialPeakDataFilt.mat'])
-        singleTrialPeakDataFilt = getSingleTrialDataWithFilter(exptDate,exptIndex)
-        singleTrialData.singleTrialPeakDataFilt = [singleTrialPeakDataFilt]
-       else
-        singleTrialData = load([outPath1 exptDate '-' exptIndex '_singleTrialPeakDataFilt'],'singleTrialPeakDataFilt','plotTimeArray','allTraces');
-       end
-        
-       if size(singleTrialData.singleTrialPeakDataFilt.stimArrayNumeric,2) > size(singleTrialData.singleTrialPeakDataFilt.pkVals.data,1)
-    singleTrialPeakDataFilt = getSingleTrialDataWithFilter(exptDate,exptIndex)
-    singleTrialData.singleTrialPeakDataFilt = [singleTrialPeakDataFilt]
-    else
-        ;
-    end
-       
-        
-        dataComplete = singleTrialData.singleTrialPeakDataFilt.pkVals.data;
 
-           columnCount = size(dataComplete,2);
-           xData = singleTrialData.singleTrialPeakDataFilt.stimArrayNumeric';  
-           stimIntensity = repmat(xData, columnCount,1);
-           yData = dataComplete(:);
+        searchString = ['M:\Zarmeen\Data\SR Model Fits\SingleTrialResponsesFilt\' exptDateIndex];
+        dataComplete = readtable(searchString);
+        dataToUse = dataComplete(:,4:34)
+        data = table2array(dataToUse)
        
+       if ~isempty(data)
+           cols_with_all_zeros = find(all(data==0));
+           n = numel(cols_with_all_zeros);
+           columnCount = size(data,2) - n;
+           trialsToUse = data(:, 2:columnCount)
+           xData = data(:,1)
+           stimIntensity = repmat(xData, columnCount-1,1)
+           yData = trialsToUse
+           yData = yData(:)
+           
  
-    x = stimIntensity; % stimulus intensity (uA)
-    %Sign reversal for each animal based on peak sign
-    
-    if contains(animalTable.Animal{ii},'ZZ09')
-        y = yData;
-    end
-    if contains(animalTable.Animal{ii},'ZZ10')
-        y = yData;
-    end
-    if contains(animalTable.Animal{ii},'ZZ14')
-       y = yData;
-    end
-    if contains(animalTable.Animal{ii},'ZZ15')
-       y = yData;
-    end
-    if contains(animalTable.Animal{ii},'ZZ19')
-        y = yData*-1;
-    end
-    if contains(animalTable.Animal{ii},'ZZ20')
-       y = yData*-1;
-    end
-    if contains(animalTable.Animal{ii},'ZZ21')
-        y = yData*-1;
-    end
-    if contains(animalTable.Animal{ii},'ZZ22')
-        y = yData;
-    end
-    if contains(animalTable.Animal{ii},'ZZ24')
-        y = yData;
-    end
-    if contains(animalTable.Animal{ii},'ZZ29')
-        y = yData%*-1;
-    end
+           x = stimIntensity; % stimulus intensity (uA)
+           y = yData*-1; 
+           
            
           %Convert stim values to Amps so that x and y values on approximately the same scale
             x = x/1.e6;
@@ -89,27 +46,20 @@ for ii = 1:size(animalList,1)
                 yMn(iStim) = mean(y(x==xStim(iStim)));
             end
             %Subtract from y the average response to lowest stim intensity
-            %y = y-yMn(xStim==min(xStim));
+            y = y-yMn(xStim==min(xStim));
             %Initial parameter estimates. Note that the slope parameter is estimated
             %from multiple values. It should be undefined at stim = c and at response =
             %a, so use the median rather than the mean.
-            %a = yMn(xStim==max(xStim));
-            a = max(yMn);%Rmax
-            indx1 = find(yMn<a/2,1,'last');
-            indx2 = find(yMn>a/2,1,'first');
-            c = (xStim(indx1)+xStim(indx2))/2; % S_50%
-            b = 1.e-4;
-%           c = (max(xStim)-min(xStim))/2;% S_50%
-%           bEst = -(xStim-c)./log(a./yMn - 1);
-%           b = median(bEst);%slope; should be around 1.e-4
+            a = yMn(xStim==max(xStim));% Rmax
+            c = (max(xStim)-min(xStim))/2;% S_50%
+            bEst = -(xStim-c)./log(a./yMn - 1);
+            b = median(bEst);%slope; should be around 1.e-4
             %Fitting function inputs
             expression = 'a/(1+exp(-(x-c)/b))';
             sigmoid = fittype(expression,'indep','x');
             p0 = [a b c];% initial conditions
             lower = [0   2.e-6  1.e-5];
             upper = [a*5 2.e-4 8.e-4];
-            figure()
-            plot(xStim,yMn, 'o')
             
             %Try four different approaches just as a demonstration.
             fo = fitoptions('Method','NonlinearLeastSquares','StartPoint',p0);
@@ -125,8 +75,7 @@ for ii = 1:size(animalList,1)
             [mdl_robust_bounded,gof_robust_bounded,out_robust_bounded] = fit(x,y,sigmoid,fo_robust_bounded);
 
             %Plot results
-            figName = (['Sigmoid Fit Plot ' exptDateIndex ])
-            thisFigure = figure('Name',figName)
+            figure();
             hold on
             plot(x,y,'o');
             plot(xStim,yMn,'o','MarkerSize',10,'MarkerFaceColor','k','markerEdgeColor','k');
@@ -141,9 +90,9 @@ for ii = 1:size(animalList,1)
             hLine = plot(mdl_robust_bounded);
             hLine.Color = 'k'; hLine.LineWidth = 2;
 
-            
-            xlabel = ('Stim intensity (A)');
-            ylabel= ('Peak response (mV)');
+            ax = gca;
+            ax.XLabel.String = 'Stim inte nsity (A)';
+            ax.YLabel.String = 'Peak response (mV)';
 
             legend({'data','avg','unbounded','bounded','robust','robust+bounded'},'Location','northwest');
 
@@ -162,9 +111,6 @@ for ii = 1:size(animalList,1)
            for cc = 1:length(cnames_mdl)
                tempTable.(cnames_mdl{cc}) = cvals_mdl(cc);
            end
-           tempTable.a_mdl = tempTable.a;
-           tempTable.b_mdl = tempTable.b;
-           tempTable.c_mdl = tempTable.c;
            
            cnames_mdlBounded = coeffnames(mdl_bounded);
            cvals_mdlBounded = coeffvalues(mdl_bounded);
@@ -172,39 +118,29 @@ for ii = 1:size(animalList,1)
            for cc = 1:length(cnames_mdlBounded)
                tempTable.(cnames_mdlBounded{cc}) = cvals_mdlBounded(cc);
            end
-           tempTable.a_mdlBounded = tempTable.a;
-           tempTable.b_mdlBounded = tempTable.b;
-           tempTable.c_mdlBounded = tempTable.c;
            
            cnames_mdlRobust = coeffnames(mdl_robust);
            cvals_mdlRobust = coeffvalues(mdl_robust);
            
            for cc = 1:length(cnames_mdlRobust)
-               tempTable.(cnames_mdlRobust{cc}) = cvals_mdlRobust(cc);
+               tempTable.(cnames_mdlRobust{cc}) = cvals_mdl(cc);
            end
-           tempTable.a_mdlRobust = tempTable.a;
-           tempTable.b_mdlRobust = tempTable.b;
-           tempTable.c_mdlRobust = tempTable.c;
            
-           cnames_mdlRobustBounded = coeffnames(mdl_robust_bounded);
-           cvals_mdlRobustBounded = coeffvalues(mdl_robust_bounded);
+           cnames_mdl = coeffnames(mdl);
+           cvals_mdl = coeffvalues(mdl);
            
-           for cc = 1:length(cnames_mdlRobustBounded)
-               tempTable.(cnames_mdlRobustBounded{cc}) = cvals_mdlRobustBounded(cc);
+           for cc = 1:length(cnames_mdl)
+               tempTable.(cnames_mdl{cc}) = cvals_mdl(cc);
            end
-           tempTable.a_mdlRobustBounded = tempTable.a;
-           tempTable.b_mdlRobustBounded = tempTable.b;
-           tempTable.c_mdlRobustBounded = tempTable.c;
            
+           temptTable.gof_rmse = gof.rmse;
+           temptTable.gofBounded_rmse = gof_bounded.rmse;
+           temptTable.gofRobust_rmse = gof_robust.rmse;
+           temptTable.gofRobustBounded_rmse = gof_robust_bounded.rmse;
            
-           tempTable.gof_rmse = gof.rmse;
-           tempTable.gofBounded_rmse = gof_bounded.rmse;
-           tempTable.gofRobust_rmse = gof_robust.rmse;
-           tempTable.gofRobustBounded_rmse = gof_robust_bounded.rmse;
-           
-           %tempTable.modelFit = {f};
-           %tempTable.rsquare = gof.rsquare;
-           %tempTable.goodness = {goodness};
+           tempTable.modelFit = {f};
+           tempTable.rsquare = goodness.rsquare;
+           tempTable.goodness = {goodness};
            
            if isempty(outputTable)
                % use this line for the first entry
@@ -215,16 +151,19 @@ for ii = 1:size(animalList,1)
            end
        
 
-    saveas(thisFigure,['M:\Zarmeen\Data\SR Model Fits\Sigmoid Fit Plots Complete\' animal '-' exptDateIndex '.png'])
-%     saveas(thisFigure,['M:\Zarmeen\Data\SR Model Fits\Sigmoid Fit Plots png\' exptDateIndex '.png'])
-    saveas(thisFigure,['M:\Zarmeen\Data\SR Model Fits\Sigmoid Fit Plots\'  animal '-' exptDateIndex '.fig'])
+   else
+      warning(['search for: ' searchString ' unsuccessful']);
+       end
+       
+    saveas(figure,['M:\Zarmeen\Data\SR Model Fits\Sigmoid Fit Plots\' exptDateIndex '.png'])
+    saveas(figure,['M:\Zarmeen\Data\SR Model Fits\Sigmoid Fit Plots\' exptDateIndex '.fig'])
+    
 
 end
 
 
-    
 outPath = ('M:\Zarmeen\Data\SR Model Fits\')
-csvFile = [outPath 'newParamEst.csv'];
+csvFile = [outPath 'sigmoid fit table.csv'];
 writetable(outputTable,csvFile);
 
 %%

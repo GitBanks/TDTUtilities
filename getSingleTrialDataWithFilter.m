@@ -1,31 +1,19 @@
-function [peakData] = evokedStimResp_userInput(exptDate,exptIndex)
+function [singleTrialPeakDataFilt] = getSingleTrialDataWithFilter(exptDate,exptIndex)
+%This is to get the single trial peak data for in vivo LFP experiments and to plot single
+%trial peaks
 
-%%
-% User-defined parameters
 
-if ~exist('exptDate','var') || ~exist('exptIndex','var')
-%       exptDate = '22507'; 
-%       exptIndex = '001';
-%     
-%     exptIndex = '008'; noTank = false;
-%	exptIndex = '004'; noTank = false;
-%     exptIndex = '005'; noTank = true;
-%     exptIndex = '006'; noTank = false;
-%    exptIndex = '007'; noTank = true;
-%     exptDate = '21520'; 
-%     exptIndex = '005';
-%     exptDate = '21510';
-%     exptIndex = '000';
-%     exptDate = '21513';
-%     exptIndex = '000';
-%     exptDate = '21513';
-%     exptIndex = '001';
-%     exptDate = '21515';
-%     exptIndex = '002';
-end
+%exptTable = readtable('M:\Zarmeen\Data\SR Model Fits\SRTableComplete2.csv');
+%for iExpt = 1:size(exptTable,1)
+
+%   clear all
+%       exptDate = '21624';
+%      exptIndex = '006';
+ % exptDate = date(1:5);
+ % exptIndex = date(7:9);
 relevantROIs = {'mPFC', 'LFP R PFC'}; % labels in database can be any of these
 % Window for analysis and plotting, relative to stim time
-tPreStim = 0.02; %sec
+tPreStim = 0.05; %sec
 tPostStim = 0.2; %sec
 % Start searching for peaks and troughs of responses after this time
 artifactDur = 2.e-3; %sec;
@@ -34,6 +22,9 @@ avgWinTime = 1.e-3; %sec;
 % Time window re stim time to calculate baseline value that is subtracted from peak values
 baseWin = [-5,-0.5]*1.e-3; %sec; 
 %hardcoded location - not ideal, but this works for now
+%date = char(exptTable.Index{iExpt});
+
+
 fileString = [exptDate '-' exptIndex];
 outPath = [getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' fileString '\'];
 
@@ -44,25 +35,11 @@ if ~exist(outPath2,'dir')
 end
 
 
-
 %% load data
 % will repeat this for the dual recordings to load in the parallel set
 
 [~,indexOut,isTank] = getIsTank(exptDate,exptIndex);
 [stimSet,dTRec,stimArray,stimTimes] = getSynapseStimSetData(exptDate,indexOut,tPreStim,tPostStim,isTank);
-
-
-
-% first check if exptDate matches the problem date.
-
-% stimSet will have channel x sample data, so swap the channel dimension
-% around as needed.
-
-% thinking on this... Matt may say "why didn't you just fix the data".  If
-% we want to do that, you could load the problem day, swap the channels in
-% the array as I suggested above, then save.  Make sure there's a backup.-
-% can we do this?? i think that would be best
-
 if contains(exptDate,'22705')
     for i = 1:size(stimSet,2)
         stimSet(i).data(1:2,:,:) = stimSet(i).data(5:6,:,:); % or whatever chan - 5:6?  
@@ -74,6 +51,17 @@ if contains(exptDate,'22705')
     end
 end
 
+
+if contains(exptDate,'22706')
+    for i = 1:size(stimSet,2)
+        stimSet(i).data(1:2,:,:) = stimSet(i).data(5:6,:,:); % or whatever chan - 5:6?  
+        %yes
+        % and also 
+        stimSet(i).sub(1,:,:) = stimSet(i).sub(3,:,:);
+        stimSet(i).dataMean(1:2,:) = stimSet(i).dataMean(5:6,:);
+        stimSet(i).subMean(1,:) = stimSet(i).subMean(3,:);
+    end
+end
 
 %% commands to process some of these parameters
 if ~exist(outPath,'dir')
@@ -90,6 +78,7 @@ electrodeLocs = electrodeLocs(map);
 ROILabels = electrodeLocs(contains(electrodeLocs,relevantROIs,'IgnoreCase',true));
 ROILabels = unique(ROILabels,'stable');
 nStims = length(stimSet);
+nTrials = size(stimSet(1).data,2);
 nROIs = 1; %size(stimSet(1).sub,1); %number of regions with recording electrodes
 preStimIndex = floor(tPreStim/dTRec);
 postStimIndex = ceil(tPostStim/dTRec);
@@ -101,23 +90,13 @@ postStimIndex = ceil(tPostStim/dTRec);
 % finding first peak after t=0 (i.e. after what Synapse thinks is the stim
 % time).
 pkThresh = 5.e-6;
-tempData = zeros(size(stimSet(1).subMean));
+tempData = zeros(size(stimSet(1).sub));
 for iStim = 1:nStims
-    tempData = tempData+stimSet(iStim).subMean/nStims;
+    tempData = tempData+stimSet(iStim).sub/nStims;
 end
 % figure()
 saveIndex = zeros(1,nROIs);
-for iROI = 1 %:nROIs
-%     subplot(1,nROIs,iROI);
-%     plot(abs(tempData(iROI,:)));
-%     [tempPks,tempIndex] = findpeaks(abs(tempData(iROI,preStimIndex:end)),'Threshold',pkThresh);
-%     if isempty(tempIndex)
-%         tempIndex(1) = 0;
-%         tempPks(1) = 0;
-%     end
-%     saveIndex(iROI) = tempIndex(1);
-%     hold on
-%     plot(tempIndex(1)+preStimIndex,tempPks(1),'+');
+for iROI = 1 
     [~,tempIndex] = findpeaks(abs(tempData(iROI,preStimIndex:end)),'Threshold',pkThresh);
     if isempty(tempIndex)
         tempIndex(1) = 0;
@@ -130,6 +109,7 @@ else
     indexAdjust = floor(mean(saveIndex(saveIndex>0)));
     actualStimIndex = preStimIndex + indexAdjust;
 end
+
 %% Compute means and find min/max for plotting
 startSearchIndex = actualStimIndex+ceil(artifactDur/dTRec); %Start search for plot min and max after artifact
 stimSet(iStim).dataMean = squeeze(mean(stimSet(iStim).data,2));
@@ -159,13 +139,60 @@ if isfile([outPath2 animal '_peakDataOverTime.mat'])
         p(iROI).yPkList = yPkList;
     end
 end
+%% Subtract baseline from post stimulus period to zero out any abberrations 
+baseWinIndex = floor(baseWin/dTRec)
+plotTimeArray = dTRec*(-preStimIndex:postStimIndex)
 
-%% Plot average traces
+figure() %Visualize raw data
+for iStim = 1:nStims
+   for iTrial = 1:nTrials
+       hold on
+    plot(plotTimeArray,squeeze(stimSet(iStim).sub(1,iTrial,:)))
+   end
+end
+
+for iROI = 1 %:nROIs
+    for iStim = 1:nStims
+         for iTrial = 1:nTrials
+     tempMn = stimSet(iStim).sub(iROI,iTrial,:);
+     baseVal = mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2)));
+     data(iStim).sub(1,iTrial,:) = tempMn  - baseVal;
+         end
+    end
+end
+
+
+figure() %Visualize normalized data
+for iStim = 1:nStims
+   for iTrial = 1:nTrials
+       hold on
+    plot(plotTimeArray,squeeze(data(iStim).sub(1,iTrial,:)))
+   end
+end
+
+   
+%% Apply filter to data
+%gausswin() will give you a gaussian window, by default it's 2.5 SD wide. 
+%Sampling frequency (fs) in Hz, times 20/2000 is 20 milliseconds wide so, 10 ms on either side;
+
+f = gausswin((1/dTRec)*(20/10000)); 
+
+%makes sure the filter sums to 1
+f = f/sum(f);
+for iStim = 1:length(stimSet)
+    for iTrial = 1:nTrials
+       tempData = data(iStim).sub(1,iTrial,:);
+       tempData = squeeze(filter(f,1,tempData))';
+       data(iStim).sub(1,iTrial,:) = tempData;
+    end
+end
+ 
+
+%% Plot traces
 ampLabel = [];
+
 for iStim = 1:nStims
     if iscell(stimArray)
-        %TODO use '-' as a delimiter to get each sides correct amplitude -
-        %use 'remain'
         [token,remain] = strtok(stimArray{iStim},'-');
         ampLabel{iStim} = [token '\mu' 'A'];
     else 
@@ -180,20 +207,22 @@ for iROI = 1 %:nROIs
     subPlt(iROI) = subplot(1,nROIs,iROI);
     hold on
     for iStim = 1:length(stimSet)
-        plot(plotTimeArray,stimSet(iStim).subMean(iROI,:));
+        for iTrials = 1:nTrials
+            %plot(plotTimeArray,squeeze((stimSet(iStim).sub(iROI,iTrials,:))));
+            plot(plotTimeArray,squeeze(data(iStim).sub(1,iTrials,:)));
+        end
     end
-    if exist('tPkList','var')
-        plot(p(iROI).tPkList,p(iROI).yPkList,'*b','MarkerSize',8);
-    end
+%     if exist('tPkList','var') %Comment this in or out if you want to see where previous peaks were selected
+%         plot(p(iROI).tPkList,p(iROI).yPkList,'*b','MarkerSize',8); 
+%     end
     ax = gca;
     ax.XLim = [-tPreStim,tPostStim];
-    ax.YLim = [-20.0e-05, 20.0e-05]%[1.05*plotMin(iROI),1.05*plotMax(iROI)];
+    ax.YLim = [-20.0e-05, 20.0e-05] %[1.05*plotMin(iROI),1.05*plotMax(iROI)];
     ax.XLabel.String = 'time(sec)';
     if iROI == 1
-        
         ax.YLabel.String = 'avg dataSub (V)';
     end
-    %ax.Title.String = ROILabels(1);
+ 
     if iROI == nROIs
         legend(ampLabel,'FontSize',6,'Location','NorthEast');
         legend('boxoff');
@@ -238,28 +267,32 @@ close(thisFigure);
 avgWinIndex = floor(avgWinTime/dTRec);
 baseWinIndex = floor(baseWin/dTRec);
 pkVals = struct();
+
+
 for iROI = 1 %:nROIs
-    pkVals(iROI).data = zeros(length(pkSearchData(iROI).tPk),nStims);
+    pkVals(iROI).data = zeros(nStims, nTrials);
     for iPk = 1:length(pkSearchData(iROI).tPk)
-        %Start and stop indices of time window re stim time to search for peak minimum resp
-        this_tPk = pkSearchData(iROI).tPk(iPk);
-        pkSearchIndices = ceil([this_tPk - this_tPk/2,this_tPk + this_tPk/2]/dTRec);
-        tempIndA = actualStimIndex+pkSearchIndices;
-        tempIndA(2) = min(tempIndA(2),length(stimSet(iStim).subMean(iROI,:)));  
-        pkSign = pkSearchData(iROI).pkSign(iPk);
         for iStim = 1:nStims
-            tempMn = stimSet(iStim).subMean(iROI,:);
-            if pkSign>0
-                [~, pkIndex] = max(tempMn(tempIndA(1):tempIndA(2)));
-            else
-                [~, pkIndex] = min(tempMn(tempIndA(1):tempIndA(2)));
+            for iTrial = 1:nTrials
+                %Start and stop indices of time window re stim time to search for peak minimum resp
+                this_tPk = pkSearchData(iROI).tPk(iPk);
+                pkSearchIndices = ceil([this_tPk - this_tPk/2,this_tPk + this_tPk/2]/dTRec);
+                tempIndA = actualStimIndex+pkSearchIndices;
+                tempIndA(2) = min(tempIndA(2),length(stimSet(iStim).sub(iROI,iTrial,:)));  
+                pkSign = pkSearchData(iROI).pkSign(iPk);
+                tempMn = stimSet(iStim).sub(iROI,iTrial,:);
+                if pkSign>0
+                    [~, pkIndex] = max(tempMn(tempIndA(1):tempIndA(2)));
+                else
+                    [~, pkIndex] = min(tempMn(tempIndA(1):tempIndA(2)));
+                end
+               baseVal = mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2))); % this is the baseline pre stim 
+                tempIndB(1) = actualStimIndex+pkSearchIndices(1)+pkIndex-avgWinIndex;
+                tempIndB(2) = actualStimIndex+pkSearchIndices(1)+pkIndex+avgWinIndex;
+                pkVals(iROI).data(iStim,iTrial) = mean(tempMn(tempIndB(1):tempIndB(2))) - baseVal;
+                pkVals(iROI).peakTimeCalc(iStim, iTrial) = (pkIndex+tempIndA(1))*dTRec-tPreStim;
+                pkVals(iROI).baseVal(iStim, iTrial) = baseVal;
             end
-            baseVal = mean(tempMn(preStimIndex + baseWinIndex(1):preStimIndex + baseWinIndex(2))); % this is the baseline pre stim 
-            tempIndB(1) = actualStimIndex+pkSearchIndices(1)+pkIndex-avgWinIndex;
-            tempIndB(2) = actualStimIndex+pkSearchIndices(1)+pkIndex+avgWinIndex;
-            pkVals(iROI).data(iPk,iStim) = mean(tempMn(tempIndB(1):tempIndB(2))) - baseVal;
-            pkVals(iROI).peakTimeCalc(iPk,iStim) = (pkIndex+tempIndA(1))*dTRec-tPreStim;
-            pkVals(iROI).baseVal(iPk,iStim) = baseVal;
         end
     end
 end
@@ -287,48 +320,35 @@ plotTimeArray = dTRec*(-preStimIndex:postStimIndex);
 
 %%
 for iStim = 1:length(stimSet)
-    avgTraces(iStim).stimSet = stimSet(iStim).subMean;
-    avgTraces(iStim).stimArrayNumeric = stimArrayNumeric(iStim);
-    avgTraces(iStim).ampLabel = ampLabel{iStim};
+    allTraces(iStim).stimSet = stimSet(iStim).sub;
+    allTraces(iStim).stimArrayNumeric = stimArrayNumeric(iStim);
+    allTraces(iStim).ampLabel = ampLabel{iStim};
 
 end
-% we will save 
+% here is where all the SAVING happens this will create indivudal files
 % Time of peak re stim time
 % Response magnitude (pk, inner product)
 % Time of stim relative to start of file
-peakData = struct;
-peakData.pkSearchData = pkSearchData; % user selected Time of peak re stim time
-peakData.ROILabels = ROILabels; %corresponding labels
-peakData.stimArrayNumeric = stimArrayNumeric;
-peakData.pkVals = pkVals; % Response magnitude 
-peakData.stimTimes = stimTimes; % Time of stim relative to start of file
-peakData.plotMin = plotMin;
-peakData.plotMax = plotMax;
-peakData.plotTimeArray = plotTimeArray; 
-peakData.avgTraces = avgTraces;
-peakData.stimSet = stimSet;
+singleTrialPeakDataFilt = struct;
+singleTrialPeakDataFilt.pkSearchData = pkSearchData; % user selected Time of peak re stim time
+singleTrialPeakDataFilt.ROILabels = ROILabels; %corresponding labels
+singleTrialPeakDataFilt.stimArrayNumeric = stimArrayNumeric;
+singleTrialPeakDataFilt.pkVals = pkVals; % Response magnitude 
+singleTrialPeakDataFilt.stimTimes = stimTimes; % Time of stim relative to start of file
+singleTrialPeakDataFilt.plotMin = plotMin;
+singleTrialPeakDataFilt.plotMax = plotMax;
+singleTrialPeakDataFilt.plotTimeArray = plotTimeArray; 
+singleTrialPeakDataFilt.allTraces = allTraces;
+singleTrialPeakDataFilt.stimSet = stimSet;
+
+    
+outPath2 = ['M:\PassiveEphys\AnimalData\' animalName '\']
+save([outPath fileString '_singleTrialPeakDataFilt'],'singleTrialPeakDataFilt','plotTimeArray','allTraces','stimArrayNumeric');
 
     
 
-save([outPath fileString '_peakData'],'peakData','plotTimeArray','avgTraces');
+%end
 
-
-% also save long term data
-% 
-if ~exist('peakDataOverTime','var')
-    peakDataOverTime = struct;
-end
-peakDataOverTime.(['expt' strrep(fileString,'-','')]).peakData = peakData;
-save([outPath2 animal '_peakDataOverTime'],'peakDataOverTime');
-
-
-
-
-
-%% 
-%plotting now contained here (so we can call it from other programs)
-sendToSlack = false;
-plotCalculatedPeaks = false;
-plotStimRespByDateIndex(exptDate,exptIndex,sendToSlack,plotCalculatedPeaks)
-
-
+% sendToSlack = false;
+% plotCalculatedPeaks = false;
+% plotSingleTrialStimRespByDateIndex(exptDate,exptIndex,sendToSlack,plotCalculatedPeaks)

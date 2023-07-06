@@ -25,12 +25,7 @@ if contains(animalName,'ZZ')
     indexTrialPerStimSequence = 1;
     indexStimCountSequence = -1;
     exptStepsPerHour = 1;
-    nIndexStepsPerHour = size(indexDescriptionRECtype,1)*exptStepsPerHour;
-    nIndexSteps = nIndexStepsPerHour*(nHoursPre+nHoursPost);
-    for iStep = 1:nIndexSteps
-        Experiment.nTrialsIndexArray(iStep) = indexTrialPerStimSequence(rem(iStep,length(indexDescriptionRECtype))+1);
-        Experiment.nStimsIndexArray(iStep) = indexStimCountSequence(rem(iStep,length(indexDescriptionRECtype))+1);
-    end
+    
     Experiment.exptDescriptionText = {
         [experimentDrugManipulation ' stim/resp pre expt' ]
         [experimentDrugManipulation ' stim/resp Baseline' ]
@@ -49,6 +44,13 @@ if contains(animalName,'ZZ')
         [experimentDrugManipulation ' spon - post injection 3' ]
         [experimentDrugManipulation ' spon - post injection 4' ]
     };
+%     nIndexStepsPerHour = size(indexDescriptionRECtype,1)*exptStepsPerHour;
+%     nIndexSteps = nIndexStepsPerHour*(nHoursPre+nHoursPost);
+    nIndexSteps = length(Experiment.exptDescriptionText);
+    for iStep = 1:nIndexSteps
+        Experiment.nTrialsIndexArray(iStep) = indexTrialPerStimSequence(rem(iStep,length(indexDescriptionRECtype))+1);
+        Experiment.nStimsIndexArray(iStep) = indexStimCountSequence(rem(iStep,length(indexDescriptionRECtype))+1);
+    end
 %         [experimentDrugManipulation ' Baseline / stim - pre LTP/LTD' ]
 %         [experimentDrugManipulation ' LTP / stim ' ]
 %         [experimentDrugManipulation ' Post LTP / stim ' ]

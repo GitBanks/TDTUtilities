@@ -101,7 +101,18 @@ for i = 1:size(specificHours,2)
         meanMove(iField) = mean(getfield(loadedData,actionList{iField}));
     end
     
+
+
+  % TODO!:  if we want a specific time window, we'll want to more
+        % tightly define dataSet(specificHours(i)).time and use that window
+        % of segments to define this loop
+        % so we're going to want iSegment to be a predefined array of that
+        % window
+
     for iSegment = 1:size(dataSet(specificHours(i)).time,1)
+        
+
+
         %thisSeg = listOfSegments{iSegment};
         
         chanN = chanOfInterest(1);
