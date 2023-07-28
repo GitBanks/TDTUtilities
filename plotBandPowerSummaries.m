@@ -4,6 +4,7 @@ function plotBandPowerSummaries(setName)
 
 % dummy variables
 % setName = 'combined'
+% setName = 'DOIKetanserin';
 
 switch setName
     case 'FLVX' 
@@ -23,8 +24,8 @@ switch setName
         xtickLabelstart = {'Sal','Psil','4ACO','6FDET'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
     case 'DOIKetanserin' % untested - this is framework only
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
-        xtickLabelstart = {'Sal,Sal','Sal,LPS','Ketan,Sal'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
-
+        xtickLabelstart = {'Sal,Sal','Sal,LPS','DOI,Sal','DOI,LPS','DOI+Ket,Sal','DOI+Ket,LPS'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
+        groupIncr = [0 0 0 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6]; 
     otherwise
         error('Need an appropriate table name from a recognized list: ''FLVX'' or ''LPS2020'' or ''ZZ'' so far ');
 end
@@ -120,8 +121,8 @@ for ii = bandStart:nColsForBoxPlot
     yLocations = boxplotArray(ii,~isnan(boxplotArray(ii,:)));
     xLocations = ones(size(yLocations,2),1)*ii;
     useThese = ~isnan(boxplotArray(ii,:));
-%     theseNames = group(groupIncr(ii)).names(useThese);
-    theseNames = group(groupIncr(ii)).Sex(useThese);
+    theseNames = group(groupIncr(ii)).names(useThese);
+%     theseNames = group(groupIncr(ii)).Sex(useThese);
     try
     text(xLocations,yLocations,theseNames);
     catch
@@ -154,7 +155,7 @@ switch setName
     case 'ZZ' % untested - this is framework only
         legend([a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
     case 'DOIKetanserin'
-        legend([a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
+        legend([a(12) a(10) a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
     otherwise
 end
 %     legend([a(3) a(2) a(1)], {'Saline Saline','Saline LPS','Fluvoxamine LPS'},'Location','southwest');
