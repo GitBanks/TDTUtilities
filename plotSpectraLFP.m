@@ -61,6 +61,7 @@ for iFile = 1:size(dataFolder,1)
     end
 end
 if ~exist('file','var')
+    disp(['Failed to find the specAnalysis output for ' animalName ' ' exptDate])
     error(['Found ' dataFolder(1).folder ' but not the file we''re looking for!']);
 end
 

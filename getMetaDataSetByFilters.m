@@ -32,7 +32,7 @@ if iscell(animalName)
     animalName = animalName{1};
 end
 % Do we want to try loading an existing?
-overWrite = false; % toggle this if we've added recordings to animals
+overWrite = true; % toggle this if we've added recordings to animals
 [metaDataMouse] = getMetaDataByAnimal(animalName,overWrite);
 
 

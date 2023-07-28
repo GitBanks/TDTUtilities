@@ -6,6 +6,7 @@ function collectSpectraDataFromExptList(setName)
 % these switches
 % setName = 'FLVX'
 % setName = 'combined'
+% setName = 'DOIKetanserin'
 isLFP = false;
 
 switch setName

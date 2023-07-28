@@ -28,6 +28,7 @@ function qualityAssuranceEEG(animalName,exptDate,reportPlot,textNotes)
 % here's by animal:
 % savePath = [getPathGlobal('animalSaves') animalName '\']
 % here's project:
+
 savePath = '\\144.92.237.185\Data\PassiveEphys\AnimalData\combined\QA\'; %change this for saving 
 saveFileName = [animalName '-' exptDate '-QA'];
 
