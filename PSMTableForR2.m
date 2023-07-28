@@ -63,7 +63,17 @@ end
 treatments = getTreatmentInfo(animalName,exptDate);
 thisDrug = treatments.pars{1};
 
-theseExptIndices = getExperimentsByAnimalAndDate(animalName,exptDate);
+
+% added this to look for ZZ SPON recordings, while note affecting EEG mice.
+% REWRITE IF LOOKING FOR STIM RECORDINGS IN ZZ ANIMALS
+
+if contains(animalName, 'ZZ') 
+    findExptType = 'Spon';
+else
+    findExptType = '';
+end
+
+theseExptIndices = getExperimentsByAnimalAndDate(animalName,exptDate,findExptType);
 
 
 totalSegs = 0;

@@ -1,17 +1,16 @@
+function [singleTrialPeakDataFilt] = getSingleTrialDataWithFilter(exptDate,exptIndex)
 %This is to get the single trial peak data for in vivo LFP experiments and to plot single
 %trial peaks
 
-% .subMean will be (ROI x samples)
-% .sub will be (ROI x trials x samples)
-% 1. we can replace anything that says stimSet.subMean(iROI,:) with stimSet.sub(iROI,1,:)
-% 2. wherever I am looping through the iROI i will have to loop through the
-% trials
-% 3. Smooth the curve wherever the data is plotted out
-close all
-clear all
-exptTable = readtable('M:\Zarmeen\Data\SR Model Fits\SRTableComplete.csv');
-for iExpt = 1:size(exptTable,1)
-      
+
+%exptTable = readtable('M:\Zarmeen\Data\SR Model Fits\SRTableComplete2.csv');
+%for iExpt = 1:size(exptTable,1)
+
+%   clear all
+%       exptDate = '21624';
+%      exptIndex = '006';
+ % exptDate = date(1:5);
+ % exptIndex = date(7:9);
 relevantROIs = {'mPFC', 'LFP R PFC'}; % labels in database can be any of these
 % Window for analysis and plotting, relative to stim time
 tPreStim = 0.05; %sec
@@ -25,10 +24,7 @@ baseWin = [-5,-0.5]*1.e-3; %sec;
 %hardcoded location - not ideal, but this works for now
 %date = char(exptTable.Index{iExpt});
 
-exptDate = '21624';
-exptIndex = '006';
-% exptDate = date(1:5);
-% exptIndex = date(7:9);
+
 fileString = [exptDate '-' exptIndex];
 outPath = [getPathGlobal('M') 'PassiveEphys\20' exptDate(1:2) '\' fileString '\'];
 
@@ -347,15 +343,12 @@ singleTrialPeakDataFilt.stimSet = stimSet;
 
     
 outPath2 = ['M:\PassiveEphys\AnimalData\' animalName '\']
-save([outPath fileString '_singleTrialPeakDataFilt'],'singleTrialPeakDataFilt','plotTimeArray','allTraces');
-% saveas(figure1,[outPath2 'raw' exptDateIndex '.fig'])
-% saveas(figure2,[outPath2 'normalized' exptDateIndex  '.fig'])
-% saveas(thisFigure,[outPath2 'smoothed' exptDateIndex '.fig'])
-%  
+save([outPath fileString '_singleTrialPeakDataFilt'],'singleTrialPeakDataFilt','plotTimeArray','allTraces','stimArrayNumeric');
+
     
 
-end
+%end
 
-sendToSlack = false;
-plotCalculatedPeaks = false;
-plotSingleTrialStimRespByDateIndex(exptDate,exptIndex,sendToSlack,plotCalculatedPeaks)
+% sendToSlack = false;
+% plotCalculatedPeaks = false;
+% plotSingleTrialStimRespByDateIndex(exptDate,exptIndex,sendToSlack,plotCalculatedPeaks)
