@@ -1,9 +1,9 @@
-function saveArraySpecAnalysis(animalName,exptDate)
+function saveWindowedArray(animalName,exptDate)
 % we want to convert the specAnalysis output to a time array
 % format, for much easier readability, and flexibility.  We'll save this in
 % the animal's folder.  This will make it easier to select time windows for
 % PSM and other plotting.
-
+ 
 % test params
 % animalName = 'EEG200';
 % exptDate = '22614';
@@ -22,7 +22,7 @@ bandRanges = zeros(2,5); % these will be set when we find the corresponding elem
 % === Find and load the animals specAnalysis output.
 folder = [getPathGlobal('pipelineSaves') animalName '\'];
 % the file will be some crazy thing like this:
-% 'EEG210_22629-001,22629-003,22629-005,22629-007,22629-009,22629-011 wPLI_dbt'; 
+% 'EEG210_22629-001,22629-003,22629-005,22629-007,22629-009,22629-011 specAnalysis-SegLength4.mat'; 
 % instead, we'll search for it.
 dataFolder = dir(folder);
 for iFile = 1:size(dataFolder,1)
@@ -117,7 +117,7 @@ happyTable.betaP = specdata(2).data(:,4);
 happyTable.gammaP = specdata(2).data(:,5);
 
 % === save now
-
+% somewhere here: M:\PassiveEphys\AnimalData\{animalName}\
 
 
 
