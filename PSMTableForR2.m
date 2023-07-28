@@ -27,7 +27,8 @@ function PSMTableForR2(animalName,exptDate)
 % input maybe
 
 try
-    loadFileFolder = 'M:\PassiveEphys\AnimalData\Fluvoxamine-LPS\';
+%     loadFileFolder = 'M:\PassiveEphys\AnimalData\Fluvoxamine-LPS\';
+    loadFileFolder = 'M:\PassiveEphys\AnimalData\DOI\';
     loadFile = [loadFileFolder animalName '_' exptDate '_bandpowerSet.mat'];
     load(loadFile,"dataSet");
     chanOfInterest = [1,2];
