@@ -9,6 +9,10 @@ function foundPoints = cleanDataByThresholdAnimalDateEEG(animalName,exptDate)
 % animalName = 'ZZ20'; problem in last index with code line 67
 % exptDate = '22907';
 
+
+trySixtyHzFilter = false;
+tryOneHzFilter = true;
+
 % you can use the output foundPoints to trigger a rerunning of specAnalysis
 % or otherwise generate a list of animals that have had points cleaned.
 
@@ -80,8 +84,11 @@ for i=1:size(operationList,1)
         hold on
         plot(t,tempEphysData(iPlot,:),'b');
     end
-    drawnow;
-    pause(2);
+%     drawnow;
+%     pause(0.5);
+
+
+
 
     % now we need some user input
     %disp([num2str(sum(tempSetNanArray)) ' points found to eliminate.']);
@@ -112,5 +119,88 @@ for i=1:size(operationList,1)
         disp('since no points found we''re skipping this index.')
     end
     close all
+
+
+
+    if trySixtyHzFilter
+        clear tempEphysData
+        tempEphysData = ephysData;
+%         tempEphysData(1,:) = cos(2*pi*60*t); test 60Hz sine
+        [tempEphysData] = filterData_dbVer(ephysData,0,0,dT);
+        figure('Units','Normalized','Position',[0 0.2 0.8 0.5]);
+        for iPlot = 1:nChans
+            subtightplot(nChans,1,iPlot)
+            plot(t,ephysData(iPlot,:),'r');
+            hold on
+            plot(t,tempEphysData(iPlot,:),'b');
+            ylim([-3e-4,3e-4]);
+            xlim([500,500.1]);
+        end
+        drawnow;
+        pause(0.5);
+            b2name = questdlg_timer(60,'Are the red points noticable, to justify an additional 60Hz filter run?',...
+            'Save Dialogue Box','Yes','No','No');
+            switch b2name
+                case 'Yes'
+                    ephysData = tempEphysData;
+                    if isEEG
+                        disp('using blue from the plot. Overwriting EEGData0!');
+                        save([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
+                        disp([dirStr operationList{i,1} '_EEGData0.mat overwritten.']);
+                    else
+                        disp('using blue from the plot. Overwriting data0!');
+                        save([dirStr operationList{i,1} '_data0.mat'],"ephysData","dT");
+                        disp([dirStr operationList{i,1} '_data0.mat overwritten.']);
+                    end
+                    disp('rerun fileMaint and reimport to revert to original.');
+                    foundPoints = true;
+                case 'No'
+                    disp('No changes will be made.')
+            end
+            close all
+    end
+
+    if tryOneHzFilter
+        clear tempEphysData
+        tempEphysData = ephysData;
+%         tempEphysData(1,:) = cos(2*pi*60*t); test 60Hz sine
+        [tempEphysData] = filterData_dbVer(ephysData,1,0,dT);
+        figure('Units','Normalized','Position',[0 0.2 0.8 0.5]);
+        for iPlot = 1:nChans
+            subtightplot(nChans,1,iPlot)
+            plot(t,ephysData(iPlot,:),'r');
+            hold on
+            plot(t,tempEphysData(iPlot,:),'b');
+            ylim([-3e-4,3e-4]);
+            xlim([500,502]);
+        end
+%         drawnow;
+%         pause(0.5);
+
+%             b2name = questdlg_timer(60,'Are the red points noticable, to justify a 1Hz filter run?',...
+%             'Save Dialogue Box','Yes','No','No');
+            b2name = 'Yes'
+            switch b2name
+                case 'Yes'
+                    ephysData = tempEphysData;
+                    if isEEG
+                        disp('using blue from the plot. Overwriting EEGData0!');
+                        save([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
+                        disp([dirStr operationList{i,1} '_EEGData0.mat overwritten.']);
+                    else
+                        disp('using blue from the plot. Overwriting data0!');
+                        save([dirStr operationList{i,1} '_data0.mat'],"ephysData","dT");
+                        disp([dirStr operationList{i,1} '_data0.mat overwritten.']);
+                    end
+                    disp('rerun fileMaint and reimport to revert to original.');
+                    foundPoints = true;
+                case 'No'
+                    disp('No changes will be made.')
+            end
+            close all
+    end
+
+
+
 end
 
