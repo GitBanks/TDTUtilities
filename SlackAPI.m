@@ -146,8 +146,8 @@ classdef SlackAPI < handle
             status = resp.ok;
             list = resp.channels;
             for i = 1:length(list)
-                if strcmp(list(i).name, channel)
-                    id = list(i).id;
+                if strcmp(list{i}.name, channel)
+                    id = list{i}.id;
                     return;
                 end
             end
@@ -157,8 +157,8 @@ classdef SlackAPI < handle
             status = resp.ok;
             list = resp.groups;
             for i = 1:length(list)
-                if strcmp(list(i).name, channel)
-                    id = list(i).id;
+                if strcmp(list{i}.name, channel)
+                    id = list{i}.id;
                     return;
                 end
             end
