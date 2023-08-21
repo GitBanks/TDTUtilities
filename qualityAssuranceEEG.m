@@ -29,7 +29,8 @@ function qualityAssuranceEEG(animalName,exptDate,reportPlot,textNotes)
 % savePath = [getPathGlobal('animalSaves') animalName '\']
 % here's project:
 
-savePath = '\\144.92.237.185\Data\PassiveEphys\AnimalData\combined\QA\'; %change this for saving 
+% savePath = '\\144.92.237.185\Data\PassiveEphys\AnimalData\combined\QA\'; %change this for saving 
+savePath = '\\144.92.237.185\Data\PassiveEphys\AnimalData\DOI\QA\'; %change this for saving 
 saveFileName = [animalName '-' exptDate '-QA'];
 
 if ~exist('textNotes','var')
@@ -74,7 +75,8 @@ upperB = prctile(fullExptChannel,99)*2; % 99th prctile
 
 % pull the spectra data from the saved run
 
-saveFolder = 'M:\PassiveEphys\AnimalData\combined\'; % EEG animals bandpower location
+% saveFolder = 'M:\PassiveEphys\AnimalData\combined\'; % EEG animals bandpower location
+saveFolder = 'M:\PassiveEphys\AnimalData\DOI\'; % EEG animals bandpower location
 % saveFolder = 'M:\Zarmeen\Data\spectra\'; % ZZ animal bandpower location 
 load([saveFolder animalName '_' exptDate '_bandpowerSet.mat'],"dataSet");
 getYMax = nan;
