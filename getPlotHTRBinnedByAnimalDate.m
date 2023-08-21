@@ -1,4 +1,4 @@
-function [allCenters,allCounts] = getPlotHTRBinnedByAnimalDate(animalName,exptDate,binSize,displayFigure)
+function [allCenters,allCounts] = getPlotHTRBinnedByAnimalDate(animalName,exptDate,binSize,displayFigure,nHours)
 
 % new code for plotting HTR!!!!
 % Zarmeen, Mallory, Sean!
@@ -19,11 +19,15 @@ if ~exist("binSize","var")
     binSize = 5; % minutes -make this a parameter?
 end
 
+if ~exist("nHours","var")
+    nHours = 2;
+end
+
 exptList = getExperimentsByAnimalAndDate(animalName,exptDate,'Spon');
 
 % this is a guess that there's only one ctrl!   not advisable!  please change ASAP!!!
 % this is a guess that there's only one ctrl!   not advisable!  please change ASAP!!!
-exptList = exptList(1:2,:); % this is a guess that there's only one ctrl!   not advisable!  please change ASAP!!!
+exptList = exptList(1:nHours,:); % this is a guess that there's only one ctrl!   not advisable!  please change ASAP!!!
 % this is a guess that there's only one ctrl!   not advisable!  please change ASAP!!!
 % this is a guess that there's only one ctrl!   not advisable!  please change ASAP!!!
 
@@ -34,7 +38,7 @@ end
 allCenters = [];
 allCounts = [];
 
-for iFile = 1:2
+for iFile = 1:nHours
     fileNameBase = [getPathGlobal('importedData') '20' exptDate(1:2) '\' exptList{iFile} '\' exptList{iFile}];
     fileNameHTR = [fileNameBase '-HTRevents.mat'];
     fileNameMagData = [fileNameBase '_magnetData'];
@@ -60,7 +64,14 @@ for iFile = 1:2
     minuteTimeArray = timeArrayMag/60;
     edges = round(minuteTimeArray(1):binSize:minuteTimeArray(end));
     centers = edges+(binSize/2);
+
     centers = centers(1:end-1);
+    if iFile > 1
+        if allCenters(end) > 0 % if we're running more than one hour after t=0
+            centers = centers+(allCenters(end)+binSize/2);
+        end
+    end
+
     Y = discretize(minuteSummaryEvents,edges);
     Y(isnan(Y)) = []; % if they're outside of bounds, they're likely erroneous due to being too early or too late. TODO - maybe handle these differently?
     [C,~,ic] = unique(Y);

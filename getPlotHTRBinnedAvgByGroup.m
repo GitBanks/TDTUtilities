@@ -1,4 +1,4 @@
-function [avgCenters,avgCounts,avgSTD] = getPlotHTRBinnedAvgByGroup(thisGroup,thisFile,displayEachAnimal,binSize,displaySummary)
+function [avgCenters,avgCounts,avgSTD] = getPlotHTRBinnedAvgByGroup(thisGroup,thisFile,displayEachAnimal,binSize,displaySummary,nHourPost)
 % for now, this works by giving the function a drug name, but we also would
 % like it to accept a list of animals
 
@@ -28,6 +28,9 @@ function [avgCenters,avgCounts,avgSTD] = getPlotHTRBinnedAvgByGroup(thisGroup,th
 % thisFile = getPathGlobal('banksLocalHTRData');
 % displaySummary = true
 
+if ~exist("nHourPost","var")
+    nHours = 2;
+end
 
 opts = detectImportOptions(thisFile);
 % opts = setvartype(opts, "RecordingID", 'string');
@@ -35,12 +38,13 @@ workingTable = readtable(thisFile,opts);
 
 animalDateTable = workingTable(workingTable.exptGroup == thisGroup,:);
 treatment = animalDateTable.drug{1};
+nHours = animalDateTable.nHours(1);
 
 for iExpt = 1:size(animalDateTable,1)
     animalName = char(animalDateTable.animalName(iExpt));
     disp(['finding bins for: ' animalName]);
     exptDate = char(animalDateTable.exptDate(iExpt));
-    [allCenters,allCounts] = getPlotHTRBinnedByAnimalDate(animalName,exptDate,binSize,displayEachAnimal);
+    [allCenters,allCounts] = getPlotHTRBinnedByAnimalDate(animalName,exptDate,binSize,displayEachAnimal,nHours);
     S(iExpt).allCenters = allCenters;
     S(iExpt).allCounts = allCounts;
 end
