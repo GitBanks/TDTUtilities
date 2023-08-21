@@ -5,12 +5,19 @@ function plotInterfaceHTR
 % condition.  This is just written for HTR.
 % default configurations
 S.thisFile = getPathGlobal('banksLocalHTRData');
+% usually it's this:  '\\144.92.237.185\Data\PassiveEphys\AnimalData\HTRDrugGroupList.xlsx'
 S.binSize = 5;
 S.nPlots = 1;
-edges = round(-60:S.binSize:60);
+S.nHourPost = 1; % use 1 for ZZ (I think?) use 2 for EEG, otherwise there will be trouble
+
+% TODO: come up with a better way to select the initial span of time we wish to plot.  
+% edges = round(-60:S.binSize:60); 
+edges = round(-60:S.binSize:155); 
+
 S.allCenters = edges+(S.binSize/2);
 S.allCenters = S.allCenters(1:end-1);
-S.allCounts = nan(10,size(S.allCenters,2));
+S.allCounts = nan(10,size(S.allCenters,2)); % over 10 on a page is a little crazy, but you can change it here if you need 11 or more, you maniac.
+S.allErr = nan(10,size(S.allCenters,2));
 S.fhPlot = figure('units','pixels',...
     'position',[200 200 1200 500]);
 S.fhControls = figure('units','pixels',...
@@ -32,6 +39,7 @@ uiwait(S.fhControls);  % everything set up now. wait for button pushes or exit.
 
 function [S] = plotNow(varargin)
 S = varargin{3};
+
 % grab values from the interface
 groupName = S.Preselects{get(S.bGroupSelect,'Value')};
 % OK, why don;t we grab the group number instead of the name? the order of
@@ -45,7 +53,7 @@ groupID = groupSet.exptGroup(1);
 rerun = get(S.bRerun,'Value'); % implement this later?
 displayEachAnimal = get(S.bDispEach,'Value');
 displaySummary = false;
-[avgCenters,avgCounts,avgSTD] = getPlotHTRBinnedAvgByGroup(groupID,S.thisFile,displayEachAnimal,S.binSize,displaySummary);
+[avgCenters,avgCounts,avgSTD] = getPlotHTRBinnedAvgByGroup(groupID,S.thisFile,displayEachAnimal,S.binSize,displaySummary,S.nHourPost);
 [~,placeHere] = intersect(S.allCenters,avgCenters);
 % now calculate standard error
 nMice = size(groupSet,1);

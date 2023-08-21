@@ -130,6 +130,10 @@ for ii = bandStart:nColsForBoxPlot
 end
 
 boxplot(boxplotArray','Colors',char(colorCode));
+
+ax = gca;
+ax.YAxis.Scale ="log";
+
 xlim([0.5,nColsForBoxPlot+.5]);
 ylabel('Post injection values (t=0:60) divided by baseline values');
 title([titleText ' bandpower changes']);
@@ -140,7 +144,7 @@ xline(nGroups+0.5);
 % xline(21.5);
 % xline(27.5);
 % xline(33.5);
-ylim([0,3]);
+%ylim([-0.001,7]);
 
 
 a = findall(gca,'Tag','Box');
