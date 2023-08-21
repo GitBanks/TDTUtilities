@@ -6,6 +6,15 @@ function fileMaint_passiveEphys(animalName,exptDate)
 % exptDate = '23427';
 % animalName = 'EEG336';
 % exptDate = '23725';
+% animalName = 'EEG338';
+% animalName = 'EEG339';
+% exptDate = '23802';
+% animalName = 'EEG347';
+% exptDate = '23814';
+
+
+
+
 
 % 1
 fileMaint(animalName);
@@ -57,7 +66,7 @@ PSMTableForR2(animalName,exptDate);
 % creates a table for R to read in, to then run the PSM (fairly simple, just saves this table)
 
 % 6 
-sendToSlack = true;
+sendToSlack = false;
 textNotes = 'Seeking evaluation';
 qualityAssuranceEEG(animalName,exptDate,sendToSlack,textNotes);
 % sends a report to the Slack channel
@@ -73,6 +82,7 @@ qualityAssuranceEEG(animalName,exptDate,sendToSlack,textNotes);
 % Banks\Documents\Code\TDTUtilities\PSMRunList.R (or ZZ version) this is
 % the PSM (weighting) code that uses the data from step 5
 
+setName = 'DOIKetanserin';
 % 9. run this collectSpectraDataFromExptList(setName) this pulls the data
 % from the list of mice in 7 (according to specified setName) and combines
 % listed PSM (step 8) and movement data into a matlab readable table. "why

@@ -14,7 +14,7 @@ xlsFilePath <- "//144.92.237.185/Data/PassiveEphys/mouseEEG/DOIKetanserinGroupIn
 
 myTable <- read_excel(xlsFilePath)
 # calc_prop_score("EEG234","23131") # this fails...
-for (x in 1:26) {
+for (x in 29:37) {
 	thisAnimal <- myTable[x, "animalName"]
 	thisDate <- myTable[x, "Dates"]
 	calc_prop_score(thisAnimal,thisDate)
