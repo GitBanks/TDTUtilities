@@ -1,9 +1,7 @@
 function [p] = getPathGlobal(str)
 % Description: a function to help avoid hardcoding important file
-% directories. Save a copy locally on your machine and don't add to the git
-% repository. Based on a function used in the Banks Lab ECoG code.
-
-% Necessary for runEEGAnalysis scripts.
+% directories. This is different than getPathLocal in that it is to be used
+% on all computers with access to this repository. Necessary for most TDTUtilities
 
 % original: ZS November 2021
 % this version: SG Jan 2022
@@ -98,7 +96,7 @@ switch str
     case 'DOIKetanserin-xlsTableGroupInfo'
         p = [M 'PassiveEphys\mouseEEG\DOIKetanserinGroupInfo.xlsx'];
     case 'DOIKetanserin-matTableBandpower'
-        p = [M 'PassiveEphys\mouseEEG\DOIKetanserinBandpowerData.mat'];
+        p = [M 'PassiveEphys\mouseEEG\DOIKetanserinBandpowerData.mat']; % this is created by collectSpectraDataFromExptList, and then used to plot the boxplot
     case 'DOIKetanserin-savePath'
         p = [M 'PassiveEphys\AnimalData\DOI\'];
 
