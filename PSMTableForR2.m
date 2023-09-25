@@ -33,12 +33,14 @@ try
     load(loadFile,"dataSet");
     chanOfInterest = [1,2];
     specificHours = [1,4];
+    chanOfInterestBackup = [4,3];
 catch
     try
         loadFileFolder = 'M:\PassiveEphys\AnimalData\combined\';
         loadFile = [loadFileFolder animalName '_' exptDate '_bandpowerSet.mat'];
         load(loadFile,"dataSet");
         chanOfInterest = [1,2];
+        chanOfInterestBackup = [4,3];
         specificHours = [1,4];
     catch
         try
@@ -117,6 +119,9 @@ for i = 1:size(specificHours,2)
         %thisSeg = listOfSegments{iSegment};
         
         chanN = chanOfInterest(1);
+%         if isnan(dataSet(specificHours(i)).delta(iSegment,chanN))
+%             chanN = chanOfInterestBackup(1);
+%         end
         % first eleement here is anterior
         PSMTable.AvgTotalPowA(incrementSeg) = dataSet(specificHours(i)).delta(iSegment,chanN);
         PSMTable.deltaA(incrementSeg) = dataSet(specificHours(i)).delta(iSegment,chanN);
@@ -128,6 +133,9 @@ for i = 1:size(specificHours,2)
 
         % 2nd element here is the posterior (updated: for just some mice)
         chanN = chanOfInterest(2);
+%         if isnan(dataSet(specificHours(i)).delta(iSegment,chanN))
+%             chanN = chanOfInterestBackup(2);
+%         end
         PSMTable.AvgTotalPowP(incrementSeg) = dataSet(specificHours(i)).delta(iSegment,chanN);
         PSMTable.deltaP(incrementSeg) = dataSet(specificHours(i)).delta(iSegment,chanN);
         PSMTable.thetaP(incrementSeg) = dataSet(specificHours(i)).theta(iSegment,chanN);
