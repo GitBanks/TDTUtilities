@@ -82,7 +82,8 @@ qualityAssuranceEEG(animalName,exptDate,sendToSlack,textNotes);
 % Banks\Documents\Code\TDTUtilities\PSMRunList.R (or ZZ version) this is
 % the PSM (weighting) code that uses the data from step 5
 
-setName = 'DOIKetanserin';
+% setName = 'DOIKetanserin';
+% setName = 'combined';
 % 9. run this collectSpectraDataFromExptList(setName) this pulls the data
 % from the list of mice in 7 (according to specified setName) and combines
 % listed PSM (step 8) and movement data into a matlab readable table. "why
@@ -92,5 +93,15 @@ setName = 'DOIKetanserin';
 % 10. run this plotBandPowerSummaries(setName) this plots the table from
 % step 9 - right now it's the pre/post delta PSM(movement weighted) ratio
 % of anterior and posterior for each drug condition.
+
+
+
+
+% file location references:
+% {repositoryLocation}\TDTUtilities\fileMaint_passiveEphys -these instructions
+% M:\PassiveEphys\mouseEEG\  -xls data files here
+
+
+
 
 
