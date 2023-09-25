@@ -106,14 +106,18 @@ adjMoveTimes = moveTimes-TheseDrugs(end).time;
 % then hour lengths after 2nd injection, so grab these times here, too
 for iDrugInj = 1:size(TheseDrugs,2)
     TheseDrugs(iDrugInj).adjTime = TheseDrugs(iDrugInj).time-TheseDrugs(end).time;
-    avgSpectraBreakIndex(iDrugInj) = find(adjTimes>TheseDrugs(iDrugInj).adjTime,1);
-    movementBreakIndex(iDrugInj) = find(adjMoveTimes>TheseDrugs(iDrugInj).adjTime,1);
+    injTimeList(iDrugInj) = TheseDrugs(iDrugInj).adjTime;
+end
+injTimeList = unique(injTimeList); % need to reset this and rerun it through to set up the correct hours
+for iDrugInj = 1:size(injTimeList,2)
+    avgSpectraBreakIndex(iDrugInj) = find(adjTimes>injTimeList(iDrugInj),1);
+    movementBreakIndex(iDrugInj) = find(adjMoveTimes>injTimeList(iDrugInj),1);
 end
 
 % continue finding breakpoints
 moreTime = true;
 breakIndex = size(avgSpectraBreakIndex,2)+1;
-nextTime = TheseDrugs(iDrugInj).adjTime+hours(1);
+nextTime = injTimeList(iDrugInj)+hours(1);
 while moreTime
     avgSpectraBreakIndex(breakIndex) = find(adjTimes>nextTime,1);
     movementBreakIndex(breakIndex) = find(adjMoveTimes>nextTime,1);
