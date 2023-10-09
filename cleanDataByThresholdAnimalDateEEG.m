@@ -66,7 +66,7 @@ for i=1:size(operationList,1)
         setNan = abs(ephysData(iChan,:)) >noiseLimit;
         % next, let's be thorough and trim a few seconds off each side
 %         tempSetNanArray = setNan;
-        for ii = blankingWindow:size(setNan,2)-blankingWindow
+        for ii = blankingWindow+1:size(setNan,2)-blankingWindow % need to do blankingWindow+1 otherwise we could get a 0 value below (and it's an index, so can't handle 0 values)
             if setNan(ii)
                 tempSetNanArray(ii-blankingWindow:ii+blankingWindow) = true;
             end
