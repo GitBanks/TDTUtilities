@@ -47,7 +47,9 @@ if ~exist("overwriteMove","var")
     overwriteMove = false;
 end
 %1. load this table
-workingTable = readtable(tname);
+opts = detectImportOptions(tname);
+opts.VariableTypes{4} = 'char'; %force this to accept the occasional character in our lab date system
+workingTable = readtable(tname,opts);
 % 
 % %T = T(1:end-2,:);
 % workingTable = table;
