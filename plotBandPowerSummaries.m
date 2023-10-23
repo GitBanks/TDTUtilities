@@ -74,81 +74,95 @@ end
 % % % % boxplot better! % % % %
 % nColsForBoxPlot = 2*3*1+3+6; % number will be: nChans (2) x treatments (4) x just delta (1) + movement (just nTreatment) (4) 
 % nColsForBoxPlot = 12; % movement (4) + treatments (4) * front/rear (2) = 12
-nColsForBoxPlot = nGroups*3; % i don;t know why I over-complicated this previously......
-boxplotArray = nan(nColsForBoxPlot,15);
+nColsForEphysBoxPlot = nGroups*2; % we're using front and rear
+nColsForMoveBoxPlot = nGroups*1; % we're splitting off the movement plot
+boxplotEphysArray = nan(nColsForEphysBoxPlot,15);
+boxplotMoveArray = nan(nColsForMoveBoxPlot,15);
 
 colorCodeTreatment = {'k','r','b','g','m','c','k','r','b','g','m','c','k','r','b'};
 indexT = 1;
 
 for iGroup = 1:nGroups
     groupSize = length(group(iGroup).movePre);
-    boxplotArray(indexT,1:groupSize) = group(iGroup).movePost./group(iGroup).movePre;
-    
+    boxplotMoveArray(indexT,1:groupSize) = group(iGroup).movePost./group(iGroup).movePre;
     xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-move'];
-    colorCode{indexT} = colorCodeTreatment{iGroup};
+    colorCodeMove{indexT} = colorCodeTreatment{iGroup};
     category{indexT} = 'Move';
     indexT = indexT+1;
 end
 
+indexT = 1;
 if isfield(group(end),'PSMDeltaPre') % if we have PSM data all the way through the end
-    titleText = 'PSMDelta';
+    titleText = '';
     for iGroup = 1:nGroups
         groupSize = length(group(iGroup).movePre);
-        boxplotArray(indexT,1:groupSize) = group(iGroup).PSMDeltaPost(:,1)./group(iGroup).PSMDeltaPre(:,1);
+        boxplotEphysArray(indexT,1:groupSize) = group(iGroup).PSMDeltaPost(:,1)./group(iGroup).PSMDeltaPre(:,1);
         xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-1'];
-        colorCode{indexT} = colorCodeTreatment{iGroup};
+        colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
         category{indexT} = 'Delta';
         indexT = indexT+1;
-        boxplotArray(indexT,1:groupSize) = group(iGroup).PSMDeltaPost(:,2)./group(iGroup).PSMDeltaPre(:,2);
+        boxplotEphysArray(indexT,1:groupSize) = group(iGroup).PSMDeltaPost(:,2)./group(iGroup).PSMDeltaPre(:,2);
         xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-2'];
-        colorCode{indexT} = colorCodeTreatment{iGroup};
+        colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
         category{indexT} = 'Delta';
         indexT = indexT+1;
     end
 end
 
-
 figure();
-scatter(1:nColsForBoxPlot,boxplotArray,'k*');
+subplot(1,3,1)
+scatter(1:nColsForMoveBoxPlot,boxplotMoveArray,'k*');
+hold on
+subplot(1,3,2:3)
+scatter(1:nColsForEphysBoxPlot,boxplotEphysArray,'k*');
 hold on
 
 
+
+
+% ==========
 % this is if you want to label the data with names or sex or whatever
-
 % find th first non movement column
-bandStart = find(groupIncr>0,1);
-for ii = bandStart:nColsForBoxPlot
-    yLocations = boxplotArray(ii,~isnan(boxplotArray(ii,:)));
-    xLocations = ones(size(yLocations,2),1)*ii;
-    useThese = ~isnan(boxplotArray(ii,:));
-    theseNames = group(groupIncr(ii)).names(useThese);
-%     theseNames = group(groupIncr(ii)).Sex(useThese);
-    try
-    text(xLocations,yLocations,theseNames);
-    catch
-    end
-end
+% round(ii/2) is the way we'll step through the 'double groups'
+% ==========
+% bandStart = find(groupIncr>0,1);
+% for ii = 1:nColsForEphysBoxPlot
+%     yLocations = boxplotEphysArray(ii,~isnan(boxplotEphysArray(ii,:)));
+%     xLocations = ones(size(yLocations,2),1)*ii;
+% 
+% %     theseNames = group(round(ii/2)).names;
+% %     text(xLocations,yLocations,theseNames);
+% 
+%     theseNames = group(round(ii/2)).Sex;
+%     text(xLocations,yLocations,theseNames);
+% end
+% ==========
 
-boxplot(boxplotArray','Colors',char(colorCode));
 
+
+subplot(1,3,1)
+boxplot(boxplotMoveArray','Colors',char(colorCodeMove));
 ax = gca;
 ax.YAxis.Scale ="log";
-
-xlim([0.5,nColsForBoxPlot+.5]);
-ylabel('Post injection values (t=0:60) divided by baseline values');
-title([titleText ' bandpower changes']);
 yline(1,'--');
-xline(nGroups+0.5);
-% xline(12.5);
-% xline(15.5);
-% xline(21.5);
-% xline(27.5);
-% xline(33.5);
-%ylim([-0.001,7]);
+xlim([0.5,nColsForMoveBoxPlot+.5]);
+ylabel('Post injection values (t=0:60) divided by baseline values');
+title([titleText ' movement changes']);
+ylim([0.08,1.4]);
+
+subplot(1,3,2:3)
+boxplot(boxplotEphysArray','Colors',char(colorCodeEphys));
+ax = gca;
+ax.YAxis.Scale ="log";
+yline(1,'--');
+xlim([0.5,nColsForEphysBoxPlot+.5]);
+ylabel('Post injection values (t=0:60) divided by baseline values');
+title([titleText 'PSMDelta bandpower changes']);
+ylim([0.5,3.5]);
+
 
 
 a = findall(gca,'Tag','Box');
-
 switch setName
     case 'FLVX'         
     case '2020_PSYLOCYBIN_LPS'
