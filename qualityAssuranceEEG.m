@@ -37,6 +37,11 @@ if ~exist('textNotes','var')
     textNotes = '';
 end
 
+if ~exist('reportPlot','var')
+    reportPlot = false;
+end
+
+
 % find the correct files and set a few variables
 findExptType = 'Spon';
 [operationList] = getExperimentsByAnimalAndDate(animalName,exptDate,findExptType);
@@ -191,7 +196,7 @@ treatmentText = treatmentText(1:end-1);
 mainPlotTitle = [animalName '-' exptDate '-' treatmentText];
 annotation('textbox', [0.2, 0.98, 0, 0], 'string', mainPlotTitle,'FontSize',12);
 
-% save the files
+%save the files
 fileName = [savePath saveFileName];
 saveas(QAFig,[fileName '.fig']);
 saveas(QAFig,[fileName '.jpg']);

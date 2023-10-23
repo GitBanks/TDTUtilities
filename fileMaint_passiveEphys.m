@@ -102,6 +102,6 @@ qualityAssuranceEEG(animalName,exptDate,sendToSlack,textNotes);
 % M:\PassiveEphys\mouseEEG\  -xls data files here
 
 
-
-
+% setName = 'DOIKetanserin'; plotBandPowerSummaries(setName); 
+% setName = 'combined'; plotBandPowerSummaries(setName); 
 

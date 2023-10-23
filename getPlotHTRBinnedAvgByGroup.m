@@ -98,7 +98,8 @@ if displaySummary
     er = errorbar(avgCenters,avgCounts,err);
     er.Color = [0 0 0];                            
     er.LineStyle = 'none';
-
+    
+%     xlim([-30,60]);
     title([treatment ' n=' num2str(size(S,2))]);
     xlabel('min (5 min bins)');
     ylabel('Average HTR');

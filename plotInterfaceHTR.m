@@ -11,8 +11,8 @@ S.nPlots = 1;
 S.nHourPost = 1; % use 1 for ZZ (I think?) use 2 for EEG, otherwise there will be trouble
 
 % TODO: come up with a better way to select the initial span of time we wish to plot.  
-% edges = round(-60:S.binSize:60); 
-edges = round(-60:S.binSize:155); 
+edges = round(-60:S.binSize:60); 
+% edges = round(-60:S.binSize:155); 
 
 S.allCenters = edges+(S.binSize/2);
 S.allCenters = S.allCenters(1:end-1);
