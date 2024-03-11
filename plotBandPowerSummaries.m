@@ -26,6 +26,17 @@ switch setName
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
         xtickLabelstart = {'Sal,Sal','Sal,LPS','DOI,Sal','DOI,LPS','DOI+Ket,Sal','DOI+Ket,LPS'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
         groupIncr = [0 0 0 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6]; 
+
+    case 'poster2023'
+        saveFileName = getPathGlobal([setName '-matTableBandpower']);
+        xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,Sal','Flvx,LPS','DMT10,Sal','DMT2.5,LPS','DMT10,LPS','DOI,Sal','DOI,LPS','DOI+Ket,Sal','DOI+Ket,LPS'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
+        groupIncr = [0 0 0 0 0 0 0 0 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9 10 10 11 11]; 
+    
+    case '2020PsilocybinKetWay'
+        saveFileName = getPathGlobal([setName '-matTableBandpower']);
+        xtickLabelstart = {'DMSO,Sal','DMSO,Psilo','Ketamine','Ketan,Sal','Ketan,Psilo','Sal,Sal','Sal,Psilo','WAY,Sal','Way,Psilo'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
+        groupIncr = [0 0 0 0 0 0 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9]; 
+    
     otherwise
         error('Need an appropriate table name from a recognized list: ''FLVX'' or ''LPS2020'' or ''ZZ'' so far ');
 end
@@ -65,7 +76,7 @@ for iGroup = 1:nGroups
             warning(['NO PSM DATA FOUND! animal: '  tempT.Animal{ii}])
         end
         group(iGroup).names{ii,1} = tempT.Animal(ii);
-        group(iGroup).Sex{ii,1} = tempT.Sex(ii);
+%         group(iGroup).Sex{ii,1} = tempT.Sex(ii);
     end
 end
 
@@ -76,8 +87,8 @@ end
 % nColsForBoxPlot = 12; % movement (4) + treatments (4) * front/rear (2) = 12
 nColsForEphysBoxPlot = nGroups*2; % we're using front and rear
 nColsForMoveBoxPlot = nGroups*1; % we're splitting off the movement plot
-boxplotEphysArray = nan(nColsForEphysBoxPlot,15);
-boxplotMoveArray = nan(nColsForMoveBoxPlot,15);
+boxplotEphysArray = nan(nColsForEphysBoxPlot,30);
+boxplotMoveArray = nan(nColsForMoveBoxPlot,30);
 
 colorCodeTreatment = {'k','r','b','g','m','c','k','r','b','g','m','c','k','r','b'};
 indexT = 1;
@@ -97,12 +108,12 @@ if isfield(group(end),'PSMDeltaPre') % if we have PSM data all the way through t
     for iGroup = 1:nGroups
         groupSize = length(group(iGroup).movePre);
         boxplotEphysArray(indexT,1:groupSize) = group(iGroup).PSMDeltaPost(:,1)./group(iGroup).PSMDeltaPre(:,1);
-        xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-1'];
+        xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-ante'];
         colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
         category{indexT} = 'Delta';
         indexT = indexT+1;
         boxplotEphysArray(indexT,1:groupSize) = group(iGroup).PSMDeltaPost(:,2)./group(iGroup).PSMDeltaPre(:,2);
-        xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-2'];
+        xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-post'];
         colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
         category{indexT} = 'Delta';
         indexT = indexT+1;
@@ -174,6 +185,10 @@ switch setName
         legend([a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
     case 'DOIKetanserin'
         legend([a(12) a(10) a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
+    case 'poster2023'
+        legend([a(22) a(20) a(18) a(16) a(14) a(12) a(10) a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
+    case '2020PsilocybinKetWay'
+        legend([a(18) a(16) a(14) a(12) a(10) a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
     otherwise
 end
 %     legend([a(3) a(2) a(1)], {'Saline Saline','Saline LPS','Fluvoxamine LPS'},'Location','southwest');

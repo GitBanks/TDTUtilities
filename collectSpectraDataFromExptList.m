@@ -40,6 +40,15 @@ switch setName
         tname = getPathGlobal([setName '-xlsTableGroupInfo']);
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
 
+    case 'poster2023' 
+        tname = getPathGlobal([setName '-xlsTableGroupInfo']);
+        saveFileName = getPathGlobal([setName '-matTableBandpower']);
+
+    case '2020PsilocybinKetWay' 
+        tname = getPathGlobal([setName '-xlsTableGroupInfo']);
+        saveFileName = getPathGlobal([setName '-matTableBandpower']);
+
+
     otherwise
         error('Need an appropriate table name from a recognized list: ''FLVX'' or ''LPS2020'' or ''ZZ'' so far ');
 end
@@ -108,6 +117,10 @@ switch setName
 
     case 'ZZ'
         isLFP = true;
+    
+    case 'poster2023' 
+
+    case '2020PsilocybinKetWay' 
        
     otherwise
         error('Need an appropriate table name from a recognized list: ''FLVX'' or ''LPS2020'' or ''ZZ'' so far ');

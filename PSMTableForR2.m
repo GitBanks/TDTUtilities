@@ -56,7 +56,16 @@ catch
             chanOfInterest = find(contains(channelList,'R mPFC') | (contains(channelList,' R ') & contains(channelList,'PFC')))';
             specificHours = [1,2];
         catch
-            error(['File not found' loadFile]);
+            try
+                loadFileFolder = 'M:\PassiveEphys\AnimalData\2020PsilocybinKetWay\';
+                loadFile = [loadFileFolder animalName '_' exptDate '_bandpowerSet.mat'];
+                load(loadFile,"dataSet");
+                chanOfInterest = [1,2];
+                chanOfInterestBackup = [4,3];
+                specificHours = [1,3]; % changed psychedelic timepoint here to be first hour post
+            catch
+                error(['File not found' loadFile]);
+            end
         end
     end
 end

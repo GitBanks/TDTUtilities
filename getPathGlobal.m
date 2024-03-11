@@ -100,6 +100,26 @@ switch str
     case 'DOIKetanserin-savePath'
         p = [M 'PassiveEphys\AnimalData\DOI\'];
 
+
+    case '2020PsilocybinKetWay-xlsTableGroupInfo'
+        p = [M 'PassiveEphys\mouseEEG\2020PsilocybinKetWayGroupInfo.xlsx'];
+    case '2020PsilocybinKetWay-matTableBandpower'
+        p = [M 'PassiveEphys\mouseEEG\2020PsilocybinKetWayBandpowerData.mat']; % this is created by collectSpectraDataFromExptList, and then used to plot the boxplot
+    case '2020PsilocybinKetWay-savePath'
+        p = [M 'PassiveEphys\AnimalData\2020PsilocybinKetWay\'];
+
+
+
+
+    case 'poster2023-xlsTableGroupInfo'
+        p = [M 'PassiveEphys\mouseEEG\poster2023GroupInfo.xlsx'];
+    case 'poster2023-matTableBandpower'
+        p = [M 'PassiveEphys\mouseEEG\poster2023BandpowerData.mat']; % this is created by collectSpectraDataFromExptList, and then used to plot the boxplot
+    case 'poster2023-savePath'
+        p = [M 'PassiveEphys\AnimalData\poster2023\'];
+
+
+
     case 'PSY2020-savePath'
         p = [M 'PassiveEphys\AnimalData\psychedelics-2020\'];
 
