@@ -28,18 +28,6 @@ cleanDataByThresholdAnimalDateEEG(animalName,exptDate);
 % This checks for outlier (imported) data points and offers a chance to
 % remove them
 
-% add 60Hz filter here?
-% 1. pick 3 bad days: 
-% animalName = 'EEG308'; exptDate = '23612'    
-% animalName = 'EEG309'; exptDate = '23619'   
-% animalName = 'EEG323'; exptDate = '23706'
-% 2. run a simple notch filter
-% 3. compare
-
-
-
-
-
 % 3 
 patientAnalysis.runAnalysis(@specAnalysis, 'Subjects',{animalName},'Blocks',{exptDate},'isMouse',true,'OptionSet','SegLength4');
 % this is the "ecog" pipeline that creates the spectra data.  Be warned it
@@ -72,6 +60,10 @@ qualityAssuranceEEG(animalName,exptDate,sendToSlack,textNotes);
 % sends a report to the Slack channel
 
 
+% All data files above will be found here: M:\PassiveEphys\AnimalData\{set name}\
+
+
+
 % Next steps:
 
 % 7. update table here: M:\PassiveEphys\mouseEEG\_______groupInfo.xlsx  %
@@ -84,6 +76,7 @@ qualityAssuranceEEG(animalName,exptDate,sendToSlack,textNotes);
 
 % setName = 'DOIKetanserin';
 % setName = 'combined';
+%setName = '2020PsilocybinKetWay';
 % 9. run this collectSpectraDataFromExptList(setName) this pulls the data
 % from the list of mice in 7 (according to specified setName) and combines
 % listed PSM (step 8) and movement data into a matlab readable table. "why

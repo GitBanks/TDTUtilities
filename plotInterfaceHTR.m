@@ -6,7 +6,7 @@ function plotInterfaceHTR
 % default configurations
 S.thisFile = getPathGlobal('banksLocalHTRData');
 % usually it's this:  '\\144.92.237.185\Data\PassiveEphys\AnimalData\HTRDrugGroupList.xlsx'
-S.binSize = 5;
+S.binSize = 10;
 S.nPlots = 1;
 S.nHourPost = 1; % use 1 for ZZ (I think?) use 2 for EEG, otherwise there will be trouble
 
@@ -105,7 +105,7 @@ end
 hold off
 
 % title([treatment ' n=' num2str(size(S,2))]);
-xlabel('min (5 min bins)');
+xlabel(['min (' num2str(S.binSize) ') min bins)']);
 ylabel('Average HTR');
 legend(S.allTreatments);
 S.nPlots = S.nPlots+1;

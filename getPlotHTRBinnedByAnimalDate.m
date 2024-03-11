@@ -1,4 +1,4 @@
-function [allCenters,allCounts] = getPlotHTRBinnedByAnimalDate(animalName,exptDate,binSize,displayFigure,nHours)
+function [allCenters,allCounts,allHtrEventTimes] = getPlotHTRBinnedByAnimalDate(animalName,exptDate,binSize,displayFigure,nHours)
 
 % new code for plotting HTR!!!!
 % Zarmeen, Mallory, Sean!
@@ -37,6 +37,7 @@ end
 
 allCenters = [];
 allCounts = [];
+allHtrEventTimes = [];
 
 for iFile = 1:nHours
     fileNameBase = [getPathGlobal('importedData') '20' exptDate(1:2) '\' exptList{iFile} '\' exptList{iFile}];
@@ -81,6 +82,7 @@ for iFile = 1:nHours
     counts(C) = a_counts;
     allCenters = [allCenters centers];
     allCounts = [allCounts counts];
+    allHtrEventTimes = [allHtrEventTimes htrEventTimes];
 end
 
 if displayFigure
