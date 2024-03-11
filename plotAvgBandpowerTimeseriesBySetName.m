@@ -9,6 +9,14 @@ function plotAvgBandpowerTimeseriesBySetName(setName)
 % load in that set and plot out the average bandpower over time *by group*
 % setName = '2020PsilocybinKetWay'; % input argument
 
+bands = {
+'delta';
+'theta';
+'alpha';
+'beta';
+'gamma';
+};  % could do better and establish bands for the whole function in case they change
+
 % main code
 saveFileName = getPathGlobal([setName '-matTableBandpower']);
 load(saveFileName);
@@ -52,7 +60,7 @@ for iGroup = unique(tableCount.group)' % --- STEP THROUGH DRUG GROUP
     
     for iHour = 1:size(hourSteps,1)
         % create an array of (experiments, bands, intervals, front/rear)
-        nBands = 5; % could do better and establish bands for the whole function in case they change
+        nBands = size(bands,1); 
         windowedIntervals = maxForHour(iHour,1);
         nChannels = 2; % front and rear
         superArray = nan(size(tempData,2),nBands,windowedIntervals,nChannels);
@@ -63,27 +71,50 @@ for iGroup = unique(tableCount.group)' % --- STEP THROUGH DRUG GROUP
             superArray(iExpt,4,:,:) = tempData(iExpt).(['hour' num2str(iHour)]).beta(1:windowedIntervals,:);
             superArray(iExpt,5,:,:) = tempData(iExpt).(['hour' num2str(iHour)]).gamma(1:windowedIntervals,:);
         end
-        averageBandpower.(['hour' num2str(iHour)]) = squeeze(mean(superArray,1));
+        averageBandpower.(['hour' num2str(iHour)]) = squeeze(median(superArray,1));
         averageBandpowerTimes(iHour).time = tempData(1).(['hour' num2str(iHour)]).time(1:windowedIntervals,:);
     end
+
+    % need to quick find limits, but ignore outliers
+    for iHour = 1:size(dataSet,2)
+        for iBand = 1:nBands
+            % try std() and multiply to set limits?
+            scaleThisPlot(1,iBand,iHour) = std(averageBandpower.(['hour' num2str(iHour)])(iBand,:,1),'omitnan');
+            scaleThisPlot(2,iBand,iHour) = std(averageBandpower.(['hour' num2str(iHour)])(iBand,:,2),'omitnan');
+            scaleThisPlotMin(iBand,iHour) = min(averageBandpower.(['hour' num2str(iHour)])(iBand,:,1));
+        end
+    end
+    scaleThisPlot = squeeze(mean(scaleThisPlot,3));
+    scaleThisPlot = squeeze(mean(scaleThisPlot,1)); % we should now have an array of band standard deviations (more or less)
+    scaleThisPlotMin = min(scaleThisPlotMin,[],2);
+  
 
     bandPower = figure(); 
     for iHour = 1:size(dataSet,2)
         for iBand = 1:nBands
             subtightplot(nBands,1,iBand);
-            plot(averageBandpowerTimes(iHour).time,averageBandpower.(['hour' num2str(iHour)])(iBand,:,1),"Color",'r')
+            plot(averageBandpowerTimes(iHour).time,averageBandpower.(['hour' num2str(iHour)])(iBand,:,1),"Color",'r');
             hold on
-            plot(averageBandpowerTimes(iHour).time,averageBandpower.(['hour' num2str(iHour)])(iBand,:,2),"Color",'b')
+            plot(averageBandpowerTimes(iHour).time,averageBandpower.(['hour' num2str(iHour)])(iBand,:,2),"Color",'b');
+            yS = scaleThisPlot(iBand);
+            ylim([scaleThisPlotMin(iBand),yS+yS*16]);
         end
     end
 
-
     subtightplot(5,1,5);
     legend({'Front','Rear'});
-    for i = 1:6
-        subtightplot(5,1,i);
-%             xlim([adjMoveTimes(1),adjMoveTimes(end)]);
+
+
+    for iBand = 1:nBands
+        subtightplot(5,1,iBand);
+        ylabel(bands{iBand});
     end
+
+
+%     for i = 1:6
+%         subtightplot(5,1,i);
+% %             xlim([adjMoveTimes(1),adjMoveTimes(end)]);
+%     end
     subtightplot(5,1,1);
     title(thisTreat)
 
