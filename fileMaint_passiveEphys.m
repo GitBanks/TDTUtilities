@@ -14,7 +14,8 @@ function fileMaint_passiveEphys(animalName,exptDate)
 
 
 
-
+%  'M:\PassiveEphys\mouseEEG\poster2023GroupInfo.xlsx' % this is where the
+%  animals are all listed
 
 % 1
 fileMaint(animalName);

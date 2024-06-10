@@ -119,12 +119,17 @@ switch setName
         isLFP = true;
     
     case 'poster2023' 
-
-    case '2020PsilocybinKetWay' 
-       
+        gaussTrimFile = 'M:\PassiveEphys\mouseEEG\poster2023GaussTrim.csv';
+        trimTable = readtable(gaussTrimFile);
+        peakTable = trimTable(contains(trimTable.epoch,'Peak'),:);
+        baseTable = trimTable(contains(trimTable.epoch,'Base'),:);
+    case '2020PsilocybinKetWay'
+    
     otherwise
         error('Need an appropriate table name from a recognized list: ''FLVX'' or ''LPS2020'' or ''ZZ'' so far ');
 end
+
+
 
 
 disp('Loading spectra data for:');
@@ -151,6 +156,7 @@ for ii = 1:size(workingTable,2)
         workingTable(ii).data.pre.PSMavgDelta = [TA.grandMean(1),TP.grandMean(1)];
         workingTable(ii).data.post.PSMavgDelta = [TA.grandMean(2),TP.grandMean(2)];
 
+
         % TODO: add section for alpha **OR** better, load in a single table
         % if we figure out the R syntax
 
@@ -159,9 +165,15 @@ for ii = 1:size(workingTable,2)
         disp(['Please run PSM R code on ' animalName ' ' exptDate]);
         error('STOPPING NOW!');
     end
+    
+    % ALSO add Bryan's new method
+    if exist('trimTable','var')
+        peakVal = peakTable.Selected(contains(peakTable.animalName,animalName));
+        baseVal = baseTable.Selected(contains(baseTable.animalName,animalName));
+        workingTable(ii).data.pre.GTrimAvgDelta = baseVal;
+        workingTable(ii).data.post.GTrimAvgDelta = peakVal;
+    end
 end
-
-
 
 
 

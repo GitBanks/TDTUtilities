@@ -1,4 +1,4 @@
-function foundPoints = cleanDataByThresholdAnimalDateEEG(animalName,exptDate)
+function [foundPoints,totalPoints] = cleanDataByThresholdAnimalDateEEG(animalName,exptDate)
 % for now let's use the method we just used in QA to look for reasonable
 
 % problem ZZ animals? 
@@ -9,9 +9,10 @@ function foundPoints = cleanDataByThresholdAnimalDateEEG(animalName,exptDate)
 % animalName = 'ZZ20'; problem in last index with code line 67
 % exptDate = '22907';
 
-
+dontAsk = false;
+totalPoints = 0;
 trySixtyHzFilter = false;
-tryOneHzFilter = true;
+tryOneHzFilter = false;
 
 % you can use the output foundPoints to trigger a rerunning of specAnalysis
 % or otherwise generate a list of animals that have had points cleaned.
@@ -95,25 +96,33 @@ for i=1:size(operationList,1)
     disp([num2str(sum(tempSetNanArray)*dT) ' seconds found to eliminate.']);
         
     if sum(tempSetNanArray) > 0
-        % should we save over the files?  ask here
-        b2name = questdlg_timer(60,'Should we eliminate these points (red)?',...
-        'Save Dialogue Box','Yes','No','No');
-        switch b2name
-            case 'Yes'
-                ephysData = tempEphysData;
-                if isEEG
-                    disp('Red points set to NaN. Overwriting EEGData0!');
-                    save([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
-                    disp([dirStr operationList{i,1} '_EEGData0.mat overwritten.']);
-                else
-                    disp('Red points set to NaN. Overwriting data0!');
-                    save([dirStr operationList{i,1} '_data0.mat'],"ephysData","dT");
-                    disp([dirStr operationList{i,1} '_data0.mat overwritten.']);
-                end
-                disp('rerun fileMaint and reimport to revert to original.');
-                foundPoints = true;
-            case 'No'
-                disp('No changes will be made.')
+        if dontAsk
+            ephysData = tempEphysData;
+            save([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
+            disp([dirStr operationList{i,1} '_EEGData0.mat overwritten.']);
+            totalPoints = sum(tempSetNanArray) + totalPoints;
+        else
+            % should we save over the files?  ask here
+            b2name = questdlg_timer(400,'Should we eliminate these points (red)?',...
+            'Save Dialogue Box','Yes','No','No');
+            switch b2name
+                case 'Yes'
+                    ephysData = tempEphysData;
+                    if isEEG
+                        disp('Red points set to NaN. Overwriting EEGData0!');
+                        save([dirStr operationList{i,1} '_EEGData0.mat'],"ephysData","dT");
+                        disp([dirStr operationList{i,1} '_EEGData0.mat overwritten.']);
+                    else
+                        disp('Red points set to NaN. Overwriting data0!');
+                        save([dirStr operationList{i,1} '_data0.mat'],"ephysData","dT");
+                        disp([dirStr operationList{i,1} '_data0.mat overwritten.']);
+                    end
+                    disp('rerun fileMaint and reimport to revert to original.');
+                    foundPoints = true;
+                    totalPoints = sum(tempSetNanArray) + totalPoints;
+                case 'No'
+                    disp('No changes will be made.')
+            end
         end
     else
         disp('since no points found we''re skipping this index.')
@@ -165,21 +174,21 @@ for i=1:size(operationList,1)
         tempEphysData = ephysData;
 %         tempEphysData(1,:) = cos(2*pi*60*t); test 60Hz sine
         [tempEphysData] = filterData_dbVer(ephysData,1,0,dT);
-        figure('Units','Normalized','Position',[0 0.2 0.8 0.5]);
-        for iPlot = 1:nChans
-            subtightplot(nChans,1,iPlot)
-            plot(t,ephysData(iPlot,:),'r');
-            hold on
-            plot(t,tempEphysData(iPlot,:),'b');
-            ylim([-3e-4,3e-4]);
-            xlim([500,502]);
-        end
+%         figure('Units','Normalized','Position',[0 0.2 0.8 0.5]);
+%         for iPlot = 1:nChans
+%             subtightplot(nChans,1,iPlot)
+%             plot(t,ephysData(iPlot,:),'r');
+%             hold on
+%             plot(t,tempEphysData(iPlot,:),'b');
+%             ylim([-3e-4,3e-4]);
+%             xlim([500,502]);
+%         end
 %         drawnow;
 %         pause(0.5);
 
 %             b2name = questdlg_timer(60,'Are the red points noticable, to justify a 1Hz filter run?',...
 %             'Save Dialogue Box','Yes','No','No');
-            b2name = 'Yes'
+            b2name = 'Yes';
             switch b2name
                 case 'Yes'
                     ephysData = tempEphysData;

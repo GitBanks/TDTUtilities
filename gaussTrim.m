@@ -1,4 +1,17 @@
 function [avgHighMvtRatio,avgHighDeltaRatio,pInclude] = gaussTrim(animalName,exptDate,plotOption)
+
+
+% rename gaussTrim to fitGaussMix  (clustering with gaussian mixture model,
+% k-means clustering, but the variance parameter varies... (also we're
+% applying it to 1 dimension, and applying it to this specific problem)
+%
+% rewrite this to output highMvtIndices
+% ALSO, accept any single  segment array (movement) - one input vector
+% THEN, (in another function) do the delta or whatever calculations -
+% output 
+
+
+
 % NOTE: maybe we want to load by animal name and date instead of handing it
 % a table?????? since most of out set is in the animalName Date format?
 
@@ -92,6 +105,115 @@ end
 
 avgHighMvtRatio = mean(mvmtPeak)/mean(mvmtCtrl);
 avgHighDeltaRatio = mean(deltaPeak)/mean(deltaCtrl);
+
+
+
+
+% also try histograms and distributions overlay; 
+% normalize so that area is = 1, use gauss function to overlay, mean and 
+% std to gauss, try plotting against the functions, all about getting 
+% vertical scaling right.  divide bins by total number; 
+
+% % bin mvmt
+% edges = linspace(0,2,100); % i think these should be dynamic
+% mvmtCtrlBin = discretize(mvmtCtrl,edges);
+% mvmtPeakBin = discretize(mvmtPeak,edges);
+% 
+% % % old hist seems to work
+% figure
+% hist(mvmtCtrlBin);
+% hold on
+% hist(mvmtPeakBin);
+% 
+% % % new histogram works better. 
+% figure
+% histogram(mvmtCtrlBin);
+% hold on
+% histogram(mvmtPeakBin);
+% legend({'Ctrl','Peak'})
+% % %  But we're only plotting the discretized output and instead we want normalized
+% 
+% 
+% a = mvmtCtrl/length(mvmtCtrl);
+% b = mvmtPeak/length(mvmtPeak);
+% sum(b)
+% figure
+% histogram(a);
+% hold on
+% histogram(b);
+% legend({'Ctrl','Peak'})
+% 
+% 
+% f = histcounts(mvmtCtrl/length(mvmtCtrl));
+% g = histcounts(mvmtPeak/length(mvmtPeak));
+% figure
+% bar(f);
+% hold on
+% bar(g);
+% 
+% 
+% % this one seems to be off
+% [f,fedge] = histcounts(mvmtCtrl/length(mvmtCtrl),20);
+% [g,gedge] = histcounts(mvmtPeak/length(mvmtPeak),20);
+% figure
+% bar(fedge(1:end-1),f);
+% hold on
+% bar(gedge(1:end-1),g);
+% 
+% 
+% [f,fedge] = histcounts(mvmtCtrl,20);
+% [g,gedge] = histcounts(mvmtPeak,20);
+% figure
+% bar(fedge(1:end-1),f);
+% hold on
+% bar(gedge(1:end-1),g);
+
+
+% % best so far
+% [f,fedge] = histcounts(mvmtCtrl,20);
+% [g,gedge] = histcounts(mvmtPeak,20);
+% f = f/length(mvmtCtrl);
+% g = g/length(mvmtPeak);
+% figure
+% bar(fedge(1:end-1),f);
+% hold on
+% bar(gedge(1:end-1),g);
+% 
+% figure
+% % 1) Estimate the mean and standard deviation using normfit
+% % 2) Calculate the probability estimates using normpdf
+% % 3) Plot the data and the estimates using plot
+% [m,s] = normfit(f);
+% y = normpdf(f,m,s);
+% plot(f,y,'.');
+% hold on
+% [m,s] = normfit(g);
+% y = normpdf(g,m,s);
+% plot(g,y,'.');
+
+
+
+
+% mvmtCtrl;
+% deltaCtrl;
+% 
+% mvmtPeak;
+% deltaPeak;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

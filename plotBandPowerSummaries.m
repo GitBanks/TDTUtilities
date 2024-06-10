@@ -5,6 +5,12 @@ function plotBandPowerSummaries(setName)
 % dummy variables
 % setName = 'combined'
 % setName = 'DOIKetanserin';
+% setName = 'poster2023';
+
+
+usePSM = false;
+useGtrim = true;
+
 
 switch setName
     case 'FLVX' 
@@ -15,6 +21,8 @@ switch setName
 %         saveFileName = getPathGlobal([setName '-matTableBandpower']);
     case 'Sigma1' % untested - this is framework only
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
+        xtickLabelstart = {'DMT,LPS','BD1063,LPS','DMT+BD; LPS','FLVX+BD,LPS','BD,saline'}; % changed!
+        groupIncr = [0 0 0 0 0 1 1 2 2 3 3 4 4 5 5]; % this will need to be updated whenever you add groups!!!!!!!
     case 'combined' % untested - this is framework only
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
         xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,LPS','DMT2.5,LPS','DMT10,LPS','DMT10,Sal','Flvx,Sal'}; % changed!
@@ -75,10 +83,39 @@ for iGroup = 1:nGroups
         else
             warning(['NO PSM DATA FOUND! animal: '  tempT.Animal{ii}])
         end
+
+        if isfield(tempT.data(groupSize,1).post,'GTrimAvgDelta')
+            group(iGroup).GTrimDeltaPre(ii,:) = tempT.data(ii,1).pre.GTrimAvgDelta;
+            group(iGroup).GTrimDeltaPost(ii,:) = tempT.data(ii,1).post.GTrimAvgDelta;
+        else
+            warning(['NO PSM DATA FOUND! animal: '  tempT.Animal{ii}])
+        end
+
         group(iGroup).names{ii,1} = tempT.Animal(ii);
 %         group(iGroup).Sex{ii,1} = tempT.Sex(ii);
     end
 end
+
+
+
+
+%create a nice table for matt - alternatively, just do this and save and
+%skip plotting?
+newTabCol = nan(height(workingTable), 1);
+workingTable.("gTrimRatio") = newTabCol;
+workingTable.("PSMavgRatio") = newTabCol;
+for iRow = 1:size(workingTable,1)
+    trimChange = workingTable.data(iRow,1).post.GTrimAvgDelta/workingTable.data(iRow,1).pre.GTrimAvgDelta; 
+    workingTable(iRow,"gTrimRatio") = {trimChange};
+    trimChange = workingTable.data(iRow,1).post.PSMavgDelta/workingTable.data(iRow,1).pre.PSMavgDelta; 
+    workingTable(iRow,"PSMavgRatio") = {trimChange};
+    workingTable(iRow,"groupLabel") = xtickLabelstart(workingTable(iRow,"group").group);
+end
+save(saveFileName,"workingTable");
+
+
+
+
 
 
 
@@ -102,23 +139,45 @@ for iGroup = 1:nGroups
     indexT = indexT+1;
 end
 
-indexT = 1;
-if isfield(group(end),'PSMDeltaPre') % if we have PSM data all the way through the end
-    titleText = '';
-    for iGroup = 1:nGroups
-        groupSize = length(group(iGroup).movePre);
-        boxplotEphysArray(indexT,1:groupSize) = group(iGroup).PSMDeltaPost(:,1)./group(iGroup).PSMDeltaPre(:,1);
-        xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-ante'];
-        colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
-        category{indexT} = 'Delta';
-        indexT = indexT+1;
-        boxplotEphysArray(indexT,1:groupSize) = group(iGroup).PSMDeltaPost(:,2)./group(iGroup).PSMDeltaPre(:,2);
-        xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-post'];
-        colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
-        category{indexT} = 'Delta';
-        indexT = indexT+1;
+if usePSM
+    indexT = 1;
+    if isfield(group(end),'PSMDeltaPre') % if we have PSM data all the way through the end
+        for iGroup = 1:nGroups
+            groupSize = length(group(iGroup).movePre);
+            boxplotEphysArray(indexT,1:groupSize) = group(iGroup).PSMDeltaPost(:,1)./group(iGroup).PSMDeltaPre(:,1);
+            xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-ante'];
+            colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
+            category{indexT} = 'Delta';
+            indexT = indexT+1;
+            boxplotEphysArray(indexT,1:groupSize) = group(iGroup).PSMDeltaPost(:,2)./group(iGroup).PSMDeltaPre(:,2);
+            xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-post'];
+            colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
+            category{indexT} = 'Delta';
+            indexT = indexT+1;
+        end
     end
 end
+
+if useGtrim
+    indexT = 1;
+    if isfield(group(end),'GTrimDeltaPre') % if we have PSM data all the way through the end
+        for iGroup = 1:nGroups
+            groupSize = length(group(iGroup).movePre);
+            boxplotEphysArray(indexT,1:groupSize) = group(iGroup).GTrimDeltaPost(:,1)./group(iGroup).GTrimDeltaPre(:,1);
+            xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-ante'];
+            colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
+            category{indexT} = 'Delta';
+            indexT = indexT+1;
+%             boxplotEphysArray(indexT,1:groupSize) = group(iGroup).GTrimDeltaPost(:,1)./group(iGroup).GTrimDeltaPre(:,1);
+            boxplotEphysArray(indexT,1:groupSize) = nan;
+            xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-ante'];
+            colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
+            category{indexT} = 'Delta';
+            indexT = indexT+1;
+        end
+    end
+end
+
 
 figure();
 subplot(1,3,1)
@@ -141,13 +200,13 @@ hold on
 %     yLocations = boxplotEphysArray(ii,~isnan(boxplotEphysArray(ii,:)));
 %     xLocations = ones(size(yLocations,2),1)*ii;
 % 
-% %     theseNames = group(round(ii/2)).names;
-% %     text(xLocations,yLocations,theseNames);
-% 
-%     theseNames = group(round(ii/2)).Sex;
+%     theseNames = group(round(ii/2)).names;
 %     text(xLocations,yLocations,theseNames);
+% 
+% %     theseNames = group(round(ii/2)).Sex;
+% %     text(xLocations,yLocations,theseNames);
 % end
-% ==========
+% % ==========
 
 
 
@@ -158,7 +217,7 @@ ax.YAxis.Scale ="log";
 yline(1,'--');
 xlim([0.5,nColsForMoveBoxPlot+.5]);
 ylabel('Post injection values (t=0:60) divided by baseline values');
-title([titleText ' movement changes']);
+title(' movement changes');
 ylim([0.08,1.4]);
 
 subplot(1,3,2:3)
@@ -168,7 +227,13 @@ ax.YAxis.Scale ="log";
 yline(1,'--');
 xlim([0.5,nColsForEphysBoxPlot+.5]);
 ylabel('Post injection values (t=0:60) divided by baseline values');
-title([titleText 'PSMDelta bandpower changes']);
+if usePSM
+    title('PSMDelta bandpower changes');
+end
+if useGtrim
+    title('Gaussian Trimmed bandpower changes');
+end
+
 ylim([0.5,3.5]);
 
 
@@ -179,6 +244,7 @@ switch setName
     case '2020_PSYLOCYBIN_LPS'
     case 'LPS2020' % untested - this is framework only
     case 'Sigma1' % untested - this is framework only        saveFileName = getPathGlobal([setName '-matTableBandpower']);
+        legend([a(10) a(8) a(6) a(4) a(2) ], xtickLabelstart,'Location','northeast');
     case 'combined' % untested - this is framework only
         legend([a(14) a(12) a(10) a(8) a(6) a(4) a(2) ], xtickLabelstart,'Location','northeast');
     case 'ZZ' % untested - this is framework only

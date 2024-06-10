@@ -11,11 +11,13 @@ source("PropensityScoreMatching.R")
 #xlsFilePath <- "//144.92.237.185/Data/PassiveEphys/mouseEEG/Sigma1GroupInfo.xlsx"
 #xlsFilePath <- "//144.92.237.185/Data/PassiveEphys/mouseEEG/combinedGroupInfo.xlsx"
 #xlsFilePath <- "//144.92.237.185/Data/PassiveEphys/mouseEEG/DOIKetanserinGroupInfo.xlsx"
-xlsFilePath <- "//144.92.237.185/Data/PassiveEphys/mouseEEG/2020PsilocybinKetWayGroupInfo.xlsx"
+#xlsFilePath <- "//144.92.237.185/Data/PassiveEphys/mouseEEG/2020PsilocybinKetWayGroupInfo.xlsx"
+xlsFilePath <- "//144.92.237.185/Data/PassiveEphys/mouseEEG/poster2023GroupInfo.xlsx"
+
 
 myTable <- read_excel(xlsFilePath)
 # calc_prop_score("EEG234","23131") # this fails...
-for (x in 1:92) {
+for (x in 1:122) {
 	thisAnimal <- myTable[x, "animalName"]
 	thisDate <- myTable[x, "Dates"]
 	calc_prop_score(thisAnimal,thisDate)

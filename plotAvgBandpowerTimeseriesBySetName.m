@@ -32,6 +32,11 @@ for iGroup = unique(tableCount.group)' % --- STEP THROUGH DRUG GROUP
     for iExpt = 1:size(subTable,1) % --- STEP THROUGH EXPERIMENT DAY
         animalName = subTable.Animal{iExpt};
         exptDate = subTable.Date{iExpt};
+
+        [moveTimeDrugStruct] = getMoveTimeDrugbyAnimalDate(animalName,exptDate,false);
+        moveM(iExpt).moveTimes = moveTimeDrugStruct.fullTimeArrayTOD;
+        moveM(iExpt).moveArray = moveTimeDrugStruct.fullMoveStream;
+
         load([saveFolder animalName '_' exptDate '_bandpowerSet.mat'],"dataSet");
         for iHour = 1:size(dataSet,2) % --- STEP THROUGH HOURS
             tempData(iExpt).(['hour' num2str(iHour)]).delta = dataSet(iHour).delta;
@@ -51,28 +56,39 @@ for iGroup = unique(tableCount.group)' % --- STEP THROUGH DRUG GROUP
     % find the minimum number of 4 sec intervals so we can cleanly average
     % them
     hourSteps = fields(tempData);
-    maxForHour = nan(size(hourSteps,1),1);
+    maxAllowed = nan(size(hourSteps,1),1);
     for iHour = 1:size(hourSteps,1)
         for iExpt = 1:size(tempData,2)
-            maxForHour(iHour,1) = min(size(tempData(iExpt).(hourSteps{iHour}).time,1),maxForHour(iHour),'omitnan');
+            maxAllowed(iHour,1) = min(size(tempData(iExpt).(hourSteps{iHour}).time,1),maxAllowed(iHour),'omitnan');
         end
     end
+    maxAllowedMove = nan; 
+    for iMove = 1:size(moveM,2)
+        maxAllowedMove = min(size(moveM(iMove).moveTimes,2),maxAllowedMove,'omitnan');
+    end
+    moveArrayFinal = nan(size(moveM,2),maxAllowedMove);
+    for iMove = 1:size(moveM,2)
+        moveArrayFinal(iMove,:) = moveM(iMove).moveArray(1:maxAllowedMove);
+    end
+    moveArrayFinal = mean(moveArrayFinal,1);
+    moveTimesFinal = moveM(1).moveTimes(1:maxAllowedMove);
+
     
     for iHour = 1:size(hourSteps,1)
         % create an array of (experiments, bands, intervals, front/rear)
         nBands = size(bands,1); 
-        windowedIntervals = maxForHour(iHour,1);
+        maxForThisHour = maxAllowed(iHour,1);
         nChannels = 2; % front and rear
-        superArray = nan(size(tempData,2),nBands,windowedIntervals,nChannels);
+        superArray = nan(size(tempData,2),nBands,maxForThisHour,nChannels);
         for iExpt = 1:size(tempData,2)
-            superArray(iExpt,1,:,:) = tempData(iExpt).(['hour' num2str(iHour)]).delta(1:windowedIntervals,:);
-            superArray(iExpt,2,:,:) = tempData(iExpt).(['hour' num2str(iHour)]).theta(1:windowedIntervals,:);
-            superArray(iExpt,3,:,:) = tempData(iExpt).(['hour' num2str(iHour)]).alpha(1:windowedIntervals,:);
-            superArray(iExpt,4,:,:) = tempData(iExpt).(['hour' num2str(iHour)]).beta(1:windowedIntervals,:);
-            superArray(iExpt,5,:,:) = tempData(iExpt).(['hour' num2str(iHour)]).gamma(1:windowedIntervals,:);
+            superArray(iExpt,1,:,:) = tempData(iExpt).(['hour' num2str(iHour)]).delta(1:maxForThisHour,:);
+            superArray(iExpt,2,:,:) = tempData(iExpt).(['hour' num2str(iHour)]).theta(1:maxForThisHour,:);
+            superArray(iExpt,3,:,:) = tempData(iExpt).(['hour' num2str(iHour)]).alpha(1:maxForThisHour,:);
+            superArray(iExpt,4,:,:) = tempData(iExpt).(['hour' num2str(iHour)]).beta(1:maxForThisHour,:);
+            superArray(iExpt,5,:,:) = tempData(iExpt).(['hour' num2str(iHour)]).gamma(1:maxForThisHour,:);
         end
         averageBandpower.(['hour' num2str(iHour)]) = squeeze(median(superArray,1));
-        averageBandpowerTimes(iHour).time = tempData(1).(['hour' num2str(iHour)]).time(1:windowedIntervals,:);
+        averageBandpowerTimes(iHour).time = tempData(1).(['hour' num2str(iHour)]).time(1:maxForThisHour,:);
     end
 
     % need to quick find limits, but ignore outliers
@@ -92,30 +108,32 @@ for iGroup = unique(tableCount.group)' % --- STEP THROUGH DRUG GROUP
     bandPower = figure(); 
     for iHour = 1:size(dataSet,2)
         for iBand = 1:nBands
-            subtightplot(nBands,1,iBand);
+            subtightplot(nBands+1,1,iBand);
             plot(averageBandpowerTimes(iHour).time,averageBandpower.(['hour' num2str(iHour)])(iBand,:,1),"Color",'r');
             hold on
             plot(averageBandpowerTimes(iHour).time,averageBandpower.(['hour' num2str(iHour)])(iBand,:,2),"Color",'b');
             yS = scaleThisPlot(iBand);
             ylim([scaleThisPlotMin(iBand),yS+yS*16]);
         end
+        subtightplot(nBands+1,1,nBands+1);
+        plot(moveTimesFinal,moveArrayFinal);
     end
 
-    subtightplot(5,1,5);
+    subtightplot(nBands+1,1,5);
     legend({'Front','Rear'});
 
 
     for iBand = 1:nBands
-        subtightplot(5,1,iBand);
+        subtightplot(nBands+1,1,iBand);
         ylabel(bands{iBand});
     end
 
 
 %     for i = 1:6
-%         subtightplot(5,1,i);
+%         subtightplot(nBands+1,1,i);
 % %             xlim([adjMoveTimes(1),adjMoveTimes(end)]);
 %     end
-    subtightplot(5,1,1);
+    subtightplot(nBands+1,1,1);
     title(thisTreat)
 
 
