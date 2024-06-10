@@ -1,4 +1,4 @@
-function [arrayOut,pInclude,gaussParams] = fitGaussMix(dataToFit,plotOption)
+function [arrayOut,pInclude,gaussParams] = fitGaussMix(dataToFit,plotOption,useSqrt,nGauss)
 % clustering with gaussian mixture model.  Similar to k-means clustering, 
 % but the variance parameter varies... (also we're applying it to 
 % dimension, and applying it to this specific problem)
@@ -29,15 +29,26 @@ function [arrayOut,pInclude,gaussParams] = fitGaussMix(dataToFit,plotOption)
 if ~exist("plotOption","var")
     plotOption = true;
 end
+if ~exist("useSqrt","var")
+    useSqrt = true;
+end
+if ~exist("nGauss","var")
+    nGauss = 2;
+end
+
 % STEP 1 & 2: can be in the same line
 % we had 1 element of 1000s across 100s of animals be negative and it
 % messed with everything.  Let's just nip that bud here and now and hope
 % nothing bad happens down the line...
 dataToFit(dataToFit < 0) = 0;
-mvmt = sqrt(dataToFit);
+if useSqrt
+    mvmt = sqrt(dataToFit);
+else
+    mvmt = dataToFit;
+end
 % STEP 3
 X = [mvmt];
-gaussParams = fitgmdist(X,2);
+gaussParams = fitgmdist(X,nGauss);
 clusterX = cluster(gaussParams,X); % Cluster index 
 % for extracting the high movement data:
 [~,ia] = max(gaussParams.mu); % ia will be the index of the cluster with larger mean
