@@ -1,9 +1,15 @@
-function tableOut = fetchSpectraFromPipelineByAnimalDate(animalName,exptDate)
+function [bandTableOut,specTableOut] = fetchSpectraFromPipelineByAnimalDate(animalName,exptDate,fullSpectra,chansToExclude)
 % much of this taken from my existing function plotSpectraEEG
 % test params
 % animalName = 'EEG195'
 % exptDate = '22421'
-chansToExclude = nan;
+if ~exist('fullSpectra','var')
+    fullSpectra = false;
+end
+if ~exist("chansToExclude","var")
+    chansToExclude = nan;
+end
+%chansToExclude = nan;
 folder = [getPathGlobal('pipelineSaves') animalName '\']; % data from the pipeline 
 chanEEGRemap = [2,4,3,1]; % direct channels to specific subplots so that channels line up with their physical locations
 % the file will be some crazy thing like this:
@@ -69,19 +75,30 @@ for iChan = 1:nChans
     gamma(:,iChan) = mean(specdata(iChan).data(:,bounds(1):bounds(2)),2,'omitnan');
 end
 
+
+if fullSpectra
+    spectraCrossChan = (specdata(1).data+specdata(2).data+specdata(3).data+specdata(4).data)/4;
+    specTableOut.segTime = out.segmentTimeOfDay{1,1};
+    specTableOut.spectra = spectraCrossChan;
+    specTableOut.freqLabels = freqLabels;
+else
+    specTableOut = table;
+end
+
+
 totalSegs = size(delta,1);
 varTypes = {'duration','double','double','double','double','double'};
 varNames = {'segTime','delta','theta','alpha','beta','gamma'};
 sz = [totalSegs,length(varNames)];
-tableOut = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
-tableOut.segTime = out.segmentTimeOfDay{1,1};
+bandTableOut = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
+bandTableOut.segTime = out.segmentTimeOfDay{1,1};
 % user can later use this line to get duration:
 % tableOut.segTime = tableOut.segTime-tableOut.segTime(1);
-tableOut.delta = mean(delta,2,'omitnan');
-tableOut.theta = mean(theta,2,'omitnan');
-tableOut.alpha = mean(alpha,2,'omitnan');
-tableOut.beta = mean(beta,2,'omitnan');
-tableOut.gamma = mean(gamma,2,'omitnan');
+bandTableOut.delta = mean(delta,2,'omitnan');
+bandTableOut.theta = mean(theta,2,'omitnan');
+bandTableOut.alpha = mean(alpha,2,'omitnan');
+bandTableOut.beta = mean(beta,2,'omitnan');
+bandTableOut.gamma = mean(gamma,2,'omitnan');
 
 
 

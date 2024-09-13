@@ -9,7 +9,7 @@ moveDataFileName = ['MoveFit_' animalName '_' exptDate '.csv'];
 tableOutPath = fullfile(moveDataPath, moveDataFileName);
 moveTable = readtable(tableOutPath);
 % load the spectra data
-tableOut = fetchSpectraFromPipelineByAnimalDate(animalName,exptDate);
+[tableOut,~] = fetchSpectraFromPipelineByAnimalDate(animalName,exptDate); % I rewrote this to give bands or full spectra as needed
 % tableOut.segTime = tableOut.segTime-tableOut.segTime(1);
 % find the index for pre and post
 moveTable.ctrl = moveTable.winTime>windowPre(1) & moveTable.winTime<windowPre(2);

@@ -1,5 +1,6 @@
 function plotBandPowerGaussFitSummaries(workingTable)
 % I rewrote this to work on the Gaussian fits and to accept a table
+% setName = 'poster2023';
 
 nGroups = max(workingTable.group);
 xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,Sal','Flvx,LPS','DMT10,Sal','DMT2.5,LPS','DMT10,LPS','DOI,Sal','DOI,LPS','DOI+Ket,Sal','DOI+Ket,LPS'}; 
@@ -15,7 +16,7 @@ for iGroup = 1:nGroups
         group(iGroup).gamma(ii,1) = tempT.gFitGamma(ii);
         group(iGroup).alpha(ii,1) = tempT.gFitAplha(ii);
         group(iGroup).beta(ii,1) = tempT.gFitBeta(ii);
-        group(iGroup).names{ii,1} = tempT.Animal(ii);
+%         group(iGroup).names{ii,1} = tempT.Animal(ii);
         group(iGroup).Sex{ii,1} = tempT.Sex(ii);
     end
 end
@@ -55,20 +56,23 @@ for iBand = 1:size(bands,2)
     figure();
     scatter(1:nColsForEphysBoxPlot,boxplotEphysArray,'k*');
     hold on
+
     % ==========
     % this is if you want to label the data with names or sex or whatever
     % find th first non movement column
     % round(ii/2) is the way we'll step through the 'double groups'
     % ==========
-    % bandStart = find(groupIncr>0,1);
-    % for ii = 1:nColsForEphysBoxPlot
-    %     yLocations = boxplotEphysArray(ii,~isnan(boxplotEphysArray(ii,:)));
-    %     xLocations = ones(size(yLocations,2),1)*ii;
-    %     theseNames = group(round(ii/2)).names;
-    %     text(xLocations,yLocations,theseNames);
-    % %     theseNames = group(round(ii/2)).Sex;
-    % %     text(xLocations,yLocations,theseNames);
-    % end
+%     bandStart = find(groupIncr>0,1);
+%     for ii = 1:nColsForEphysBoxPlot
+%         yLocations = boxplotEphysArray(ii,~isnan(boxplotEphysArray(ii,:)));
+%         xLocations = ones(size(yLocations,2),1)*ii;
+% %         theseNames = group(round(ii/2)).names;
+% %         text(xLocations,yLocations,theseNames);
+%         theseNames = group(ii).Sex;
+%         text(xLocations,yLocations,theseNames);
+%         clear yLocations xLocations theseNames
+%     end
+
     % % ==========
     boxplot(boxplotEphysArray','Colors',char(colorCodeEphys));
     ax = gca;
