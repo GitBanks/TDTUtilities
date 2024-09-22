@@ -1,5 +1,14 @@
-% 9/13/24 Notes & tasks due
-% 1. verify the median is displayed (otherwise why is it not 1); 
+% Master notes for 2024 LPS paper
+% Date related notes in descending order / recent on top
+% =========================================================================
+% =========================================================================
+
+
+% =========================================================================
+% =========================================================================
+% 9/25/24 
+% will refresh list from 9/13/24.
+% 1. [SOLVED] verify the median
 % 2. show spectra before and after movement (results 1) ;  
 % 3. cytokine box plots clean up axes
 % 4. cytokine / delta scatter - normalize to saline (treat data the same way) also fit line - linear regression on sal/sal and sal/lps data single regression for all those; 
@@ -7,20 +16,8 @@
 % day
 % 6. Verify Box plots 
 
-% biggest feat accomplished was getting computer, remote, and code working
-% and refamiliarized - only started real plot progress last night at 4PM
-% i.e., the day before the meeting with no time to spare
-
-
-% =========================================================================
-% 1. verify the median is displayed (otherwise why is it not 1); 
-% answer comes from the function:  On each box, the central mark indicates 
-% the median, and the bottom and top edges of the box indicate the 25th and 
-% 75th percentiles, respectively. 
-
-% =========================================================================
-% 2. show spectra before and after movement (results 1).  Code working,
-% need help sorting.
+% ===================
+% 2. show spectra before and after movement.  Code working, need help sortingand cleaning up plots.
 setName = 'poster2023';
 load(getPathGlobal([setName '-matTableBandpower']));
 for iTable = 1:size(workingTable,1)
@@ -32,12 +29,11 @@ for iTable = 1:size(workingTable,1)
     drawnow
 end
 
-% =========================================================================
+% ===================
 % 3. cytokine box plots clean up axes
-% notes on scatterplot here C_24617-plotsAboveAreDone-workingOnCytokineScatter
+% 
 
-
-% =========================================================================
+% ===================
 % 4. (plot) cytokine scatter - normalize to saline (treat data the same 
 % way) also fit line - linear regression on sal/sal and sal/lps data single
 % regression for all those; 
@@ -92,21 +88,20 @@ for iPlot = 1:3
     ylim([0.25,3]);
 end
 
+% ===================
+% 5. show one whole movement day
+% when getFitGaussMixByAnimalDate() is run, it saves a file to getPathGlobal('animalSaves')
+% it saves segment times and average movement This means we can load the 
+animalName = 'EEG367';
+exptDate = '23906';
+outPath = [getPathGlobal('animalSaves') animalName '\'];
+saveFileName = ['MoveFit_' animalName '_' exptDate '.csv'];
+tableOutPath = fullfile(outPath, saveFileName);
+thisTable = readtable(tableOutPath);
+plot(thisTable.winTime,thisTable.meanMovement);
 
-% =========================================================================
-% 5. show one whole movement day; 
-
-
-% =========================================================================
+% ===================
 % 6. Verify Box plots 
-% latest box plots and movement box plots here: 
-% C_24528-organizing_plots_for_the_paper_3.m
-
-
-
-
-% this is the code to actually plot out figure 3
-% now take the table and grab the specific time window
 setName = 'poster2023';
 load(getPathGlobal([setName '-matTableBandpower']));
 for iTable = 1:size(workingTable,1)
@@ -120,3 +115,54 @@ for iTable = 1:size(workingTable,1)
     workingTable.gFitBeta(iTable) = animalOut.beta;
 end
 plotBandPowerGaussFitSummaries(workingTable);
+
+
+
+
+% =========================================================================
+% =========================================================================
+% 9/17/24 no updates. I had a medical procedure and could not make time
+
+
+% =========================================================================
+% =========================================================================
+% 9/13/24 Notes & tasks due
+% 1. verify the median is displayed (otherwise why is it not 1); 
+% 2. show spectra before and after movement (results 1) ;  
+% 3. cytokine box plots clean up axes
+% 4. cytokine / delta scatter - normalize to saline (treat data the same way) also fit line - linear regression on sal/sal and sal/lps data single regression for all those; 
+% 5. show one whole movement day; the actual "movement events for one whole
+% day
+% 6. Verify Box plots 
+
+% biggest feat accomplished was getting computer, remote, and code working
+% and refamiliarized - only started real plot progress last night at 4PM
+% i.e., the day before the meeting with no time to spare
+
+% ===================
+% 1. verify the median is displayed (otherwise why is it not 1); 
+% answer comes from the function:  On each box, the central mark indicates 
+% the median, and the bottom and top edges of the box indicate the 25th and 
+% 75th percentiles, respectively. 
+
+% ===================
+% 2. show spectra before and after movement (results 1).  Code working,
+% need help sorting.
+% [code moved to more recent dates]
+
+% ===================
+% 3. cytokine box plots clean up axes
+% notes on scatterplot here C_24617-plotsAboveAreDone-workingOnCytokineScatter
+
+% ===================
+% 4. (plot) cytokine scatter - normalize to saline (treat data the same 
+% way) also fit line - linear regression on sal/sal and sal/lps data single
+% regression for all those; 
+% ==== example of how to set up cytokine plotting on the new table.
+% [code moved to more recent dates]
+
+% ===================
+% 6. Verify Box plots 
+% latest box plots and movement box plots here: 
+% C_24528-organizing_plots_for_the_paper_3.m
+% [code moved to more recent dates]

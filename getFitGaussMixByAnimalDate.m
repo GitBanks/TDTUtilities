@@ -69,7 +69,7 @@ writetable(gaussFitTable,tableOutPath);
 
 
 
-% we include all indeces, is that ideal or not?  won;t the fits be
+% we include all indices, is that ideal or not?  won;t the fits be
 % different?
 
 
