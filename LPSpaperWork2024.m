@@ -6,6 +6,13 @@
 
 % =========================================================================
 % =========================================================================
+% two days before meeting.  Still need to:
+% part 3. find the code for cytokine box plots
+% part 4. confirm linear regression?
+% part 4. add normalization to saline option
+% clean up all axes / legends / labels 
+
+
 % 9/25/24 
 % will refresh list from 9/13/24.
 % 1. [SOLVED] verify the median
@@ -53,7 +60,18 @@ figure
 subplot(1,3,1);
 for i = 1:size(groups,2)
     subgroup = newWorkingTable(newWorkingTable.groupID==groups(i),:);
-    scatter(subgroup.IL6.*subgroup.scaleFactor,subgroup.delta,"filled");
+    x = subgroup.IL6.*subgroup.scaleFactor;
+    y = subgroup.delta;
+    scatter(x,y,"filled");
+    % linear regression - we could program a search for saline / saline, or
+    % just shortcut to 1 because we know that's the group ID.
+    if i==1 
+        b1=x\y;
+        yCalc1 = b1*x;
+        hold on
+        [~,orderedLine]=sort(x);
+        plot(x(orderedLine),yCalc1(orderedLine));
+    end
     hold on;
 end
 xlim([0,300]);
@@ -62,7 +80,16 @@ title('IL6');
 subplot(1,3,2);
 for i = 1:size(groups,2)
     subgroup = newWorkingTable(newWorkingTable.groupID==groups(i),:);
-    scatter(subgroup.TNF.*subgroup.scaleFactor,subgroup.delta,"filled");
+    x = subgroup.TNF.*subgroup.scaleFactor;
+    y = subgroup.delta;
+    scatter(x,y,"filled");
+    if i==1
+        b1=x\y;
+        yCalc1 = b1*x;
+        hold on
+        [~,orderedLine]=sort(x);
+        plot(x(orderedLine),yCalc1(orderedLine));
+    end
     hold on;
 end
 xlim([0,10]);
@@ -71,7 +98,19 @@ title('TNF alpha');
 subplot(1,3,3);
 for i = 1:size(groups,2)
     subgroup = newWorkingTable(newWorkingTable.groupID==groups(i),:);
-    scatter(subgroup.IL10.*subgroup.scaleFactor,subgroup.delta,"filled");
+    x = subgroup.IL10.*subgroup.scaleFactor;
+    y = subgroup.delta;
+    scatter(x,y,"filled");
+    if i==1
+        removeThese = isnan(x);
+        x(removeThese)=[];
+        y(removeThese)=[];
+        b1=x\y;
+        yCalc1 = b1*x;
+        hold on
+        [~,orderedLine]=sort(x);
+        plot(x(orderedLine),yCalc1(orderedLine));
+    end
     hold on;
 end
 xlim([0,10]);
@@ -86,6 +125,7 @@ for iPlot = 1:3
         legend(orderedGroupName,'Interpreter','none');
     end
     ylim([0.25,3]);
+    set(gca, 'XScale', 'log');
 end
 
 % ===================
