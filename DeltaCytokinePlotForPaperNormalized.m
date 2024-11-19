@@ -45,7 +45,6 @@ end
 % these are now scaled to the total protein count! don't double calculate
 % this!
 
-
 % now normalize to the saline/saline of each respective plate.
 % The two plate groups we want are 1 and three  notes from 10/11/24
 % 1,2,5,6 divide by 1
@@ -67,12 +66,7 @@ for iCytokine = 1:size(cytokineList,2)
 end
 % plate specific saline/saline control performed
 
-figure
 colorSequence = {'b','r','g','c','k','m','y'};
-sx = scatter(1:7,1:7);
-
-
-
 figure
 % take the log of data, plot on linear scale, run regression
 for iCytokine = 1:size(cytokineList,2)
@@ -92,7 +86,7 @@ for iCytokine = 1:size(cytokineList,2)
     x = log10(x);
     tbl = table(x , y);
     mdl = fitlm(tbl,'linear');
-    p1 = plot(mdl,'LineWidth',1);
+    plot(mdl,'LineWidth',1);
     hold on
     mdlStruct(iCytokine).cytokine = thisCytokine;
     mdlStruct(iCytokine).mdl = mdl;
@@ -104,72 +98,30 @@ for iCytokine = 1:size(cytokineList,2)
         x = subgroup.(thisCytokine);
         x = log10(x);
         y = subgroup.delta;
-        s1 = scatter(x,y,"filled",colorSequence{iGroup});
+        scatter(x,y,"filled",colorSequence{iGroup});
         hold on
-
         removeThese = isnan(x);
         x(removeThese)=[]; % get rid of nans
         y(removeThese)=[]; 
-
         yMean = mean(y);
         xMean = mean(x);
         yStdErr = std(y)/sqrt((size(y,1)-1));
         xStdErr = std(x)/sqrt((size(x,1)-1));
-        s2 = scatter(xMean,yMean,100,colorSequence{iGroup},"filled");
+        scatter(xMean,yMean,100,colorSequence{iGroup},"filled");
         hold on
-        e1 = errorbar(xMean,yMean,-yStdErr,+yStdErr,-xStdErr,+xStdErr,colorSequence{iGroup},'MarkerSize',20);
-        % color code
-%         errorbar(xMean,yMean,yStdErr,xStdErr,'MarkerSize',20);
+        errorbar(xMean,yMean,-yStdErr,+yStdErr,-xStdErr,+xStdErr,colorSequence{iGroup},'MarkerSize',20);
     end
     title(thisCytokine);
-%     legend([p1(1),s1(1),s2(1)],'From data1','From data2','From data3');
-    % colorSequence = {'b','r','g','c','k','m','y'};
-    % orderedGroupName = {'sal_sal','sal_LPS','Flu_LPS','DMT_LPS','DMT_LPS','DOI_sal','DOI_LPS'}
-%     legend('sal sal','sal LPS','Flu LPS','DMT LPS','DMT LPS','DOI Sal','DOI LPS');
-%     legend(orderedGroupName,colorSequence);
-%     legend([sx(1),sx(2),sx(3),sx(4),sx(5),sx(6),sx(7)],orderedGroupName);
-%     legend([sx(1)],orderedGroupName);
-%     legend(orderedGroupName);
-    p1 = plot(NaN,NaN,'b');
-    p2 = plot(NaN,NaN,'r');
-    p3 = plot(NaN,NaN,'g');
-    p4 = plot(NaN,NaN,'c');
-    p5 = plot(NaN,NaN,'k');
-    p6 = plot(NaN,NaN,'m');
-    p7 = plot(NaN,NaN,'y');
-%     legend([p(1),p(2),p(3),p(4),p(5),p(6),p(7)],orderedGroupName);
+    p1 = scatter(NaN,NaN,"filled",'b');
+    p2 = scatter(NaN,NaN,"filled",'r');
+    p3 = scatter(NaN,NaN,"filled",'g');
+    p4 = scatter(NaN,NaN,"filled",'c');
+    p5 = scatter(NaN,NaN,"filled",'k');
+    p6 = scatter(NaN,NaN,"filled",'m');
+    p7 = scatter(NaN,NaN,"filled",'y');
     legend([p1,p2,p3,p4,p5,p6,p7],orderedGroupName,'Interpreter','none');
     ylabel('delta change');
     xlabel('cytokine level 4 hours post');
 end
 
 
-
-
-
-
-
-
-
-
-% %TODO confirm pg/ml
-% for iPlot = 1:size(cytokineList,2)
-%     subplot(1,3,iPlot);
-% %     if iPlot == 1
-% % %         a = findall(gca,'Tag','Scatter');
-% % %         legend([a(6) a(5) a(4) a(3) a(2) a(1)], xtickLabelstart,'Location','northeast');
-% %         legend(orderedGroupName,'Interpreter','none');
-% %     end
-% %     ylim([0.25,3]);
-% %     set(gca, 'XScale', 'log');
-% end
-% % Matt gacve this code
-%  data1 = 10*ones(10,4)+randn(10,4);
-%  t1    = (0:1:9);
-%  figure();
-%  p1 = plot(t1,data1,'bo');
-%  hold on
-%  data2 = 25*ones(100,4)+2*randn(100,4);
-%  t2    = (0:0.1:9.9);
-%  p2 = plot(t2,data2,'rx');
-%  legend([p1(1),p2(1)],'From data1','From data2');
