@@ -4,6 +4,7 @@ function plotBandPowerGaussFitSummaries(workingTable)
 
 nGroups = max(workingTable.group);
 xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,Sal','Flvx,LPS','DMT10,Sal','DMT2.5,LPS','DMT10,LPS','DOI,Sal','DOI,LPS','DOI+Ket,Sal','DOI+Ket,LPS'}; 
+% xtickLabelstart = {'Sal,Sal','Sal,LPS','BD1063,Sal','BD1063_0.1,LPS','BD1063_1.0,LPS','BD1063_5.0,LPS'}; 
 bands = {'delta','theta','alpha','beta','gamma'};
 
 %workingTable = sortrows(workingTable,'group'); %not strictly necessary, just looks better
@@ -86,6 +87,8 @@ for iBand = 1:size(bands,2)
     a = findall(gca,'Tag','Box');
     % legend([a(22) a(20) a(18) a(16) a(14) a(12) a(10) a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
     legend([a(11) a(10) a(9) a(8) a(7) a(6) a(5) a(4) a(3) a(2) a(1)], xtickLabelstart,'Location','northeast');
+%     legend([a(6) a(5) a(4) a(3) a(2) a(1)], xtickLabelstart,'Location','northeast');
+   
     ax = gca;
     ax.XTickLabels = xtickLabelArray;
 
