@@ -147,9 +147,9 @@ for i=1:size(operationList,1)
         end
         drawnow;
         pause(0.5);
-%             b2name = questdlg_timer(60000,'Are the red points noticable, to justify an additional 60Hz filter run?',...
-%             'Save Dialogue Box','Yes','No','No');
-            b2name = 'yes'
+            b2name = questdlg_timer(60000,'Are the red points noticable, to justify an additional 60Hz filter run?',...
+            'Save Dialogue Box','Yes','No','No');
+%             b2name = 'yes'
             switch b2name
                 case 'Yes'
                     ephysData = tempEphysData;

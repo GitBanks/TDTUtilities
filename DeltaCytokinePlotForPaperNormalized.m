@@ -39,10 +39,7 @@ end
 % let's do all our calculations ahead of time because there are a few steps
 % now.  !! careful, these are different groups than the loop below!!! 
 % this is for the total protein count
-for iCytokine = 1:size(cyt ...
-        ...
-        ...
-        okineList,2)
+for iCytokine = 1:size(cytokineList,2)
     thisCytokine = cytokineList{iCytokine};
     newWorkingTable.(thisCytokine)=newWorkingTable.(thisCytokine).*newWorkingTable.scaleFactor;
 end
