@@ -10,14 +10,18 @@ DeltaCytokinePlotForPaperNormalized; % as named, the delta/cytokine scatter plot
 % We ran two plates. The plate reader output we use is Calc_Conc_Mean. 
 % Cytokines from the same plate are then multiplied by a scaling factor
 % based on the total protein measure.  We then divided values from each 
-% plate by the mean of the common control treatment (saline) ran on the 
-% same plate.
+% plate by the mean of the common control treatment (saline/saline) ran on 
+% the same plate.
 % =========================================================================
 
 
 % 11/25/24
 % Dear diary... I've made improvements since last entry but did not
-% detail them here.  Check git.
+% detail them here.  Check git.  I also cleaned up the notes in this
+% document
+
+
+
 
 % 10/29/24
 % pipeline reran (took almost 3 days because no parallel processing
@@ -29,11 +33,6 @@ DeltaCytokinePlotForPaperNormalized; % as named, the delta/cytokine scatter plot
 % Delta_cytokinePlotForPaperNormalized
 % last step: I realize I manually merged the cytokine table and the
 % bandpower table, so need to redo that, too
-
-
-
-
-
 
 % 10/18/24
 % posted spectra for others, but still need to review.  track down how
@@ -68,96 +67,8 @@ DeltaCytokinePlotForPaperNormalized; % as named, the delta/cytokine scatter plot
 
 % 1a. delta/cytokine scatter: run the regression on the log of the values;  
 % 1b. delta/cytokine scatter: normalize to saline (treat data the same way)
-clear all
-load('C:\Users\Matt Banks\Desktop\paper data sets\poster2023BandpowerData4.mat',"newWorkingTable")
-groups = unique(newWorkingTable.groupID);
-groups = groups(~isnan(groups));
-groups = groups(groups>0)';
-indexHere = 1;
-for iGroup = groups %just step through the ones we found
-    orderedGroupName{indexHere} = newWorkingTable(newWorkingTable.groupID==groups(indexHere),:).groupText(1,1);
-    indexHere = indexHere+1;
-end
-
-figure
-% ==== IL6 ====
-subplot(1,3,1);
-for i = 1:size(groups,2)
-    subgroup = newWorkingTable(newWorkingTable.groupID==groups(i),:);
-    x = log(subgroup.IL6.*subgroup.scaleFactor+1);
-    y = subgroup.delta;
-    scatter(x,y,"filled");
-    hold on
-%     if i==1 
-%         coeffs = polyfit(x, y, 2);  % Fit a quadratic model
-%         y_pred = polyval(coeffs, x);
-%         [~,orderedLine]=sort(x);
-%         plot(x(orderedLine),y_pred(orderedLine));
-%     end
-    % linear regression - we could program a search for saline / saline, or
-    % just shortcut to 1 because we know that's the group ID.
-    if i==1 
-        b1=x\y;
-        yCalc1 = b1*x;
-        hold on
-        [~,orderedLine]=sort(x);
-        plot(x(orderedLine),yCalc1(orderedLine));
-    end
-    hold on;
-end
-xlim([0,300]);
-title('IL6');
-% ==== TNF alpha ====
-subplot(1,3,2);
-for i = 1:size(groups,2)
-    subgroup = newWorkingTable(newWorkingTable.groupID==groups(i),:);
-    x = log(subgroup.TNF.*subgroup.scaleFactor+1);
-    y = subgroup.delta;
-    scatter(x,y,"filled");
-    if i==1
-        b1=x\y;
-        yCalc1 = b1*x;
-        hold on
-        [~,orderedLine]=sort(x);
-        plot(x(orderedLine),yCalc1(orderedLine));
-    end
-    hold on;
-end
-xlim([0,10]);
-title('TNF alpha');
-% ==== IL10 ====
-subplot(1,3,3);
-for i = 1:size(groups,2)
-    subgroup = newWorkingTable(newWorkingTable.groupID==groups(i),:);
-    x = log(subgroup.IL10.*subgroup.scaleFactor+1);
-    y = subgroup.delta;
-    scatter(x,y,"filled");
-    if i==1
-        removeThese = isnan(x);
-        x(removeThese)=[];
-        y(removeThese)=[];
-        b1=x\y;
-        yCalc1 = b1*x;
-        hold on
-        [~,orderedLine]=sort(x);
-        plot(x(orderedLine),yCalc1(orderedLine));
-    end
-    hold on;
-end
-xlim([0,10]);
-title('IL10');
-
-%TODO confirm pg/ml
-for iPlot = 1:3
-    subplot(1,3,iPlot);
-    ylabel('delta change');
-    xlabel('cytokine level 4 hours post');
-    if iPlot == 1
-        legend(orderedGroupName,'Interpreter','none');
-    end
-    ylim([0.25,3]);
-    set(gca, 'XScale', 'log');
-end
+% everything tracked here now:
+DeltaCytokinePlotForPaperNormalized
 
 % 2. find the code for cytokine box plots
 % C_24010-FOUND-fluvoxamineELISAPlots - Matts version
@@ -280,90 +191,8 @@ end
 % 4. (plot) cytokine scatter - normalize to saline (treat data the same 
 % way) also fit line - linear regression on sal/sal and sal/lps data single
 % regression for all those; 
-% ==== example of how to set up cytokine plotting on the new table.
-clear all
-load('C:\Users\Matt Banks\Desktop\paper data sets\poster2023BandpowerData4.mat',"newWorkingTable")
-groups = unique(newWorkingTable.groupID);
-groups = groups(~isnan(groups));
-groups = groups(groups>0)';
-indexHere = 1;
-for iGroup = groups %just step through the ones we found
-    orderedGroupName{indexHere} = newWorkingTable(newWorkingTable.groupID==groups(indexHere),:).groupText(1,1);
-    indexHere = indexHere+1;
-end
-figure
-% ==== IL6 ====
-subplot(1,3,1);
-for i = 1:size(groups,2)
-    subgroup = newWorkingTable(newWorkingTable.groupID==groups(i),:);
-    x = subgroup.IL6.*subgroup.scaleFactor;
-    y = subgroup.delta;
-    scatter(x,y,"filled");
-    % linear regression - we could program a search for saline / saline, or
-    % just shortcut to 1 because we know that's the group ID.
-    if i==1 
-        b1=x\y;
-        yCalc1 = b1*x;
-        hold on
-        [~,orderedLine]=sort(x);
-        plot(x(orderedLine),yCalc1(orderedLine));
-    end
-    hold on;
-end
-xlim([0,300]);
-title('IL6');
-% ==== TNF alpha ====
-subplot(1,3,2);
-for i = 1:size(groups,2)
-    subgroup = newWorkingTable(newWorkingTable.groupID==groups(i),:);
-    x = subgroup.TNF.*subgroup.scaleFactor;
-    y = subgroup.delta;
-    scatter(x,y,"filled");
-    if i==1
-        b1=x\y;
-        yCalc1 = b1*x;
-        hold on
-        [~,orderedLine]=sort(x);
-        plot(x(orderedLine),yCalc1(orderedLine));
-    end
-    hold on;
-end
-xlim([0,10]);
-title('TNF alpha');
-% ==== IL10 ====
-subplot(1,3,3);
-for i = 1:size(groups,2)
-    subgroup = newWorkingTable(newWorkingTable.groupID==groups(i),:);
-    x = subgroup.IL10.*subgroup.scaleFactor;
-    y = subgroup.delta;
-    scatter(x,y,"filled");
-    if i==1
-        removeThese = isnan(x);
-        x(removeThese)=[];
-        y(removeThese)=[];
-        b1=x\y;
-        yCalc1 = b1*x;
-        hold on
-        [~,orderedLine]=sort(x);
-        plot(x(orderedLine),yCalc1(orderedLine));
-    end
-    hold on;
-end
-xlim([0,10]);
-title('IL10');
-
-%TODO confirm pg/ml
-for iPlot = 1:3
-    subplot(1,3,iPlot);
-    ylabel('delta change');
-    xlabel('cytokine level 4 hours post');
-    if iPlot == 1
-        legend(orderedGroupName,'Interpreter','none');
-    end
-    ylim([0.25,3]);
-    set(gca, 'XScale', 'log');
-end
-
+% everything tracked and updated in:
+DeltaCytokinePlotForPaperNormalized
 % ===================
 % 5. show one whole movement day
 % when getFitGaussMixByAnimalDate() is run, it saves a file to getPathGlobal('animalSaves')
