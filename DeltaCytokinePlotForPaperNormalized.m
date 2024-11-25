@@ -25,6 +25,7 @@ testWellsTable = fullTable(contains(fullTable.animalName,'EEG'),:);
 uniqueMice = unique(testWellsTable.animalName);
 newCol = nan(height(newWorkingTable),1);
 newWorkingTable.plateNumber = newCol;
+newWorkingTable.plate = newCol;
 for iMice = 1:size(uniqueMice,1)
     thisMouse = uniqueMice{iMice};
     uniqueMice{iMice,2} = testWellsTable(contains(testWellsTable.animalName,thisMouse),:).groupID(1);
@@ -38,7 +39,10 @@ end
 % let's do all our calculations ahead of time because there are a few steps
 % now.  !! careful, these are different groups than the loop below!!! 
 % this is for the total protein count
-for iCytokine = 1:size(cytokineList,2)
+for iCytokine = 1:size(cyt ...
+        ...
+        ...
+        okineList,2)
     thisCytokine = cytokineList{iCytokine};
     newWorkingTable.(thisCytokine)=newWorkingTable.(thisCytokine).*newWorkingTable.scaleFactor;
 end
@@ -49,8 +53,18 @@ end
 % The two plate groups we want are 1 and three  notes from 10/11/24
 % 1,2,5,6 divide by 1
 % 3,4,7,8, divide by 3
-plateArray = [1,2,5,6;...
-              3,4,7,8];
+% making sure these make sense, here are the expected groups:
+% 1 = saline/saline (plate 1)
+% 2 = saline LPS (plate 1)
+% 3 = saline/saline (plate 2)
+% 4 = saline / LPS (plate 2)
+% 5 = Fluvoxamine / LPS
+% 6 = DMT 2.5 / LPS
+% 7 = DMT 10 / LPS
+% 8 = DOI / LPS
+% 9 = DOI / saline!
+plateArray = [1,2,5,6,9;...
+              3,4,7,8,nan];
 for iCytokine = 1:size(cytokineList,2)
     thisCytokine = cytokineList{iCytokine};
     for iPlate = 1:size(plateArray,1)
@@ -59,12 +73,18 @@ for iCytokine = 1:size(cytokineList,2)
         iPlateMean = mean(newWorkingTable(iPlateLogical,:).(thisCytokine),'omitnan');
         for jPlate = 1:size(plateArray,2)
             thisPlateGroup = plateArray(iPlate,jPlate);
+%             if thisPlateGroup==8; keyboard; end
             jPlateLogical = newWorkingTable.plateNumber==thisPlateGroup;
             newWorkingTable(jPlateLogical,:).(thisCytokine) = newWorkingTable(jPlateLogical,:).(thisCytokine)./iPlateMean;
-        end
+%             repmat(iPlate, sum(jPlateLogical), 1)
+%             newWorkingTable(jPlateLogical,:).plate = iPlate;
+            newWorkingTable.plate(jPlateLogical) = repmat(iPlate, sum(jPlateLogical), 1);
+        end 
     end
 end
 % plate specific saline/saline control performed
+
+outputTable = table;
 
 colorSequence = {'b','r','g','c','k','m','y'};
 figure
@@ -109,7 +129,8 @@ for iCytokine = 1:size(cytokineList,2)
         xStdErr = std(x)/sqrt((size(x,1)-1));
         scatter(xMean,yMean,100,colorSequence{iGroup},"filled");
         hold on
-        errorbar(xMean,yMean,-yStdErr,+yStdErr,-xStdErr,+xStdErr,colorSequence{iGroup},'MarkerSize',20);
+        errorbar(xMean,yMean,-yStdErr,+yStdErr,-xStdErr,+xStdErr,colorSequence{iGroup},'MarkerSize',16);
+        outputTable = [outputTable;subgroup];
     end
     title(thisCytokine);
     p1 = scatter(NaN,NaN,"filled",'b');
@@ -124,4 +145,9 @@ for iCytokine = 1:size(cytokineList,2)
     xlabel('cytokine level 4 hours post');
 end
 
+% if something will annoy Matt, it's confusing output.  This table is the
+% result of numerous attempts using a wide variety of cleaning strategies.
+% No need to leave old or irrelevant information there.
+outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','gTrimRatio','IL6first','TNFfirst','plateNumber'}) = [];
+writetable(outputTable, 'C:\Users\Matt Banks\Desktop\paper data sets\myTable.csv');
 
