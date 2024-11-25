@@ -1,22 +1,13 @@
 % Master notes for 2024 LPS paper
-
 % =========================================================================
-% other scripts we're using for these plots.
-% ====
-% CODE_24416_rerunningDataCleaning_FULL
-% All the steps for reanalysis
-% ====
-% C_24010-FOUND-fluvoxamineELISAPlots - Matts version
-% box plot version of the cytokine plots alone
-% ====
-% Delta_cytokinePlotForPaperNormalized
-% 
-% =========================================================================
-
-% =========================================================================
-% process related notes
+% KEEP THIS BLOCK AT TOP, LOG WORK IN NEXT BLOCK(s), RECENT FIRST.
+% other scripts we're using for these plots:
+CODE_24416_rerunningDataCleaning_FULL; % All the steps for reanalysis
+C_24010_FOUND_fluvoxamineELISAPlots_MattsVersion; % box plot version of the cytokine plots alone
+DeltaCytokinePlotForPaperNormalized; % as named, the delta/cytokine scatter plot we've been perfecting
+% process related notes:
 % 1. how are the cytokine data used?
-% We ran 2 plates. The plate reader output we use is Calc_Conc_Mean. 
+% We ran two plates. The plate reader output we use is Calc_Conc_Mean. 
 % Cytokines from the same plate are then multiplied by a scaling factor
 % based on the total protein measure.  We then divided values from each 
 % plate by the mean of the common control treatment (saline) ran on the 
@@ -24,8 +15,9 @@
 % =========================================================================
 
 
-% =========================================================================
-% Date related notes in descending order / recent on top
+% 11/25/24
+% Dear diary... I've made improvements since last entry but did not
+% detail them here.  Check git.
 
 % 10/29/24
 % pipeline reran (took almost 3 days because no parallel processing
@@ -43,13 +35,9 @@
 
 
 
-%
-%
 % 10/18/24
 % posted spectra for others, but still need to review.  track down how
 % normalization was handled first.
-% 
-%
 
 % =========================================================================
 % 10/11/24
