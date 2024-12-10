@@ -15,11 +15,51 @@ DeltaCytokinePlotForPaperNormalized; % as named, the delta/cytokine scatter plot
 % =========================================================================
 
 
+% 12/10/24 Meeting
+% 1. why don't delta from the scatter plot and the box plot comport? 
+% 2. investigate suspicious values in TNFa; 
+% 3. methods section notes: Reasons for exclusion of animals, channels, and segments  https://uwmadison.app.box.com/file/1538300098981; 
+% 4. Remove DOI saline, yellow.
+
+% 1. delta discrepency
+% plotBandPowerGaussFitSummaries(workingTable) uses: 
+% workingTable.gFitDelta(i)
+% DeltaCytokinePlotForPaperNormalized uses:
+% newWorkingTable.delta(i)
+% fixed these to use the correct gFitDelta
+
+
+% LPS paper TODO; 
+% make sure filtering is working for list ((292; 293; 302; 303; 305; 306; 308; 309; 313; 314; 315; 318; 320; 322; 324; 327; 375)); 
+% methods section notes;  
+% DONE!  CONFIRMED!
+% Zarmeen's code; 
+% relabel(log10); 
+% drop DOI saline; 
+workingTable(1:3,:) = [];
+workingTable(1:2,:) = [];
+workingTable(35,:) = [];
+
+
+% 11/26/24
+% checking back, the actual error was me setting an 60Hz filter setting 
+% default to 'yes' when the case sensitive switch in the code was looking 
+% for a 'Yes'.
+
 % 11/25/24
 % Dear diary... I've made improvements since last entry but did not
 % detail them here.  Check git.  I also cleaned up the notes in this
 % document
 
+%bad animal
+animalName = 'EEG292';
+exptDate = '23511';
+[foundPoints,totalPoints] = cleanDataByThresholdAnimalDateEEG(animalName,exptDate);
+patientAnalysis.runAnalysis(@specAnalysis, 'Subjects',{animalName},'Blocks',{exptDate},'isMouse',true,'OptionSet','SegLength4');
+chansToExclude = 1;
+setName = 'poster2023';
+sendToSlack = false;
+plotSpectraEEG(animalName,exptDate,chansToExclude,setName,sendToSlack);
 
 
 

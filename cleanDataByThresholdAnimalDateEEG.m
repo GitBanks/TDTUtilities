@@ -12,7 +12,7 @@ function [foundPoints,totalPoints] = cleanDataByThresholdAnimalDateEEG(animalNam
 dontAsk = false;
 totalPoints = 0;
 trySixtyHzFilter = true;
-tryOneHzFilter = true;
+tryOneHzFilter = false;
 
 % you can use the output foundPoints to trigger a rerunning of specAnalysis
 % or otherwise generate a list of animals that have had points cleaned.
@@ -147,9 +147,9 @@ for i=1:size(operationList,1)
         end
         drawnow;
         pause(0.5);
-            b2name = questdlg_timer(60000,'Are the red points noticable, to justify an additional 60Hz filter run?',...
-            'Save Dialogue Box','Yes','No','No');
-%             b2name = 'yes'
+%             b2name = questdlg_timer(60000,'Are the red points noticable, to justify an additional 60Hz filter run?',...
+%             'Save Dialogue Box','Yes','No','No');
+            b2name = 'Yes';
             switch b2name
                 case 'Yes'
                     ephysData = tempEphysData;

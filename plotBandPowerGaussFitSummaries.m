@@ -36,10 +36,8 @@ end
 % end
 % save(saveFileName,"workingTable");
 
-
 for iBand = 1:size(bands,2)
     thisBand = bands{iBand};
-
     nColsForEphysBoxPlot = nGroups; % we're using front and rear
     boxplotEphysArray = nan(nColsForEphysBoxPlot,30);
     colorCodeTreatment = {'k','r','b','g','m','c','k','r','b','g','m','c','k','r','b'};
