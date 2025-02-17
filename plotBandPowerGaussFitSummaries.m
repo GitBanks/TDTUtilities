@@ -1,15 +1,20 @@
 function plotBandPowerGaussFitSummaries(workingTable)
 % I rewrote this to work on the Gaussian fits and to accept a table
 % setName = 'poster2023';
+% workingTable = newTable;
 
-nGroups = max(workingTable.group);
-xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,Sal','Flvx,LPS','DMT10,Sal','DMT2.5,LPS','DMT10,LPS','DOI,Sal','DOI,LPS','DOI+Ket,Sal','DOI+Ket,LPS'}; 
+nGroups = size(unique(workingTable.group),1);
+theseGroups = unique(workingTable.group)';
+xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,LPS','DMT2.5,LPS','DMT10,LPS','DOI,LPS'}; 
+% xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,Sal','Flvx,LPS','DMT10,Sal','DMT2.5,LPS','DMT10,LPS','DOI,Sal','DOI,LPS','DOI+Ket,Sal','DOI+Ket,LPS'}; 
 % xtickLabelstart = {'Sal,Sal','Sal,LPS','BD1063,Sal','BD1063_0.1,LPS','BD1063_1.0,LPS','BD1063_5.0,LPS'}; 
-bands = {'delta','theta','alpha','beta','gamma'};
+% bands = {'delta','theta','alpha','beta','gamma'};
+bands = {'delta'};
 
 %workingTable = sortrows(workingTable,'group'); %not strictly necessary, just looks better
 for iGroup = 1:nGroups
-    tempT = workingTable(workingTable.group == iGroup,:);
+    thisGroup = theseGroups(iGroup);
+    tempT = workingTable(workingTable.group == thisGroup,:);
     groupSize = size(tempT,1);
     for ii = 1:groupSize
         group(iGroup).delta(ii,1) = tempT.gFitDelta(ii);
@@ -43,6 +48,7 @@ for iBand = 1:size(bands,2)
     colorCodeTreatment = {'k','r','b','g','m','c','k','r','b','g','m','c','k','r','b'};
     indexT = 1;
     for iGroup = 1:nGroups
+        thisGroup = theseGroups(iGroup);
         groupSize = length(group(iGroup).delta);
         boxplotEphysArray(indexT,1:groupSize) = group(iGroup).(thisBand)(:,1);
         xtickLabelArray{indexT} = [xtickLabelstart{iGroup}];
@@ -50,9 +56,8 @@ for iBand = 1:size(bands,2)
         category{indexT} = thisBand;
         indexT = indexT+1;
     end
-    
-    
-    figure();
+
+    myfig = figure();
     scatter(1:nColsForEphysBoxPlot,boxplotEphysArray,'k*');
     hold on
 
@@ -80,20 +85,19 @@ for iBand = 1:size(bands,2)
     xlim([0.5,nColsForEphysBoxPlot+.5]);
     ylabel('Post injection window values divided by baseline values');
     title(['mixed model Gaussian fit ' thisBand ' changes']);
-    
+  
     ylim([0.5,3.5]);
     a = findall(gca,'Tag','Box');
+    legend([a(6) a(5) a(4) a(3) a(2) a(1)], xtickLabelstart,'Location','northeast');
     % legend([a(22) a(20) a(18) a(16) a(14) a(12) a(10) a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
-    legend([a(11) a(10) a(9) a(8) a(7) a(6) a(5) a(4) a(3) a(2) a(1)], xtickLabelstart,'Location','northeast');
-%     legend([a(6) a(5) a(4) a(3) a(2) a(1)], xtickLabelstart,'Location','northeast');
-   
+%     legend([a(11) a(10) a(9) a(8) a(7) a(6) a(5) a(4) a(3) a(2) a(1)], xtickLabelstart,'Location','northeast');
+%     legend([a(6) a(5) a(4) a(3) a(2) a(1)],
+%     xtickLabelstart,'Location','northeast');
     ax = gca;
     ax.XTickLabels = xtickLabelArray;
-
-
 end
 
-
-
+savefig('C:\Users\Matt Banks\Desktop\FIG3_gaussFitDeltaChanges.fig');
+saveas(myfig,'C:\Users\Matt Banks\Desktop\FIG3_gaussFitDeltaChanges.jpg');
 
 

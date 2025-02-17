@@ -15,6 +15,23 @@ DeltaCytokinePlotForPaperNormalized; % as named, the delta/cytokine scatter plot
 % =========================================================================
 
 
+
+% 2/13/25
+% meeting
+% 1. Figure 1: add other dose of DMT in power spectra; - raw traces and power spectra   
+% 2. reconsider the order of figures (so these might be different order);   
+% 3. Figure 2 LPS show movement for the time course of the expt - use the mice in fig 1; **movement plot  
+% 4. Figure 2 show just the groups we're using;   
+% 5. Figure 2 gaussian fit demo;   
+% 6. Figure 3 updated, just the groups we care about;   
+% 7. show the power spectra after the movement adjustment;   
+% 8. make sure the methods detail the gaussian fit analysis;   
+% 9. Figure 4: combine plates 1& 2;   
+% 10. Figure 4: leftmost panel should be IL6;   
+% 11. Figure 5: scatterplot latest version;   
+% LPS PAPER: note, work from latest copy in folder, don't hard link a specific copy: https://uwmadison.app.box.com/folder/238162413354;
+
+
 % 12/10/24 Meeting
 % 1. why don't delta from the scatter plot and the box plot comport? 
 % 2. investigate suspicious values in TNFa; 
@@ -27,6 +44,8 @@ DeltaCytokinePlotForPaperNormalized; % as named, the delta/cytokine scatter plot
 % DeltaCytokinePlotForPaperNormalized uses:
 % newWorkingTable.delta(i)
 % fixed these to use the correct gFitDelta
+% progress, but there are still some odd values.  
+% the scatter plot is showing a log10 and the box plots are not...
 
 
 % LPS paper TODO; 
@@ -141,6 +160,8 @@ DeltaCytokinePlotForPaperNormalized
 % DOI LPS EEG343 23809
 % DMT LPS EEG237 23206 
 % FLVX LPS EEG214 22727 
+setName = 'poster2023';
+workingTable = readtable(getPathGlobal([setName '-xlsTableGroupInfo']));
 animalList={
 'EEG313' 
 'EEG335' 
@@ -157,10 +178,11 @@ for iTable = 1:size(animalList,1)
     animalName = animalList{iTable};
     exptDate = dateList{iTable};
     showPlot = true;
-    exclude = workingTable.ChansToExclude(iTable);
+    exclude = workingTable.chansToExclude(iTable);
     plotArray = plotSpectralDensityGaussFitAnimalDate(animalName,exptDate,showPlot,exclude,true);
     drawnow
 end
+
 
 % for BD1063 set - need to run it through new steps of pipeline
 animalDateTable = getAnimalDayTableByTreatment('BD1063');

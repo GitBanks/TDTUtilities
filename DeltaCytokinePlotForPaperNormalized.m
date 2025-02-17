@@ -3,6 +3,8 @@ clear all
 load('C:\Users\Matt Banks\Desktop\paper data sets\poster2023BandpowerData6.mat',"newWorkingTable")
 cytokineList = {'IL6','TNF','IL10'};
 groups = unique(newWorkingTable.groupID);
+% remove DOI groups for now
+groups = groups(groups<8);
 groups = groups(~isnan(groups));
 groups = groups(groups>0)';
 indexHere = 1;
@@ -10,13 +12,16 @@ for iGroup = groups %just step through the ones we found
     orderedGroupName{indexHere} = newWorkingTable(newWorkingTable.groupID==groups(indexHere),:).groupText(1,1);
     indexHere = indexHere+1;
 end
+% crappy hack for this label
+orderedGroupName{4} = string([char(orderedGroupName{4}) '_2.5']);
+orderedGroupName{5} = string([char(orderedGroupName{4}) '_10']);
 
-% % !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-% % 12/3/24 SAVE WORKBOOK PAGE #1 (original) HERE!
-% % remake this 
-% outputTable = newWorkingTable;
-% outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst','gFitAplha','gFitBeta','gFitDelta','gFitGamma','gFitTheta'}) = [];
-% writetable(outputTable, 'C:\Users\Matt Banks\Desktop\CytokineDeltaTableStep0.csv');
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% 12/3/24 SAVE WORKBOOK PAGE #1 (original) HERE!
+% remake this 
+outputTable = newWorkingTable;
+outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst','delta'}) = [];
+writetable(outputTable, 'C:\Users\Matt Banks\Desktop\CytokineDeltaTableStep0.csv');
 
 
 % ===== new feature 10/21/24 ==============================================
@@ -55,11 +60,11 @@ end
 % this!
 
 
-% % !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-% % 12/3/24 SAVE WORKBOOK PAGE #2 (protein count normalized) HERE!
-% outputTable = newWorkingTable;
-% outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst','gFitAplha','gFitBeta','gFitDelta','gFitGamma','gFitTheta'}) = [];
-% writetable(outputTable, 'C:\Users\Matt Banks\Desktop\CytokineDeltaTableStep1.csv');
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% 12/3/24 SAVE WORKBOOK PAGE #2 (protein count normalized) HERE!
+outputTable = newWorkingTable;
+outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst','delta'}) = [];
+writetable(outputTable, 'C:\Users\Matt Banks\Desktop\CytokineDeltaTableStep1.csv');
 
 
 
@@ -98,11 +103,11 @@ for iCytokine = 1:size(cytokineList,2)
 end
 % plate specific saline/saline control performed
 
-% % !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-% % 12/3/24 SAVE WORKBOOK PAGE #3 (saline/saline plate normalized) HERE!
-% outputTable = newWorkingTable;
-% outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst','gFitAplha','gFitBeta','gFitDelta','gFitGamma','gFitTheta'}) = [];
-% writetable(outputTable, 'C:\Users\Matt Banks\Desktop\CytokineDeltaTableStep2.csv');
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% 12/3/24 SAVE WORKBOOK PAGE #3 (saline/saline plate normalized) HERE!
+outputTable = newWorkingTable;
+outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst','delta'}) = [];
+writetable(outputTable, 'C:\Users\Matt Banks\Desktop\CytokineDeltaTableStep2.csv');
 
 
 outputTable = table;
@@ -139,7 +144,8 @@ for iCytokine = 1:size(cytokineList,2)
         thisTag = subgroup.groupText{1};
         x = subgroup.(thisCytokine);
         x = log10(x);
-        y = subgroup.delta;
+%         y = subgroup.delta;
+        y = [subgroup.gFitDelta];
         scatter(x,y,"filled",colorSequence{iGroup});
         hold on
         removeThese = isnan(x);
@@ -160,9 +166,10 @@ for iCytokine = 1:size(cytokineList,2)
     p3 = scatter(NaN,NaN,"filled",'g');
     p4 = scatter(NaN,NaN,"filled",'c');
     p5 = scatter(NaN,NaN,"filled",'k');
-    p6 = scatter(NaN,NaN,"filled",'m');
-    p7 = scatter(NaN,NaN,"filled",'y');
-    legend([p1,p2,p3,p4,p5,p6,p7],orderedGroupName,'Interpreter','none');
+%     p6 = scatter(NaN,NaN,"filled",'m');
+%     p7 = scatter(NaN,NaN,"filled",'y');
+%     legend([p1,p2,p3,p4,p5,p6,p7],orderedGroupName,'Interpreter','none');
+    legend([p1,p2,p3,p4,p5],orderedGroupName,'Interpreter','none');
     ylabel('delta change');
     xlabel('cytokine level 4 hours post');
 end
@@ -170,7 +177,7 @@ end
 % if something will annoy Matt, it's confusing output.  This table is the
 % result of numerous attempts using a wide variety of cleaning strategies.
 % No need to leave old or irrelevant information there.
-outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst','plateNumber','gFitAplha','gFitBeta','gFitGamma','gFitTheta','delta'}) = [];
+outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst','plateNumber','delta'}) = [];
 % writetable(outputTable, 'C:\Users\Matt Banks\Desktop\paper data sets\myTable.csv');
 writetable(outputTable, 'C:\Users\Matt Banks\Desktop\CytokineDeltaTableStep3.csv');
 
