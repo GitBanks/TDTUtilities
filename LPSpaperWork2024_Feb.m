@@ -3,7 +3,7 @@
 % 1. Figure 1: add other dose of DMT in power spectra; - raw traces and power spectra   
 % ***2. reconsider the order of figures (so these might be different order);   
 % 3. Figure 2 LPS show movement for the time course of the expt - use the mice in fig 1; 
-% 4. Figure 2 show just the groups we're using;   
+% *** 4. Figure 2 show just the groups we're using;   
 % 5. Figure 2 gaussian fit demo;   
 % *** 6. Figure 3 updated, just the groups we care about;   
 % 7. show the power spectra after the movement adjustment;   
@@ -48,6 +48,21 @@ newTable(newTable.group==5,:) = [];
 newTable(newTable.group==8,:) = [];
 newTable(newTable.group==10,:) = [];
 newTable(newTable.group==11,:) = [];
+
+% ===================
+% 4. Figure 2 show just the groups we're using;   
+setName = 'poster2023b';
+plotBandPowerSummaries(setName)
+
+% ===================
+% 5. Figure 2 gaussian fit demo;
+% 8. make sure the methods detail the gaussian fit analysis;
+animalName = 'EEG367';
+exptDate = '23906';
+[gaussFitTable] = getFitGaussMixByAnimalDate(animalName,exptDate);
+% plotOption = true;
+% [gaussFitTable.acceptedGaussFit,pInclude,gaussParams] = fitGaussMix(gaussFitTable.meanMovement,plotOption);
+
 
 % ===================
 % 6. Verify Box plots 

@@ -6,11 +6,10 @@ function plotBandPowerSummaries(setName)
 % setName = 'combined'
 % setName = 'DOIKetanserin';
 % setName = 'poster2023';
-
+% setName = 'poster2023b';
 
 usePSM = false;
 useGtrim = true;
-
 
 switch setName
     case 'FLVX' 
@@ -23,43 +22,61 @@ switch setName
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
         xtickLabelstart = {'DMT,LPS','BD1063,LPS','DMT+BD; LPS','FLVX+BD,LPS','BD,saline'}; % changed!
         groupIncr = [0 0 0 0 0 1 1 2 2 3 3 4 4 5 5]; % this will need to be updated whenever you add groups!!!!!!!
+        load(saveFileName);
     case 'combined' % untested - this is framework only
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
         xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,LPS','DMT2.5,LPS','DMT10,LPS','DMT10,Sal','Flvx,Sal'}; % changed!
         groupIncr = [0 0 0 0 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6 7 7]; % this will need to be updated whenever you add groups!!!!!!!
+        load(saveFileName);
     case 'ZZ' % untested - this is framework only
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
         xtickLabelstart = {'Sal','Psil','4ACO','6FDET'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
+        load(saveFileName);
     case 'DOIKetanserin' % untested - this is framework only
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
         xtickLabelstart = {'Sal,Sal','Sal,LPS','DOI,Sal','DOI,LPS','DOI+Ket,Sal','DOI+Ket,LPS'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
         groupIncr = [0 0 0 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6]; 
-
+        load(saveFileName);
     case 'poster2023'
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
         xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,Sal','Flvx,LPS','DMT10,Sal','DMT2.5,LPS','DMT10,LPS','DOI,Sal','DOI,LPS','DOI+Ket,Sal','DOI+Ket,LPS'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
-        groupIncr = [0 0 0 0 0 0 0 0 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9 10 10 11 11]; 
-    
+        groupIncr = [0 0 0 0 0 0 0 0 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9 10 10 11 11];
+        load(saveFileName);
     case '2020PsilocybinKetWay'
         saveFileName = getPathGlobal([setName '-matTableBandpower']);
         xtickLabelstart = {'DMSO,Sal','DMSO,Psilo','Ketamine','Ketan,Sal','Ketan,Psilo','Sal,Sal','Sal,Psilo','WAY,Sal','Way,Psilo'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
         groupIncr = [0 0 0 0 0 0 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9]; 
-    
+        load(saveFileName);
+    case 'poster2023b'
+        setName = setName(1:end-1);
+        saveFileName = getPathGlobal([setName '-matTableBandpower']);
+        xtickLabelstart = {'Sal,Sal','Sal,LPS','Flvx,LPS','DMT2.5,LPS','DMT10,LPS','DOI,LPS'};  % TODO: pull this from the xls file instead, or save that info in the .mat file to pass along to this point..
+        groupIncr = [0 0 0 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6]; 
+        load(saveFileName);
+        workingTable(workingTable.group==3,:) = [];
+        workingTable(workingTable.group==5,:) = [];
+        workingTable(workingTable.group==8,:) = [];
+        workingTable(workingTable.group==10,:) = [];
+        workingTable(workingTable.group==11,:) = [];
     otherwise
         error('Need an appropriate table name from a recognized list: ''FLVX'' or ''LPS2020'' or ''ZZ'' so far ');
 end
-load(saveFileName);
-
 
 
 % Now assemble the different sets into a structure we can average across
 % groups with 
-workingTable = struct2table(workingTable);
-nGroups = max(workingTable.group);
+if ~istable(workingTable)
+    workingTable = struct2table(workingTable);
+end
+groupList = unique(workingTable.group);
+nGroups = size(groupList,1);
+
+
 
 %workingTable = sortrows(workingTable,'group'); %not strictly necessary, just looks better
 for iGroup = 1:nGroups
-    tempT = workingTable(workingTable.group == iGroup,:);
+    thisGroup = groupList(iGroup);
+    tempT = workingTable(workingTable.group == thisGroup,:);
     groupSize = size(tempT,1);
     for ii = 1:groupSize
         group(iGroup).movePre(ii,:) = tempT.data(ii,1).pre.move;
@@ -99,19 +116,19 @@ end
 
 
 
-%create a nice table for matt - alternatively, just do this and save and
-%skip plotting?
-newTabCol = nan(height(workingTable), 1);
-workingTable.("gTrimRatio") = newTabCol;
-workingTable.("PSMavgRatio") = newTabCol;
-for iRow = 1:size(workingTable,1)
-    trimChange = workingTable.data(iRow,1).post.GTrimAvgDelta/workingTable.data(iRow,1).pre.GTrimAvgDelta; 
-    workingTable(iRow,"gTrimRatio") = {trimChange};
-    trimChange = workingTable.data(iRow,1).post.PSMavgDelta/workingTable.data(iRow,1).pre.PSMavgDelta; 
-    workingTable(iRow,"PSMavgRatio") = {trimChange};
-    workingTable(iRow,"groupLabel") = xtickLabelstart(workingTable(iRow,"group").group);
-end
-save(saveFileName,"workingTable");
+% %create a nice table for matt - alternatively, just do this and save and
+% %skip plotting?
+% newTabCol = nan(height(workingTable), 1);
+% workingTable.("gTrimRatio") = newTabCol;
+% workingTable.("PSMavgRatio") = newTabCol;
+% for iRow = 1:size(workingTable,1)
+%     trimChange = workingTable.data(iRow,1).post.GTrimAvgDelta/workingTable.data(iRow,1).pre.GTrimAvgDelta; 
+%     workingTable(iRow,"gTrimRatio") = {trimChange};
+%     trimChange = workingTable.data(iRow,1).post.PSMavgDelta/workingTable.data(iRow,1).pre.PSMavgDelta; 
+%     workingTable(iRow,"PSMavgRatio") = {trimChange};
+%     workingTable(iRow,"groupLabel") = xtickLabelstart(workingTable(iRow,"group").group);
+% end
+% save(saveFileName,"workingTable");
 
 
 
@@ -133,7 +150,7 @@ indexT = 1;
 for iGroup = 1:nGroups
     groupSize = length(group(iGroup).movePre);
     boxplotMoveArray(indexT,1:groupSize) = group(iGroup).movePost./group(iGroup).movePre;
-    xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-move'];
+    xtickLabelArray{indexT} = [xtickLabelstart{iGroup}];
     colorCodeMove{indexT} = colorCodeTreatment{iGroup};
     category{indexT} = 'Move';
     indexT = indexT+1;
@@ -143,14 +160,15 @@ if usePSM
     indexT = 1;
     if isfield(group(end),'PSMDeltaPre') % if we have PSM data all the way through the end
         for iGroup = 1:nGroups
+            thisGroup = groupList(iGroup);
             groupSize = length(group(iGroup).movePre);
             boxplotEphysArray(indexT,1:groupSize) = group(iGroup).PSMDeltaPost(:,1)./group(iGroup).PSMDeltaPre(:,1);
-            xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-ante'];
+            xtickLabelArray{indexT} = [xtickLabelstart{iGroup}];
             colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
             category{indexT} = 'Delta';
             indexT = indexT+1;
             boxplotEphysArray(indexT,1:groupSize) = group(iGroup).PSMDeltaPost(:,2)./group(iGroup).PSMDeltaPre(:,2);
-            xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-post'];
+            xtickLabelArray{indexT} = [xtickLabelstart{iGroup}];
             colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
             category{indexT} = 'Delta';
             indexT = indexT+1;
@@ -162,15 +180,16 @@ if useGtrim
     indexT = 1;
     if isfield(group(end),'GTrimDeltaPre') % if we have PSM data all the way through the end
         for iGroup = 1:nGroups
+            thisGroup = groupList(iGroup);
             groupSize = length(group(iGroup).movePre);
             boxplotEphysArray(indexT,1:groupSize) = group(iGroup).GTrimDeltaPost(:,1)./group(iGroup).GTrimDeltaPre(:,1);
-            xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-ante'];
+            xtickLabelArray{indexT} = [xtickLabelstart{iGroup}];
             colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
             category{indexT} = 'Delta';
             indexT = indexT+1;
 %             boxplotEphysArray(indexT,1:groupSize) = group(iGroup).GTrimDeltaPost(:,1)./group(iGroup).GTrimDeltaPre(:,1);
             boxplotEphysArray(indexT,1:groupSize) = nan;
-            xtickLabelArray{indexT} = [xtickLabelstart{iGroup} '-ante'];
+            xtickLabelArray{indexT} = [xtickLabelstart{iGroup}];
             colorCodeEphys{indexT} = colorCodeTreatment{iGroup};
             category{indexT} = 'Delta';
             indexT = indexT+1;
@@ -231,7 +250,7 @@ if usePSM
     title('PSMDelta bandpower changes');
 end
 if useGtrim
-    title('Gaussian Trimmed bandpower changes');
+    title('Gaussian fit binned bandpower changes');
 end
 
 ylim([0.5,3.5]);
@@ -252,7 +271,8 @@ switch setName
     case 'DOIKetanserin'
         legend([a(12) a(10) a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
     case 'poster2023'
-        legend([a(22) a(20) a(18) a(16) a(14) a(12) a(10) a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
+%         legend([a(22) a(20) a(18) a(16) a(14) a(12) a(10) a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
+        legend([a(11) a(10) a(9) a(8) a(7) a(6) a(5) a(4) a(3) a(2) a(1)], xtickLabelstart,'Location','northeast');
     case '2020PsilocybinKetWay'
         legend([a(18) a(16) a(14) a(12) a(10) a(8) a(6) a(4) a(2)], xtickLabelstart,'Location','northeast');
     otherwise
@@ -269,8 +289,20 @@ ax.XTickLabels = xtickLabelArray; %{'Sal move','Psil move','4ACO move','6FDET mo
 
 
 
-
-
-
+moveFigAlone = figure;
+scatter(1:nColsForMoveBoxPlot,boxplotMoveArray,'k*');
+hold on
+boxplot(boxplotMoveArray','Colors',char(colorCodeMove));
+ax = gca;
+ax.YAxis.Scale ="log";
+yline(1,'--');
+xlim([0.5,nColsForMoveBoxPlot+.5]);
+ylabel('Post injection values (t=0:60) divided by baseline values');
+title(' movement changes');
+ylim([0.08,1.4]);
+% a = findall(gca,'Tag','Box');
+% legend([a(6) a(5) a(4) a(3) a(2) a(1)], xtickLabelstart,'Location','northeast');
+ax = gca;
+ax.XTickLabels = xtickLabelArray;
 
 
