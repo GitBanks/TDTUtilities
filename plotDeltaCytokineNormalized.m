@@ -20,7 +20,7 @@ orderedGroupName{5} = string([char(orderedGroupName{4}) '_10']);
 % 12/3/24 SAVE WORKBOOK PAGE #1 (original) HERE!
 % remake this 
 outputTable = newWorkingTable;
-outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst','delta'}) = [];
+outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst'}) = [];
 writetable(outputTable, 'C:\Users\Matt Banks\Desktop\CytokineDeltaTableStep0.csv');
 
 
@@ -63,7 +63,7 @@ end
 % !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 % 12/3/24 SAVE WORKBOOK PAGE #2 (protein count normalized) HERE!
 outputTable = newWorkingTable;
-outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst','delta'}) = [];
+outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst'}) = [];
 writetable(outputTable, 'C:\Users\Matt Banks\Desktop\CytokineDeltaTableStep1.csv');
 
 
@@ -106,7 +106,7 @@ end
 % !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 % 12/3/24 SAVE WORKBOOK PAGE #3 (saline/saline plate normalized) HERE!
 outputTable = newWorkingTable;
-outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst','delta'}) = [];
+outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst'}) = [];
 writetable(outputTable, 'C:\Users\Matt Banks\Desktop\CytokineDeltaTableStep2.csv');
 
 
@@ -177,7 +177,7 @@ end
 % if something will annoy Matt, it's confusing output.  This table is the
 % result of numerous attempts using a wide variety of cleaning strategies.
 % No need to leave old or irrelevant information there.
-outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst','plateNumber','delta'}) = [];
+outputTable(:,{'dt','treatments','fullMoveStream','fullTimeArray','fullTimeArrayTOD','data','Animal_proteinTable','IL6first','TNFfirst','plateNumber'}) = [];
 % writetable(outputTable, 'C:\Users\Matt Banks\Desktop\paper data sets\myTable.csv');
 writetable(outputTable, 'C:\Users\Matt Banks\Desktop\CytokineDeltaTableStep3.csv');
 
