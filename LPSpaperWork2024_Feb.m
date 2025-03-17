@@ -1,3 +1,8 @@
+% 3/17/25
+% 1. fix unadjusted delta list.  The one I sent didn't have all the animals.
+
+
+
 % 2/13/25
 % meeting
 % 1. Figure 1: add other dose of DMT in power spectra; - raw traces and power spectra   
@@ -79,17 +84,23 @@ DeltaCytokinePlotForPaperNormalized
 setName = 'poster2023';
 workingTable = readtable(getPathGlobal([setName '-xlsTableGroupInfo']));
 animalList={
-'EEG313' 
-'EEG335' 
-'EEG343' 
-'EEG237' 
-'EEG214' };
+'EEG335' % saline saline 
+'EEG313' % saline LPS
+'EEG343' % DOI LPS
+'EEG237' % DOI ketanserin LPS
+'EEG214' % FLVX LPS
+'EEG223' % DMT 2.5
+'EEG265' % DMT 10
+}; 
 dateList={
-'23621'
 '23720'
+'23621'
 '23809'
 '23206'
-'22727'};
+'22727'
+'22d18'
+'23313'
+};
 for iTable = 1:size(animalList,1)
     animalName = animalList{iTable};
     exptDate = dateList{iTable};
@@ -112,7 +123,8 @@ for iTable = 1:size(animalList,1)
     saveFileName = ['MoveFit_' animalName '_' exptDate '.csv'];
     tableOutPath = fullfile(outPath, saveFileName);
     thisTable = readtable(tableOutPath);
-    plot(thisTable.winTime,thisTable.meanMovement);
+    time = 0+thisTable.winTime;
+    plot(time,thisTable.meanMovement);
 end
 
 
