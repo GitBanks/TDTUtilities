@@ -18,6 +18,8 @@ disp(['Processing ' animalName ' on ' exptDate '.']);
 useFullSpectra = true;
 % ==== load the segmented spectra
 [~,specTableOut] = fetchSpectraFromPipelineByAnimalDate(animalName,exptDate,useFullSpectra,chansToExclude);
+treatments = getTreatmentInfo(animalName,exptDate);
+extraText = [treatments.pars{1,end}(1:3) '_' num2str(fix(treatments.vals(1,end))) '_' treatments.pars{2,end}(1:3) '_' num2str(treatments.vals(2,end))];
 segTimes = specTableOut.segTime - specTableOut.segTime(1);
 fullSpectra = specTableOut.spectra;
 % ==== load the movement info from the gaussian fit program
@@ -36,7 +38,7 @@ plotArray(1,:) = mean(fullSpectra(logicalCtrl,:),1,"omitnan");
 plotArray(2,:) = mean(fullSpectra(logicalpostInj,:),1,"omitnan");
 if showPlot
     freqLabels = specTableOut.freqLabels;
-    titletext = [animalName ' ' exptDate];
+    titletext = [animalName ' ' exptDate ' ' extraText ' movement accepted'];
     avgspectra = figure('Name',titletext); 
     loglog(freqLabels,plotArray(1,:)); 
     hold on
@@ -44,13 +46,14 @@ if showPlot
     xlabel('Freq');
     ylabel('Power (mV^2)');
     legend({'ctrl','peak drug effect'});
+    saveas(avgspectra,['C:\Users\Matt Banks\Desktop\spectraFigs\' titletext ]);
 end
 
 if showOriginalPlot
     plotArray(1,:) = mean(fullSpectra(moveTable.ctrl,:),1,"omitnan");
     plotArray(2,:) = mean(fullSpectra(moveTable.postInj,:),1,"omitnan");
     freqLabels = specTableOut.freqLabels;
-    titletext = [animalName ' ' exptDate];
+    titletext = [animalName ' ' exptDate ' ' extraText ' original'];
     avgspectra = figure('Name',titletext); 
     loglog(freqLabels,plotArray(1,:)); 
     hold on
@@ -58,6 +61,7 @@ if showOriginalPlot
     xlabel('Freq');
     ylabel('Power (mV^2)');
     legend({'ctrl','peak drug effect'});
+    saveas(avgspectra,['C:\Users\Matt Banks\Desktop\spectraFigs\' titletext ]);
 end
 
 
